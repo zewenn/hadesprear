@@ -14,9 +14,10 @@ pub const rl = @import("raylib");
 pub fn init(allocator: *Allocator) !void {
     ecs.init(allocator);
     events.init(allocator);
-    
+
     try assets.compile();
     try assets.init(allocator);
+
 
     try @import("../.temp/script_run.zig").register();
 
@@ -25,7 +26,11 @@ pub fn init(allocator: *Allocator) !void {
 }
 
 pub fn deinit() void {
+
     assets.deinit();
     events.deinit();
     ecs.deinit();
+}
+
+pub fn update() void {
 }

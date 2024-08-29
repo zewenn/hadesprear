@@ -54,7 +54,13 @@ pub fn build(b: *std.Build) !void {
         var allocator = gpa.allocator();
 
         const files_dir = "./src/assets/";
-        const output_file = std.fs.cwd().createFile("src/.temp/filenames.zig", .{}) catch unreachable;
+        const output_file = std.fs.cwd().createFile(
+            "src/.temp/filenames.zig",
+            .{
+                .truncate = true,
+                .exclusive = false,
+            },
+        ) catch unreachable;
 
         const seg = generateFileNames(files_dir, &allocator);
         defer {
@@ -88,7 +94,13 @@ pub fn build(b: *std.Build) !void {
         var allocator = gpa.allocator();
 
         const files_dir = "./src/.scripts/";
-        const output_file = std.fs.cwd().createFile("src/.temp/script_run.zig", .{}) catch unreachable;
+        const output_file = std.fs.cwd().createFile(
+            "src/.temp/script_run.zig",
+            .{
+                .truncate = true,
+                .exclusive = false,
+            },
+        ) catch unreachable;
 
         const seg = generateFileNames(files_dir, &allocator);
         defer {

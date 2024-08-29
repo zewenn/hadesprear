@@ -15,55 +15,57 @@ pub fn main() !void {
     defer e.deinit();
 
     var Player = try e.ecs.newEntity("Player");
+
+    e.z.dprint("Player: 0x{x}", .{@intFromPtr(Player)});
+
     var player_display: e.ecs.components.Display = undefined;
     {
         player_display = e.ecs.components.Display{
-            .sprite = " ",
+            .sprite = "player_left_0.png",
             .scaling = .normal,
         };
         try Player.attach(e.ecs.components.Display, &player_display, "display");
     }
+    var player_transform: e.ecs.components.Transform = undefined;
+    {
+        player_transform = e.ecs.components.Transform{
+            .position = rl.Vector2.init(0, 0),
+            .rotation = rl.Vector3.init(0, 0, 0),
+            .scale = rl.Vector2.init(128, 128),
+        };
+        try Player.attach(e.ecs.components.Transform, &player_transform, "transform");
+    }
 
-    const pd = Player.get(e.ecs.components.Display, "display");
-    std.debug.print("{any}", .{pd});
+    e.z.dprint("PD 0x{x}", .{@intFromPtr(&player_display)});
+    e.z.dprint("PT 0x{x}", .{@intFromPtr(&player_transform)});
 
-    Player.deinit();
+    // const pd = Player.get(e.ecs.components.Display, "display");
+    // const pt = Player.get(e.ecs.components.Transform, "transform");
+    // std.debug.print("{any}{any}", .{pd, pt});
 
-    // // Initialization
-    // //--------------------------------------------------------------------------------------
-    // const screenWidth = 800;
-    // const screenHeight = 450;
 
-    // rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
-    // defer rl.closeWindow(); // Close window and OpenGL context
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    const screenWidth = 1280;
+    const screenHeight = 720;
 
-    // rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
-    // //--------------------------------------------------------------------------------------
+    rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
+    defer rl.closeWindow(); // Close window and OpenGL context
 
-    // var textr = rl.loadImage("/Users/zoltantakacs/_code/zig/testproj/src/assets/player_left_0.png");
-    // rl.imageResizeNN(&textr, 160, 160);
+    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
 
-    // // Main game loop
-    // while (!rl.windowShouldClose()) { // Detect window close button or ESC key
-    //     // Update
-    //     //----------------------------------------------------------------------------------
-    //     // TODO: Update your variables here
-    //     //----------------------------------------------------------------------------------
+    var textr = rl.loadImage("/Users/zoltantakacs/_code/zig/testproj/src/assets/player_left_0.png");
+    rl.imageResizeNN(&textr, 160, 160);
 
-    //     const x = rl.loadTextureFromImage(textr);
+    // Main game loop
+    while (!rl.windowShouldClose()) { // Detect window close button or ESC key
+        e.update();
 
-    //     // Draw
-    //     //----------------------------------------------------------------------------------
-    //     rl.beginDrawing();
-    //     defer rl.endDrawing();
+        // rl.beginDrawing();
 
-    //     rl.clearBackground(rl.Color.white);
+        // rl.clearBackground(rl.Color.white);
 
-    //     // rl.drawRectangle(0, 0, 100, 100, rl.Color.black);
-
-    //     rl.drawTexture(x, 0, 0, rl.Color.white);
-
-    //     rl.drawText("Congrats! You created your first window!", 190, 200, 20, rl.Color.light_gray);
-    //     //----------------------------------------------------------------------------------
-    // }
+        // defer rl.endDrawing();
+    }
 }

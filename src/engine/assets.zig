@@ -30,12 +30,14 @@ pub fn init(allocator: *Allocator) !void {
     alloc = allocator;
     image_map = std.StringHashMap(Image).init(allocator.*);
 
+    z.dprint("image_map: 0x{x}", .{@intFromPtr(&image_map)});
+
     // const testimg = try Image.loadFromMemory(files[0], 4);
     // std.debug.print("{any}", .{getPixelData(&testimg, .{ .x = 0, .y = 0 })});
 
     for (filenames, files) |name, data| {
         const img = rl.loadImageFromMemory(".png", data);
-
+        
         try image_map.put(name, img);
     }
 }

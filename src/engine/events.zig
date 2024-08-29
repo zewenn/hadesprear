@@ -1,4 +1,5 @@
 const std = @import("std");
+const z = @import("./z/z.zig");
 
 pub const EngineEvents = enum {
     Awake,
@@ -21,6 +22,7 @@ pub fn EventHandler(comptime T: EventsSettings) type {
 
         pub fn init(allocator: *std.mem.Allocator) void {
             event_map = map_type.init(allocator.*);
+            z.dprint("event_map: 0x{x}", .{@intFromPtr(&event_map)});
             allocator_ptr = allocator;
         }
 

@@ -16,7 +16,6 @@ const c = @cImport({
 
 const Self = @This();
 
-// tags: std.ArrayListAligned([]const u8, null),
 id: []const u8,
 components: std.StringHashMap(*anyopaque),
 
@@ -25,18 +24,11 @@ alloc: *Allocator,
 pub fn init(
     allocator: *Allocator,
     id: []const u8,
-    // comptime tags: [][]const u8,
 ) Self {
-    // var tgs = std.ArrayList([]const u8).init(allocator.*);
     const comps = std.StringHashMap(*anyopaque).init(allocator.*);
-
-    // for (tags) |tag| {
-    //     tgs.append(tag) catch unreachable;
-    // }
 
     return .{
         .id = id,
-        // .tags = tgs,
         .components = comps,
         .alloc = allocator,
     };
@@ -57,6 +49,5 @@ pub fn get(self: *Self, comptime T: type, id: []const u8) ?*T {
 }
 
 pub fn deinit(self: *Self) void {
-    // self.tags.deinit();
     self.components.deinit();
 }

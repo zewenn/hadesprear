@@ -15,7 +15,9 @@ pub var entities: std.StringHashMap(Entity) = undefined;
 
 pub fn init(allocator: *Allocator) void {
     alloc = allocator;
+
     entities = std.StringHashMap(Entity).init(alloc.*);
+    z.dprint("entities: 0x{x}", .{@intFromPtr(&entities)});
 }
 
 pub fn deinit() void {
@@ -29,11 +31,11 @@ pub fn deinit() void {
     }
 }
 
-pub fn newEntity(id: []const u8) !Entity {
+pub fn newEntity(id: []const u8) !*Entity {
     try entities.put(id, Entity.init(alloc, id));
-    return entities.get(id).?;
+    return entities.getPtr(id).?;
 }
 
-pub fn getEntity(id: []const u8) ?Entity {
-    return entities.get(id);
+pub fn getEntity(id: []const u8) ?*Entity {
+    return entities.getPtr(id);
 }

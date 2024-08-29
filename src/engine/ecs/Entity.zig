@@ -24,7 +24,7 @@ alloc: *Allocator,
 
 pub fn init(
     allocator: *Allocator,
-    comptime id: []const u8,
+    id: []const u8,
     // comptime tags: [][]const u8,
 ) Self {
     // var tgs = std.ArrayList([]const u8).init(allocator.*);
@@ -42,14 +42,14 @@ pub fn init(
     };
 }
 
-pub fn attach(self: *Self, comptime T: type, component: *T, comptime id: []const u8) !void {
+pub fn attach(self: *Self, comptime T: type, component: *T, id: []const u8) !void {
     try self.components.put(
         id,
         @as(*anyopaque, @ptrCast(component)),
     );
 }
 
-pub fn get(self: *Self, comptime T: type, comptime id: []const u8) ?*T {
+pub fn get(self: *Self, comptime T: type, id: []const u8) ?*T {
     const res = self.components.get(id);
     if (res == null) return null;
 

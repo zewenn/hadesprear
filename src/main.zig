@@ -1,4 +1,3 @@
-
 const std = @import("std");
 const rl = @import("raylib");
 const os = @import("std").os;
@@ -15,7 +14,7 @@ pub fn main() !void {
     try e.init(&allocator);
     defer e.deinit();
 
-    var Player = e.ecs.Entity.init(&allocator, "Player");
+    var Player = try e.ecs.newEntity("Player");
     var player_display: e.ecs.components.Display = undefined;
     {
         player_display = e.ecs.components.Display{

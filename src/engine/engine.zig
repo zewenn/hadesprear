@@ -12,6 +12,7 @@ pub const display = @import("./display.zig");
 pub const rl = @import("raylib");
 
 pub fn init(allocator: *Allocator) !void {
+    ecs.init(allocator);
     events.init(allocator);
     
     try assets.compile();
@@ -20,10 +21,11 @@ pub fn init(allocator: *Allocator) !void {
     try @import("../.temp/script_run.zig").register();
 
     try events.call(.Awake);
-    try events.call(.Load);
+    try events.call(.Init);
 }
 
 pub fn deinit() void {
-    events.deinit();
     assets.deinit();
+    events.deinit();
+    ecs.deinit();
 }

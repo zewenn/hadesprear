@@ -1,14 +1,10 @@
-
 const std = @import("std");
 const e = @import("../engine/engine.zig");
 
+pub fn awake() void {}
 
 pub fn init() void {
-    e.z.println("Hello again!", .{});
+    e.z.dprint("Hello again!", .{});
 }
 
-
-pub fn main() !void {
-    try e.events.on(.Load, init);
-    std.debug.print("Hello world!", .{});
-}
+pub fn update() void {}

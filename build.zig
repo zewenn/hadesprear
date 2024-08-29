@@ -80,6 +80,7 @@ pub fn build(b: *std.Build) !void {
         }
         _ = writer.write("\n};") catch unreachable;
     }
+    // Handling Scripts
     {
         var gpa = std.heap.GeneralPurposeAllocator(.{}){};
         defer _ = gpa.deinit();
@@ -99,9 +100,12 @@ pub fn build(b: *std.Build) !void {
 
         var writer = output_file.writer();
         writer.writeAll("") catch unreachable;
+        _ = writer.write("const e = @import(\"../engine/engine.zig\");\n\n") catch unreachable;
         _ = writer.write("pub fn register() !void {\n") catch unreachable;
         for (seg.list.items) |item| {
-            writer.print("\ttry @import(\"../.scripts/{s}\").main();\n", .{item}) catch unreachable;
+            writer.print("\ttry e.events.on(.Awake, @import(\"../.scripts/{s}\").awake);\n", .{item}) catch unreachable;
+            writer.print("\ttry e.events.on(.Init, @import(\"../.scripts/{s}\").init);\n", .{item}) catch unreachable;
+            writer.print("\ttry e.events.on(.Update, @import(\"../.scripts/{s}\").update);\n", .{item}) catch unreachable;
         }
         _ = writer.write("}") catch unreachable;
     }

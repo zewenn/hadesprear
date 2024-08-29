@@ -16,3 +16,4 @@ pub const arrays = @import("arrays.zig");
 
 pub const print = @import("./print.zig").print;
 pub const println = @import("./print.zig").println;
+pub const dprint = @import("print.zig").dprint;

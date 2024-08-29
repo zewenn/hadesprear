@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub const EngineEvents = enum {
     Awake,
-    Load,
+    Init,
     Update,
 };
 

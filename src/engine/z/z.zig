@@ -13,3 +13,6 @@ pub fn panic(msg: anytype) noreturn {
 
 pub const math = @import("math.zig");
 pub const arrays = @import("arrays.zig");
+
+pub const print = @import("./print.zig").print;
+pub const println = @import("./print.zig").println;

@@ -1,9 +1,10 @@
-// raylib-zig (c) Nikolas Wipper 2023
+
 const std = @import("std");
 const rl = @import("raylib");
 const os = @import("std").os;
 const fs = @import("std").fs;
-const ecs = @import("./engine/ecs/ecs.zig");
+
+const e = @import("./engine/engine.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -11,17 +12,20 @@ pub fn main() !void {
 
     var allocator = gpa.allocator();
 
-    var Player = ecs.Entity.init(&allocator, "Player");
-    var player_display: ecs.components.Display = undefined;
+    try e.init(&allocator);
+    defer e.deinit();
+
+    var Player = e.ecs.Entity.init(&allocator, "Player");
+    var player_display: e.ecs.components.Display = undefined;
     {
-        player_display = ecs.components.Display{
+        player_display = e.ecs.components.Display{
             .sprite = " ",
             .scaling = .normal,
         };
-        try Player.attach(ecs.components.Display, &player_display, "display");
+        try Player.attach(e.ecs.components.Display, &player_display, "display");
     }
 
-    const pd = Player.get(ecs.components.Display, "display");
+    const pd = Player.get(e.ecs.components.Display, "display");
     std.debug.print("{any}", .{pd});
 
     Player.deinit();

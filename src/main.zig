@@ -22,14 +22,14 @@ pub fn main() !void {
     {
         player_display = e.ecs.components.Display{
             .sprite = "player_left_0.png",
-            .scaling = .normal,
+            .scaling = .pixelate,
         };
         try Player.attach(e.ecs.components.Display, &player_display, "display");
     }
     var player_transform: e.ecs.components.Transform = undefined;
     {
         player_transform = e.ecs.components.Transform{
-            .position = rl.Vector2.init(0, 0),
+            .position = rl.Vector2.init(100, 0),
             .rotation = rl.Vector3.init(0, 0, 0),
             .scale = rl.Vector2.init(128, 128),
         };

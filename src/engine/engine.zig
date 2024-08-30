@@ -18,6 +18,7 @@ pub fn init(allocator: *Allocator) !void {
     try assets.compile();
     try assets.init(allocator);
 
+    display.init(allocator);
 
     try @import("../.temp/script_run.zig").register();
 
@@ -26,6 +27,7 @@ pub fn init(allocator: *Allocator) !void {
 }
 
 pub fn deinit() void {
+    display.deinit();
 
     assets.deinit();
     events.deinit();
@@ -33,4 +35,5 @@ pub fn deinit() void {
 }
 
 pub fn update() void {
+    display.update();
 }

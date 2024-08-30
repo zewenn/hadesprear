@@ -37,7 +37,6 @@ pub fn init(allocator: *Allocator) !void {
 
     for (filenames, files) |name, data| {
         const img = rl.loadImageFromMemory(".png", data);
-        
         try image_map.put(name, img);
     }
 }
@@ -47,5 +46,11 @@ pub fn get(id: []const u8) ?Image {
 }
 
 pub fn deinit() void {
+    var kIt = image_map.keyIterator();
+    while (kIt.next()) |key| {
+        if (image_map.get(key.*)) |image| {
+            rl.unloadImage(image);
+        }
+    }
     image_map.deinit();
 }

@@ -6,6 +6,9 @@ const Allocator = @import("std").mem.Allocator;
 // =====================================================
 
 pub const components = @import("./components.zig");
+pub const cDisplay = components.Display;
+pub const cTransform = components.Transform;
+
 pub const Entity = @import("./Entity.zig");
 
 // =====================================================

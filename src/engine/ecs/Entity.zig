@@ -34,12 +34,18 @@ pub fn init(
     };
 }
 
-pub fn attach(self: *Self, comptime T: type, component: *T, id: []const u8) !void {
+pub fn attach(self: *Self, component: *anyopaque, id: []const u8) !void {
     try self.components.put(
         id,
         @as(*anyopaque, @ptrCast(component)),
     );
 }
+// pub fn attach(self: *Self, comptime T: type, component: *T, id: []const u8) !void {
+//     try self.components.put(
+//         id,
+//         @as(*anyopaque, @ptrCast(component)),
+//     );
+// }
 
 pub fn get(self: *Self, comptime T: type, id: []const u8) ?*T {
     const res = self.components.get(id);

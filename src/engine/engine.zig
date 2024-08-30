@@ -5,17 +5,19 @@ pub const z = @import("./z/z.zig");
 pub const ecs = @import("./ecs/ecs.zig");
 pub const assets = @import("./assets.zig");
 
-const _events = @import("./events.zig");
-pub const events = _events.EventHandler(.{});
+pub const events = @import("./events.zig");
 
 pub const display = @import("./display.zig");
 pub const rl = @import("raylib");
+
+pub inline fn compile() !void {
+    try assets.compile();
+}
 
 pub fn init(allocator: *Allocator) !void {
     ecs.init(allocator);
     events.init(allocator);
 
-    try assets.compile();
     try assets.init(allocator);
 
     display.init(allocator);
@@ -36,5 +38,6 @@ pub fn deinit() !void {
 }
 
 pub fn update() void {
+    events.call(.Update) catch void;
     display.update();
 }

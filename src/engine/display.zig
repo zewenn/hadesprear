@@ -93,6 +93,8 @@ pub fn update() void {
         if (prev.texture) |_texture| {
             if (!flag) {
                 texture = _texture;
+            } else {
+                rl.unloadTexture(_texture);
             }
         } else flag = true;
 
@@ -108,7 +110,6 @@ pub fn update() void {
             continue;
         }
 
-        z.dprint("image: h: {d} | w: {d}", .{ img.height, img.width });
 
         switch (display.scaling) {
             .normal => rl.imageResize(
@@ -128,7 +129,12 @@ pub fn update() void {
             @intFromFloat(transform.rotation.z),
         );
 
+        z.dprint("entity: {s}", .{ entity.id });
+        z.dprint("image: data: {any}", .{ img });
+        
+
         texture = rl.loadTextureFromImage(img);
+        prev.texture = texture;
         // defer rl.unloadTexture(texture);
         drawTetxure(texture, transform.position, rl.Color.white);
     }

@@ -26,9 +26,10 @@ pub fn init(allocator: *Allocator) !void {
     try events.call(.Init);
 }
 
-pub fn deinit() void {
-    display.deinit();
+pub fn deinit() !void {
+    try events.call(.Deinit);
 
+    display.deinit();
     assets.deinit();
     events.deinit();
     ecs.deinit();

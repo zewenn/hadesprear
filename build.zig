@@ -118,6 +118,7 @@ pub fn build(b: *std.Build) !void {
             writer.print("\ttry e.events.on(.Awake, @import(\"../.scripts/{s}\").awake);\n", .{item}) catch unreachable;
             writer.print("\ttry e.events.on(.Init, @import(\"../.scripts/{s}\").init);\n", .{item}) catch unreachable;
             writer.print("\ttry e.events.on(.Update, @import(\"../.scripts/{s}\").update);\n", .{item}) catch unreachable;
+            writer.print("\ttry e.events.on(.Deinit, @import(\"../.scripts/{s}\").deinit);\n", .{item}) catch unreachable;
         }
         _ = writer.write("}") catch unreachable;
     }

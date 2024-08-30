@@ -12,7 +12,7 @@ pub fn main() !void {
     var allocator = gpa.allocator();
 
     try e.init(&allocator);
-    defer e.deinit();
+    defer e.deinit() catch null;
 
     var Player = try e.ecs.newEntity("Player");
 

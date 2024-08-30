@@ -5,6 +5,7 @@ pub const EngineEvents = enum {
     Awake,
     Init,
     Update,
+    Deinit,
 };
 
 pub const EventsSettings = struct {

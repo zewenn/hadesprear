@@ -14,3 +14,10 @@ pub fn dprint(comptime msg: []const u8, args: anytype) void {
         args,
     );
 }
+
+pub fn addrprint(name: []const u8, ptr: anytype) void {
+    switch (@TypeOf(ptr)) {
+        .Pointer => dprint("ADDR[{s}]: 0x{x}", .{ name, @intFromPtr(ptr) }),
+        else => print("{any}", .{ptr}),
+    }
+}

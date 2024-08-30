@@ -16,8 +16,6 @@ pub fn main() !void {
 
     var Player = try e.ecs.newEntity("Player");
 
-    e.z.dprint("Player: 0x{x}", .{@intFromPtr(Player)});
-
     var player_display: e.ecs.components.Display = undefined;
     {
         player_display = e.ecs.components.Display{
@@ -35,9 +33,6 @@ pub fn main() !void {
         };
         try Player.attach(e.ecs.components.Transform, &player_transform, "transform");
     }
-
-    e.z.dprint("PD 0x{x}", .{@intFromPtr(&player_display)});
-    e.z.dprint("PT 0x{x}", .{@intFromPtr(&player_transform)});
 
     // const pd = Player.get(e.ecs.components.Display, "display");
     // const pt = Player.get(e.ecs.components.Transform, "transform");

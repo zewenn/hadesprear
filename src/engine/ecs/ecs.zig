@@ -17,7 +17,6 @@ pub fn init(allocator: *Allocator) void {
     alloc = allocator;
 
     entities = std.StringHashMap(Entity).init(alloc.*);
-    z.dprint("entities: 0x{x}", .{@intFromPtr(&entities)});
 }
 
 pub fn deinit() void {

@@ -1,8 +1,152 @@
 const std = @import("std");
 const rlz = @import("raylib-zig");
 const Allocator = @import("std").mem.Allocator;
+const String = @import("./libs/zig-string.zig").String;
 
 pub fn build(b: *std.Build) !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var allocator = gpa.allocator();
+
+    {
+        const files_dir = "./src/assets/";
+        const output_file = std.fs.cwd().createFile(
+            "src/.temp/filenames.zig",
+            .{
+                .truncate = true,
+                .exclusive = false,
+            },
+        ) catch unreachable;
+
+        const seg = generateFileNames(files_dir, &allocator);
+        defer {
+            for (seg.list.items) |item| {
+                seg.alloc.free(item);
+            }
+            seg.list.deinit();
+        }
+
+        var writer = output_file.writer();
+        writer.writeAll("") catch unreachable;
+        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
+        for (seg.list.items, 0..seg.list.items.len) |item, i| {
+            if (i == 0) {
+                _ = writer.write("\t\"") catch unreachable;
+            } else {
+                _ = writer.write("\",\n\t\"") catch unreachable;
+            }
+            writer.print("{s}", .{item}) catch unreachable;
+            if (i == seg.list.items.len - 1) {
+                _ = writer.write("\"") catch unreachable;
+            }
+        }
+        _ = writer.write("\n};") catch unreachable;
+    }
+    // Handling Scripts
+    {
+        const output_file = std.fs.cwd().createFile(
+            "src/.temp/script_run.zig",
+            .{
+                .truncate = true,
+                .exclusive = false,
+            },
+        ) catch unreachable;
+
+        var writer = output_file.writer();
+        writer.writeAll("") catch unreachable;
+        _ = writer.write("const sc = @import(\"../engine/scenes.zig\");\n\n") catch unreachable;
+        _ = writer.write("pub fn register() !void {\n") catch unreachable;
+
+        var files_dirs = getEntries("./src/app/", &allocator);
+        defer {
+            for (files_dirs.items) |files_dir| {
+                allocator.free(files_dir);
+            }
+            files_dirs.deinit();
+        }
+
+        for (files_dirs.items) |files_dir| {
+            const scene_name = files_dir[1 .. files_dir.len - 1];
+
+            var Sfiles_fir = String.init_with_contents(allocator, files_dir) catch unreachable;
+            defer Sfiles_fir.deinit();
+
+            if (!Sfiles_fir.startsWith("[") or !Sfiles_fir.endsWith("]")) continue;
+
+            var Ssub_path = String.init_with_contents(allocator, "./src/app/") catch unreachable;
+            defer Ssub_path.deinit();
+
+            Ssub_path.concat(files_dir) catch unreachable;
+
+            const sub_path = (Ssub_path.toOwned() catch unreachable).?;
+            defer allocator.free(sub_path);
+
+            const dir = std.fs.cwd().openDir(
+                sub_path,
+                .{
+                    .iterate = true,
+                },
+            ) catch unreachable;
+
+            var it = dir.iterate();
+
+            while (it.next() catch unreachable) |entry| {
+                if (entry.kind != .file) continue;
+
+                Ssub_path.concat("/") catch unreachable;
+                Ssub_path.concat(entry.name) catch unreachable;
+
+                const file_sub = (Ssub_path.toOwned() catch unreachable).?;
+                defer allocator.free(file_sub);
+
+                const file = std.fs.cwd().openFile(file_sub, .{}) catch unreachable;
+
+                const contents_u8 = file.readToEndAlloc(allocator, 8192) catch @panic("Couldn't read file");
+                defer allocator.free(contents_u8);
+
+                var Scontents = String.init_with_contents(allocator, contents_u8) catch unreachable;
+                defer Scontents.deinit();
+
+                writer.print("\ttry sc.register(\"{s}\", sc.Script", .{scene_name}) catch unreachable;
+                _ = writer.write("{\n") catch unreachable;
+
+                if (Scontents.find("awake(") != null) {
+                    writer.print(
+                        "\t\t.eAwake = @import(\"../app/{s}/{s}\").awake,\n",
+                        .{ files_dir, entry.name },
+                    ) catch unreachable;
+                }
+                if (Scontents.find("init(") != null) {
+                    writer.print(
+                        "\t\t.eInit = @import(\"../app/{s}/{s}\").init,\n",
+                        .{ files_dir, entry.name },
+                    ) catch unreachable;
+                }
+                if (Scontents.find("update(") != null) {
+                    writer.print(
+                        "\t\t.eUpdate = @import(\"../app/{s}/{s}\").update,\n",
+                        .{ files_dir, entry.name },
+                    ) catch unreachable;
+                }
+                if (Scontents.find("deinit(") != null) {
+                    writer.print(
+                        "\t\t.eDeinit = @import(\"../app/{s}/{s}\").deinit,\n",
+                        .{ files_dir, entry.name },
+                    ) catch unreachable;
+                }
+
+                _ = writer.write("\t});") catch unreachable;
+            }
+
+            //try e.scenes.register("default", e.scenes.Script{
+            //     .eAwake = player_script.awake,
+            // });
+
+        }
+        _ = writer.write("\n}") catch unreachable;
+    }
+
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -46,83 +190,6 @@ pub fn build(b: *std.Build) !void {
     const run_step = b.step("run", "Run testproj");
     run_step.dependOn(&run_cmd.step);
 
-    // Automatic file "import"
-    {
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
-
-        var allocator = gpa.allocator();
-
-        const files_dir = "./src/assets/";
-        const output_file = std.fs.cwd().createFile(
-            "src/.temp/filenames.zig",
-            .{
-                .truncate = true,
-                .exclusive = false,
-            },
-        ) catch unreachable;
-
-        const seg = generateFileNames(files_dir, &allocator);
-        defer {
-            for (seg.list.items) |item| {
-                seg.alloc.free(item);
-            }
-            seg.list.deinit();
-        }
-
-        var writer = output_file.writer();
-        writer.writeAll("") catch unreachable;
-        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
-        for (seg.list.items, 0..seg.list.items.len) |item, i| {
-            if (i == 0) {
-                _ = writer.write("\t\"") catch unreachable;
-            } else {
-                _ = writer.write("\",\n\t\"") catch unreachable;
-            }
-            writer.print("{s}", .{item}) catch unreachable;
-            if (i == seg.list.items.len - 1) {
-                _ = writer.write("\"") catch unreachable;
-            }
-        }
-        _ = writer.write("\n};") catch unreachable;
-    }
-    // Handling Scripts
-    {
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
-
-        var allocator = gpa.allocator();
-
-        const files_dir = "./src/.scripts/";
-        const output_file = std.fs.cwd().createFile(
-            "src/.temp/script_run.zig",
-            .{
-                .truncate = true,
-                .exclusive = false,
-            },
-        ) catch unreachable;
-
-        const seg = generateFileNames(files_dir, &allocator);
-        defer {
-            for (seg.list.items) |item| {
-                seg.alloc.free(item);
-            }
-            seg.list.deinit();
-        }
-
-        var writer = output_file.writer();
-        writer.writeAll("") catch unreachable;
-        _ = writer.write("const e = @import(\"../engine/engine.zig\");\n\n") catch unreachable;
-        _ = writer.write("pub fn register() !void {\n") catch unreachable;
-        for (seg.list.items) |item| {
-            writer.print("\ttry e.events.on(.Awake, @import(\"../.scripts/{s}\").awake);\n", .{item}) catch unreachable;
-            writer.print("\ttry e.events.on(.Init, @import(\"../.scripts/{s}\").init);\n", .{item}) catch unreachable;
-            writer.print("\ttry e.events.on(.Update, @import(\"../.scripts/{s}\").update);\n", .{item}) catch unreachable;
-            writer.print("\ttry e.events.on(.Deinit, @import(\"../.scripts/{s}\").deinit);\n", .{item}) catch unreachable;
-        }
-        _ = writer.write("}") catch unreachable;
-    }
-
     b.installArtifact(exe);
 }
 
@@ -154,4 +221,25 @@ fn generateFileNames(files_dir: []const u8, alloc: *Allocator) Segment {
         .alloc = alloc.*,
         .list = result,
     };
+}
+
+/// Caller owns the returned memory.
+fn getEntries(files_dir: []const u8, alloc: *Allocator) std.ArrayList([]const u8) {
+    var dir = std.fs.cwd().openDir(files_dir, .{ .iterate = true }) catch unreachable;
+    defer dir.close();
+
+    var result = std.ArrayList([]const u8).init(alloc.*);
+
+    var it = dir.iterate();
+    while (it.next() catch unreachable) |*entry| {
+        if (entry.kind != .directory) continue;
+        const copied = alloc.alloc(u8, entry.name.len) catch unreachable;
+
+        for (copied, entry.name) |*l, l2| {
+            l.* = l2;
+        }
+        result.append(copied) catch unreachable;
+    }
+
+    return result;
 }

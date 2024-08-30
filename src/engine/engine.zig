@@ -24,6 +24,10 @@ pub fn init(allocator: *Allocator) !void {
 
     display.init(allocator);
 
+    try @import("../.temp/script_run.zig").register();
+
+    try scenes.load("default");
+
     // try @import("../.temp/script_run.zig").register();
 }
 

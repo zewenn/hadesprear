@@ -32,7 +32,19 @@ pub fn deinit() void {
     event_map.deinit();
 }
 
-pub fn on(comptime id: EngineEvents, comptime func: map_fn_type) !void {
+pub fn clear() void {
+    var kIt = event_map.keyIterator();
+
+    while (kIt.next()) |item| {
+        const arr = event_map.get(item.*);
+        if (arr != null) arr.?.deinit();
+
+        _ = event_map.remove(item.*);
+    }
+    event_map.clearAndFree();
+}
+
+pub fn on(comptime id: EngineEvents, func: map_fn_type) !void {
     const data = event_map.get(id);
 
     if (data == null) {

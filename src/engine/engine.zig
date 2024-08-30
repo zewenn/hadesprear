@@ -6,6 +6,7 @@ pub const ecs = @import("./ecs/ecs.zig");
 pub const assets = @import("./assets.zig");
 
 pub const events = @import("./events.zig");
+pub const scenes = @import("./scenes.zig");
 
 pub const display = @import("./display.zig");
 pub const rl = @import("raylib");
@@ -17,15 +18,13 @@ pub inline fn compile() !void {
 pub fn init(allocator: *Allocator) !void {
     ecs.init(allocator);
     events.init(allocator);
+    scenes.init(allocator);
 
     try assets.init(allocator);
 
     display.init(allocator);
 
-    try @import("../.temp/script_run.zig").register();
-
-    try events.call(.Awake);
-    try events.call(.Init);
+    // try @import("../.temp/script_run.zig").register();
 }
 
 pub fn deinit() !void {
@@ -33,6 +32,7 @@ pub fn deinit() !void {
 
     display.deinit();
     assets.deinit();
+    scenes.deinit();
     events.deinit();
     ecs.deinit();
 }

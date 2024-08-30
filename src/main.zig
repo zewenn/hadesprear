@@ -15,6 +15,13 @@ pub fn main() !void {
     try e.init(&allocator);
     defer e.deinit() catch void;
 
+    const player_script = @import("./app/[default]/player.zig");
+    try e.scenes.register("default", e.scenes.Script{
+        .eAwake = player_script.awake,
+    });
+
+    try e.scenes.load("default");
+
     // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 1280;

@@ -4,11 +4,14 @@ const Allocator = @import("std").mem.Allocator;
 const z = @import("./z/z.zig");
 
 pub const Image = rl.Image;
+pub const Sound = rl.Sound;
+pub const Wave = rl.Wave;
 
 const filenames = @import("../.temp/filenames.zig").Filenames;
 var files: [filenames.len][]const u8 = undefined;
 
 var image_map: std.StringHashMap(Image) = undefined;
+var wave_map: std.StringHashMap(Wave) = undefined;
 var alloc: *Allocator = undefined;
 
 pub inline fn compile() !void {
@@ -27,20 +30,44 @@ pub inline fn compile() !void {
 }
 
 pub fn init(allocator: *Allocator) !void {
+    z.dprint("[MODULE] ASSETS: LOADING...", .{});
     alloc = allocator;
-    image_map = std.StringHashMap(Image).init(allocator.*);
+    image_map = std.StringHashMap(Image).init(alloc.*);
+    wave_map = std.StringHashMap(Wave).init(alloc.*);
 
     // const testimg = try Image.loadFromMemory(files[0], 4);
     // std.debug.print("{any}", .{getPixelData(&testimg, .{ .x = 0, .y = 0 })});
 
     for (filenames, files) |name, data| {
-        const img = rl.loadImageFromMemory(".png", data);
-        try image_map.put(name, img);
+        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "png")) {
+            const img = rl.loadImageFromMemory(".png", data);
+            try image_map.put(name, img);
+        }
+        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "mp3")) {
+            const wave = rl.loadWaveFromMemory(".mp3", data);
+            try wave_map.put(name, wave);
+        }
     }
+    z.dprint("[MODULE] ASSETS: LOADED", .{});
 }
 
-pub fn get(id: []const u8) ?Image {
-    return image_map.get(id);
+/// Caller owns the returned memory!
+pub fn get(T: type, id: []const u8) ?T {
+    if (T == rl.Image) {
+        if (image_map.getPtr(id)) |img| {
+            return rl.imageCopy(img.*);
+        }
+        return null;
+    }
+    if (T == rl.Sound) {
+        if (wave_map.get(id)) |wav| {
+            const sound = rl.loadSoundFromWave(wav);
+            return sound;
+        }
+        return null;
+    }
+    z.dprint("ASSETS: File type not supported", .{});
+    return null;
 }
 
 pub fn deinit() void {
@@ -51,4 +78,12 @@ pub fn deinit() void {
         }
     }
     image_map.deinit();
+
+    var wkIt = wave_map.keyIterator();
+    while (wkIt.next()) |key| {
+        if (wave_map.get(key.*)) |wave| {
+            rl.unloadWave(wave);
+        }
+    }
+    wave_map.deinit();
 }

@@ -111,25 +111,25 @@ pub fn build(b: *std.Build) !void {
                 writer.print("\ttry sc.register(\"{s}\", sc.Script", .{scene_name}) catch unreachable;
                 _ = writer.write("{\n") catch unreachable;
 
-                if (Scontents.find("awake(") != null) {
+                if (Scontents.find("\npub fn awake(") != null) {
                     writer.print(
                         "\t\t.eAwake = @import(\"../app/{s}/{s}\").awake,\n",
                         .{ files_dir, entry.name },
                     ) catch unreachable;
                 }
-                if (Scontents.find("init(") != null) {
+                if (Scontents.find("\npub fn init(") != null) {
                     writer.print(
                         "\t\t.eInit = @import(\"../app/{s}/{s}\").init,\n",
                         .{ files_dir, entry.name },
                     ) catch unreachable;
                 }
-                if (Scontents.find("update(") != null) {
+                if (Scontents.find("\npub fn update(") != null) {
                     writer.print(
                         "\t\t.eUpdate = @import(\"../app/{s}/{s}\").update,\n",
                         .{ files_dir, entry.name },
                     ) catch unreachable;
                 }
-                if (Scontents.find("deinit(") != null) {
+                if (Scontents.find("\npub fn deinit(") != null) {
                     writer.print(
                         "\t\t.eDeinit = @import(\"../app/{s}/{s}\").deinit,\n",
                         .{ files_dir, entry.name },

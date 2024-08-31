@@ -11,18 +11,28 @@ pub fn main() !void {
 
     var allocator = gpa.allocator();
 
-    try e.compile();
-    try e.init(&allocator);
-    defer e.deinit() catch void;
-
-
     // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 1280;
     const screenHeight = 720;
 
-    rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
+    rl.initWindow(
+        screenWidth,
+        screenHeight,
+        "HADESPEAR",
+    );
     defer rl.closeWindow(); // Close window and OpenGL context
+
+    rl.initAudioDevice();
+    defer rl.closeAudioDevice();
+
+    if (!rl.isAudioDeviceReady()) {
+        e.z.dprint("Error initalising audio devide", .{});
+    }
+
+    try e.compile();
+    try e.init(&allocator);
+    defer e.deinit() catch void;
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -30,11 +40,5 @@ pub fn main() !void {
     // Main game loop
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
         e.update();
-
-        // rl.beginDrawing();
-
-        // rl.clearBackground(rl.Color.white);
-
-        // defer rl.endDrawing();
     }
 }

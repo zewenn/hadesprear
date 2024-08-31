@@ -19,6 +19,7 @@ pub fn init(allocator: *Allocator) void {
     alloc = allocator;
 
     PreviousMap = std.StringHashMap(Previous).init(alloc.*);
+    z.dprint("[MODULE] DISPLAY: LOADED", .{});
 }
 
 pub fn deinit() void {
@@ -103,13 +104,12 @@ pub fn update() void {
             continue;
         }
 
-        if (assets.get(display.sprite)) |_img| {
-            img = rl.imageCopy(_img);
+        if (assets.get(rl.Image, display.sprite)) |_img| {
+            img = _img;
         } else {
             std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
             continue;
         }
-
 
         switch (display.scaling) {
             .normal => rl.imageResize(
@@ -128,10 +128,6 @@ pub fn update() void {
             &img,
             @intFromFloat(transform.rotation.z),
         );
-
-        z.dprint("entity: {s}", .{ entity.id });
-        z.dprint("image: data: {any}", .{ img });
-        
 
         texture = rl.loadTextureFromImage(img);
         prev.texture = texture;

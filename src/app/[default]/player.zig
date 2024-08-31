@@ -1,5 +1,6 @@
 const std = @import("std");
 const e = @import("../../engine/engine.zig");
+const entity = @import("../entity.zig");
 
 // ===================== [Entity] =====================
 
@@ -9,10 +10,11 @@ var Player: *e.ecs.Entity = undefined;
 
 var pDisplay: e.ecs.cDisplay = undefined;
 var pTransform: e.ecs.cTransform = undefined;
+var pEntityStats: entity.EntityStats = undefined;
 
 // ===================== [Others] =====================
 
-// TODO: Add other things here
+var menu_music: e.Sound = undefined;
 
 // ===================== [Events] =====================
 
@@ -27,37 +29,49 @@ pub fn awake() void {
     }
     {
         pTransform = .{
-            .position = e.rl.Vector2.init(0, 0),
-            .rotation = e.rl.Vector3.init(0, 0, 0),
-            .scale = e.rl.Vector2.init(128, 128),
+            .position = e.Vector2.init(0, 0),
+            .rotation = e.Vector3.init(0, 0, 0),
+            .scale = e.Vector2.init(64, 64),
         };
         Player.attach(&pTransform, "transform") catch unreachable;
     }
+    {
+        pEntityStats = .{
+            .movement_speed = 10,
+        };
+        Player.attach(&pEntityStats, "stats") catch unreachable;
+    }
+
+    menu_music = e.assets.get(e.Sound, "menu.mp3").?;
 }
 
 pub fn init() void {
     e.z.dprint("Hello again!", .{});
+    e.playSound(menu_music);
 }
 
 pub fn update() void {
-    var moveVector = e.rl.Vector2.init(0, 0);
+    var moveVector = e.Vector2.init(0, 0);
 
-    if (e.rl.isKeyDown(.key_w)) {
+    if (e.isKeyDown(.key_w)) {
         moveVector.y -= 1;
     }
-    if (e.rl.isKeyDown(.key_s)) {
+    if (e.isKeyDown(.key_s)) {
         moveVector.y += 1;
     }
-    if (e.rl.isKeyDown(.key_a)) {
+    if (e.isKeyDown(.key_a)) {
         moveVector.x -= 1;
     }
-    if (e.rl.isKeyDown(.key_d)) {
+    if (e.isKeyDown(.key_d)) {
         moveVector.x += 1;
     }
 
     const normVec = moveVector.normalize();
-    pTransform.position.x += normVec.x;
-    pTransform.position.y += normVec.y;
+    pTransform.position.x += normVec.x * pEntityStats.movement_speed;
+    pTransform.position.y += normVec.y * pEntityStats.movement_speed;
 }
 
-pub fn deinit() void {}
+pub fn deinit() void {
+    e.stopSound(menu_music);
+    e.unloadSound(menu_music);
+}

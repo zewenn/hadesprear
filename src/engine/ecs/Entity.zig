@@ -37,7 +37,7 @@ pub fn init(
 pub fn attach(self: *Self, component: *anyopaque, id: []const u8) !void {
     try self.components.put(
         id,
-        @as(*anyopaque, @ptrCast(component)),
+        component,
     );
 }
 // pub fn attach(self: *Self, comptime T: type, component: *T, id: []const u8) !void {

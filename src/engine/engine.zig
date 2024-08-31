@@ -15,6 +15,8 @@ pub inline fn compile() !void {
     try assets.compile();
 }
 
+pub usingnamespace rl;
+
 pub fn init(allocator: *Allocator) !void {
     ecs.init(allocator);
     events.init(allocator);

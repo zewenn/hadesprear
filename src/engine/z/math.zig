@@ -31,7 +31,7 @@ pub fn div(numerator: anytype, denominator: anytype) ?f128 {
 
     if (d == 0) return null;
 
-    return std.math.divTrunc(f128, n, d) catch null;
+    return n / d;
 }
 
 pub fn min(value1: anytype, value2: anytype) ?f128 {

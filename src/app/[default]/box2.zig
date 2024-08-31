@@ -18,7 +18,7 @@ var collider: e.ecs.cCollider = undefined;
 // ===================== [Events] =====================
 
 pub fn awake() void {
-    box = e.ecs.newEntity("box") catch {
+    box = e.ecs.newEntity("box2") catch {
         e.z.panic("box entity couldn't be created :O");
     };
     {
@@ -32,7 +32,7 @@ pub fn awake() void {
     }
     {
         transform = .{
-            .position = e.Vector2.init(64, 0),
+            .position = e.Vector2.init(-64, 0),
             .rotation = e.Vector3.init(0, 0, 0),
             .scale = e.Vector2.init(64, 64),
         };
@@ -51,8 +51,8 @@ pub fn awake() void {
     {
         collider = .{
             .rect = e.Rectangle.init(0, 0, 64, 64),
-            .weight = 1,
-            .dynamic = true,
+            .weight = 6,
+            .dynamic = false,
         };
         box.attach(&collider, "collider") catch {
             e.z.panic("box's collider couldn't be attache");

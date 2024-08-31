@@ -25,8 +25,11 @@ pub fn Array(comptime T: type, comptime len: usize, comptime val: [len]T) type {
 }
 
 pub fn StringEqual(string1: []const u8, string2: []const u8) bool {
+    if (string1.len != string2.len) return false;
+
     for (string1, string2) |l1, l2| {
         if (l1 != l2) return false;
     }
+
     return true;
 }

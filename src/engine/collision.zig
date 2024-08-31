@@ -103,7 +103,7 @@ pub fn update(alloc: *Allocator) !void {
     const entities = try ecs.getEntities("collider");
     defer alloc.free(entities);
 
-    for (entities) |e| {
+    dynamic: for (entities) |e| {
         const query_e_transform = e.get(ecs.cTransform, "transform");
         if (query_e_transform == null) continue;
 
@@ -113,7 +113,7 @@ pub fn update(alloc: *Allocator) !void {
 
         const e_collider = e.get(ecs.cCollider, "collider").?;
 
-        if (!e_collider.dynamic) continue;
+        if (!e_collider.dynamic) continue :dynamic;
 
         const e_rect = rl.Rectangle.init(
             e_collider.rect.x + e_transform.position.x,
@@ -122,9 +122,11 @@ pub fn update(alloc: *Allocator) !void {
             e_collider.rect.height,
         );
 
-        for (entities) |other| {
+        other: for (entities) |other| {
+            if (z.arrays.StringEqual(e.id, other.id)) continue :other;
+
             const query_other_transform = other.get(ecs.cTransform, "transform");
-            if (query_other_transform == null) continue;
+            if (query_other_transform == null) continue :other;
 
             const other_transform = query_other_transform.?;
 
@@ -137,7 +139,7 @@ pub fn update(alloc: *Allocator) !void {
                 other_collider.rect.height,
             );
 
-            if (!e_rect.checkCollision(other_rect)) continue;
+            if (!e_rect.checkCollision(other_rect)) continue :other;
 
             // Collision Happening
             const e_distances = Distances{
@@ -185,7 +187,7 @@ pub fn update(alloc: *Allocator) !void {
 
             if (!other_collider.dynamic) {
                 moveBack(e_distances, e_transform, e_collider, other_transform, other_collider, 1);
-                continue;
+                continue :other;
             }
 
             const other_distances = Distances{

@@ -85,6 +85,12 @@ pub fn update() void {
     if (e.isKeyDown(.key_d)) {
         moveVector.x += 1;
     }
+    if (e.isKeyDown(.key_q)) {
+        pTransform.rotate(-10);
+    }
+    if (e.isKeyDown(.key_e)) {
+        pTransform.rotate(10);
+    }
 
     const normVec = moveVector.normalize();
     pTransform.position.x += normVec.x * pEntityStats.movement_speed;

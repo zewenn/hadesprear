@@ -16,6 +16,22 @@ pub const Transform = struct {
 
         return true;
     }
+
+    pub fn rotate(self: *Self, by: f32) void {
+        const scale = 359 + 360;
+        var new_rot: f32 = self.rotation.z + by;
+
+        if (new_rot > 360) {
+            const rem: f32 = @rem(new_rot - 360, scale);
+            new_rot = @as(f32, -359) + rem;
+        }
+        if (new_rot < -359) {
+            const rem: f32 = @rem(new_rot + 359, scale);
+            new_rot = @as(f32, 360) - rem;
+        }
+
+        self.rotation.z = new_rot;
+    }
 };
 
 pub const Display = struct {
@@ -25,7 +41,8 @@ pub const Display = struct {
     };
 
     sprite: []const u8,
-    scaling: scalings,
+    scaling: scalings = .normal,
+    tint: rl.Color = rl.Color.white,
 };
 
 pub const Collider = struct {

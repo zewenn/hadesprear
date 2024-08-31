@@ -184,16 +184,16 @@ pub fn update() void {
             ),
         }
 
-        rl.imageRotate(
-            &img,
-            @intFromFloat(transform.rotation.z),
-        );
+        // rl.imageRotate(
+        //     &img,
+        //     @intFromFloat(transform.rotation.z),
+        // );
 
         rl.unloadTexture(texture);
         texture = rl.loadTextureFromImage(img);
         prev.texture = texture;
         // defer rl.unloadTexture(texture);
-        drawTetxure(texture, transform, rl.Color.white);
+        drawTetxure(texture, transform, display.tint);
     }
 }
 
@@ -208,13 +208,15 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) voi
     y -= z.math.to_f128(camera.position.y).?;
     y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
 
-    const ix = z.math.f128_to(i32, x).?;
-    const iy = z.math.f128_to(i32, y).?;
+    const ix = z.math.f128_to(f32, x).?;
+    const iy = z.math.f128_to(f32, y).?;
 
-    rl.drawTexture(
+    rl.drawTexturePro(
         texture,
-        ix,
-        iy,
+        rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
+        rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
+        rl.Vector2.init(trnsfrm.scale.x / 2, trnsfrm.scale.y / 2),
+        trnsfrm.rotation.z,
         tint,
     );
 }

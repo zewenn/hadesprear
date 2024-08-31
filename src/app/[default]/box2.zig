@@ -25,6 +25,7 @@ pub fn awake() void {
         display = e.ecs.components.Display{
             .sprite = "empty_icon.png",
             .scaling = .pixelate,
+            .tint = e.Color.red,
         };
         box.attach(&display, "display") catch {
             e.z.panic("Player's display couldn't be attached");

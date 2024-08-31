@@ -11,6 +11,51 @@ const Previous = struct {
     texture: ?rl.Texture2D = null,
 };
 
+pub const window = struct {
+    pub var size = rl.Vector2.init(0, 0);
+    pub var borderless = false;
+    pub var fullscreen = false;
+
+    pub fn resize(to: rl.Vector2) void {
+        rl.setWindowSize(
+            @intFromFloat(to.x),
+            @intFromFloat(to.y),
+        );
+        size = to;
+    }
+
+    pub fn toggleBorderless() void {
+        if (borderless) {
+            resize(rl.Vector2.init(1280, 720));
+        } else {
+            size = rl.Vector2.init(
+                @floatFromInt(rl.getScreenWidth()),
+                @floatFromInt(rl.getScreenHeight()),
+            );
+        }
+        borderless = !borderless;
+        rl.toggleBorderlessWindowed();
+    }
+
+    pub fn toggleFullscreen() void {
+        if (fullscreen) {
+            resize(rl.Vector2.init(1280, 720));
+        } else {
+            size = rl.Vector2.init(
+                @floatFromInt(rl.getScreenWidth()),
+                @floatFromInt(rl.getScreenHeight()),
+            );
+        }
+        fullscreen = !fullscreen;
+        rl.toggleFullscreen();
+    }
+};
+
+pub const camera = struct {
+    pub var position = rl.Vector2.init(0, 0);
+    pub var zoom: f32 = 1;
+};
+
 /// Key: entity.id - Value: Previously rendered data
 var PreviousMap: std.StringHashMap(Previous) = undefined;
 var alloc: *Allocator = undefined;
@@ -47,7 +92,7 @@ pub fn update() void {
     while (KIt.next()) |key| {
         var entity = ecs.getEntity(key.*).?.*;
         var prev: *Previous = undefined;
-        var flag: bool = false;
+        // var flag: bool = false;
 
         if (PreviousMap.getPtr(entity.id)) |pr| {
             prev = pr;
@@ -74,35 +119,37 @@ pub fn update() void {
             display = _display.*;
         } else continue;
 
-        if (prev.transform) |ptransform| {
-            if (!transform.equals(ptransform)) {
-                prev.transform = transform;
-                flag = true;
-            }
-        } else flag = true;
+        // if (prev.transform) |ptransform| {
+        //     if (transform.rotation.equals(ptransform.rotation) == 0 or
+        //         transform.scale.equals(ptransform.scale) == 0)
+        //     {
+        //         prev.transform = transform;
+        //         flag = true;
+        //     }
+        // } else {flag = true;}
 
-        if (prev.display) |pdisplay| {
-            if (!z.arrays.StringEqual(
-                display.sprite,
-                pdisplay.sprite,
-            )) {
-                prev.display = display;
-                flag = true;
-            }
-        } else flag = true;
+        // if (prev.display) |pdisplay| {
+        //     if (!z.arrays.StringEqual(
+        //         display.sprite,
+        //         pdisplay.sprite,
+        //     )) {
+        //         prev.display = display;
+        //         flag = true;
+        //     }
+        // } else flag = true;
 
-        if (prev.texture) |_texture| {
-            if (!flag) {
-                texture = _texture;
-            } else {
-                rl.unloadTexture(_texture);
-            }
-        } else flag = true;
+        // if (prev.texture) |_texture| {
+        //     if (!flag) {
+        //         texture = _texture;
+        //     } else {
+        //         rl.unloadTexture(_texture);
+        //     }
+        // } else flag = true;
 
-        if (!flag) {
-            drawTetxure(texture, transform.position, rl.Color.white);
-            continue;
-        }
+        // if (!flag) {
+        //     drawTetxure(texture, transform.position, rl.Color.white);
+        //     continue;
+        // }
 
         if (assets.get(rl.Image, display.sprite)) |_img| {
             img = _img;
@@ -114,13 +161,13 @@ pub fn update() void {
         switch (display.scaling) {
             .normal => rl.imageResize(
                 &img,
-                @intFromFloat(transform.scale.x),
-                @intFromFloat(transform.scale.y),
+                @intFromFloat(transform.scale.x * camera.zoom),
+                @intFromFloat(transform.scale.y * camera.zoom),
             ),
             .pixelate => rl.imageResizeNN(
                 &img,
-                @intFromFloat(transform.scale.x),
-                @intFromFloat(transform.scale.y),
+                @intFromFloat(transform.scale.x * camera.zoom),
+                @intFromFloat(transform.scale.y * camera.zoom),
             ),
         }
 
@@ -132,15 +179,28 @@ pub fn update() void {
         texture = rl.loadTextureFromImage(img);
         prev.texture = texture;
         // defer rl.unloadTexture(texture);
-        drawTetxure(texture, transform.position, rl.Color.white);
+        drawTetxure(texture, transform, rl.Color.white);
     }
 }
 
-fn drawTetxure(texture: rl.Texture, pos: rl.Vector2, tint: rl.Color) void {
+fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) void {
+    var x = z.math.div(window.size.x, 2).?;
+    x += z.math.to_f128(trnsfrm.position.x).?;
+    x -= z.math.to_f128(camera.position.x).?;
+    x -= z.math.div(trnsfrm.scale.x * camera.zoom, 2).?;
+
+    var y = z.math.div(window.size.y, 2).?;
+    y += z.math.to_f128(trnsfrm.position.y).?;
+    y -= z.math.to_f128(camera.position.y).?;
+    y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
+
+    const ix = z.math.f128_to(i32, x).?;
+    const iy = z.math.f128_to(i32, y).?;
+
     rl.drawTexture(
         texture,
-        @intFromFloat(pos.x),
-        @intFromFloat(pos.y),
+        ix,
+        iy,
         tint,
     );
 }

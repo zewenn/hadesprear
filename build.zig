@@ -9,7 +9,7 @@ pub fn build(b: *std.Build) !void {
 
     var allocator = gpa.allocator();
 
-    {
+    filenames: {
         const files_dir = "./src/assets/";
         const output_file = std.fs.cwd().createFile(
             "src/.temp/filenames.zig",
@@ -42,9 +42,10 @@ pub fn build(b: *std.Build) !void {
             }
         }
         _ = writer.write("\n};") catch unreachable;
+        break :filenames;
     }
-    // Handling Scripts
-    {
+    // Handling Scenes & Scripts
+    scenes: {
         const output_file = std.fs.cwd().createFile(
             "src/.temp/script_run.zig",
             .{
@@ -145,6 +146,7 @@ pub fn build(b: *std.Build) !void {
 
         }
         _ = writer.write("\n}") catch unreachable;
+        break :scenes;
     }
 
     const target = b.standardTargetOptions(.{});

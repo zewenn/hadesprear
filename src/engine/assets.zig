@@ -47,6 +47,10 @@ pub fn init(allocator: *Allocator) !void {
             const wave = rl.loadWaveFromMemory(".mp3", data);
             try wave_map.put(name, wave);
         }
+        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "wav")) {
+            const wave = rl.loadWaveFromMemory(".wav", data);
+            try wave_map.put(name, wave);
+        }
     }
     z.dprint("[MODULE] ASSETS: LOADED", .{});
 }

@@ -15,6 +15,9 @@ pub inline fn compile() !void {
     try assets.compile();
 }
 
+pub const window = display.window;
+pub const camera = display.camera;
+
 pub usingnamespace rl;
 
 pub fn init(allocator: *Allocator) !void {
@@ -29,8 +32,6 @@ pub fn init(allocator: *Allocator) !void {
     try @import("../.temp/script_run.zig").register();
 
     try scenes.load("default");
-
-    // try @import("../.temp/script_run.zig").register();
 }
 
 pub fn deinit() !void {

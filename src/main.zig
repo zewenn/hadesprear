@@ -21,6 +21,7 @@ pub fn main() !void {
         screenHeight,
         "HADESPEAR",
     );
+    e.display.window.resize(e.Vector2.init(1280, 720));
     defer rl.closeWindow(); // Close window and OpenGL context
 
     rl.initAudioDevice();

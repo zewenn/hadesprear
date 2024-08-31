@@ -19,13 +19,17 @@ var menu_music: e.Sound = undefined;
 // ===================== [Events] =====================
 
 pub fn awake() void {
-    Player = e.ecs.newEntity("Player") catch unreachable;
+    Player = e.ecs.newEntity("Player") catch {
+        e.z.panic("Player entity couldn't be created :O");
+    };
     {
         pDisplay = e.ecs.components.Display{
             .sprite = "player_left_0.png",
             .scaling = .pixelate,
         };
-        Player.attach(&pDisplay, "display") catch unreachable;
+        Player.attach(&pDisplay, "display") catch {
+            e.z.panic("Player's display couldn't be attached");
+        };
     }
     {
         pTransform = .{
@@ -33,13 +37,17 @@ pub fn awake() void {
             .rotation = e.Vector3.init(0, 0, 0),
             .scale = e.Vector2.init(64, 64),
         };
-        Player.attach(&pTransform, "transform") catch unreachable;
+        Player.attach(&pTransform, "transform") catch {
+            e.z.panic("Player's transform couldn't be attached");
+        };
     }
     {
         pEntityStats = .{
             .movement_speed = 10,
         };
-        Player.attach(&pEntityStats, "stats") catch unreachable;
+        Player.attach(&pEntityStats, "stats") catch {
+            e.z.panic("Player's stats couldn't be attache");
+        };
     }
 
     menu_music = e.assets.get(e.Sound, "menu.mp3").?;
@@ -69,6 +77,8 @@ pub fn update() void {
     const normVec = moveVector.normalize();
     pTransform.position.x += normVec.x * pEntityStats.movement_speed;
     pTransform.position.y += normVec.y * pEntityStats.movement_speed;
+
+    e.camera.position = pTransform.position;
 }
 
 pub fn deinit() void {

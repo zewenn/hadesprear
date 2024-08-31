@@ -52,10 +52,10 @@ pub fn clear() void {
 }
 
 pub fn register(comptime id: String, script: Script) !void {
-    const data = script_map.get(id);
+    const data = script_map.getPtr(id);
 
     if (data) |_data| {
-        try @constCast(&_data).append(script);
+        try _data.append(script);
         return;
     }
 

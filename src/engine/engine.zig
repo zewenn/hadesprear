@@ -9,6 +9,7 @@ pub const events = @import("./events.zig");
 pub const scenes = @import("./scenes.zig");
 
 pub const display = @import("./display.zig");
+pub const collision = @import("./collision.zig");
 pub const rl = @import("raylib");
 
 pub inline fn compile() !void {
@@ -44,7 +45,9 @@ pub fn deinit() !void {
     ecs.deinit();
 }
 
-pub fn update() void {
+pub fn update(allocator: *Allocator) !void {
     events.call(.Update) catch void;
+    try collision.update(allocator);
+    camera.update();
     display.update();
 }

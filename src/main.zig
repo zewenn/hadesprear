@@ -40,6 +40,6 @@ pub fn main() !void {
 
     // Main game loop
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
-        e.update();
+        e.update(&allocator) catch {};
     }
 }

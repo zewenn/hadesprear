@@ -27,3 +27,9 @@ pub const Display = struct {
     sprite: []const u8,
     scaling: scalings,
 };
+
+pub const Collider = struct {
+    rect: rl.Rectangle,
+    weight: f32,
+    dynamic: bool,
+};

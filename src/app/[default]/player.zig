@@ -11,6 +11,7 @@ var Player: *e.ecs.Entity = undefined;
 var pDisplay: e.ecs.cDisplay = undefined;
 var pTransform: e.ecs.cTransform = undefined;
 var pEntityStats: entity.EntityStats = undefined;
+var pCollider: e.ecs.cCollider = undefined;
 
 // ===================== [Others] =====================
 
@@ -49,8 +50,19 @@ pub fn awake() void {
             e.z.panic("Player's stats couldn't be attache");
         };
     }
+    {
+        pCollider = .{
+            .rect = e.Rectangle.init(0, 0, 64, 64),
+            .dynamic = true,
+            .weight = 1,
+        };
+        Player.attach(&pCollider, "collider") catch {
+            e.z.panic("Player's collider couldn't be attache");
+        };
+    }
 
     menu_music = e.assets.get(e.Sound, "menu.mp3").?;
+    e.camera.follow(&(pTransform.position));
 }
 
 pub fn init() void {
@@ -77,8 +89,6 @@ pub fn update() void {
     const normVec = moveVector.normalize();
     pTransform.position.x += normVec.x * pEntityStats.movement_speed;
     pTransform.position.y += normVec.y * pEntityStats.movement_speed;
-
-    e.camera.position = pTransform.position;
 }
 
 pub fn deinit() void {

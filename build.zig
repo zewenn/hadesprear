@@ -95,13 +95,19 @@ pub fn build(b: *std.Build) !void {
             while (it.next() catch unreachable) |entry| {
                 if (entry.kind != .file) continue;
 
-                Ssub_path.concat("/") catch unreachable;
-                Ssub_path.concat(entry.name) catch unreachable;
+                var spath = Ssub_path.clone() catch unreachable;
+                defer spath.deinit();
 
-                const file_sub = (Ssub_path.toOwned() catch unreachable).?;
+                spath.concat("/") catch unreachable;
+                spath.concat(entry.name) catch unreachable;
+
+                const file_sub = (spath.toOwned() catch unreachable).?;
                 defer allocator.free(file_sub);
 
+                // _ = writer.write(entry.name) catch unreachable;
+
                 const file = std.fs.cwd().openFile(file_sub, .{}) catch unreachable;
+                defer file.close();
 
                 const contents_u8 = file.readToEndAlloc(allocator, 8192) catch @panic("Couldn't read file");
                 defer allocator.free(contents_u8);

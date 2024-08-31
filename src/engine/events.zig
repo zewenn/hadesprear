@@ -45,17 +45,16 @@ pub fn clear() void {
 }
 
 pub fn on(comptime id: EngineEvents, func: map_fn_type) !void {
-    const data = event_map.get(id);
+    const data = event_map.getPtr(id);
 
-    if (data == null) {
-        var new_array = std.ArrayList(map_fn_struct_type).init(allocator_ptr.*);
-        try new_array.append(map_fn_struct_type{ .func = func });
-        try event_map.put(id, new_array);
+    if (data) |d| {
+        try d.append(map_fn_struct_type{ .func = func });
         return;
     }
 
-    try @constCast(&data.?).append(map_fn_struct_type{ .func = func });
-    return;
+    var new_array = std.ArrayList(map_fn_struct_type).init(allocator_ptr.*);
+    try new_array.append(map_fn_struct_type{ .func = func });
+    try event_map.put(id, new_array);
 }
 
 pub fn call(comptime id: EngineEvents) !void {

@@ -54,6 +54,18 @@ pub const window = struct {
 pub const camera = struct {
     pub var position = rl.Vector2.init(0, 0);
     pub var zoom: f32 = 1;
+
+    pub var following: ?*rl.Vector2 = null;
+
+    pub fn follow(vec: *rl.Vector2) void {
+        following = vec;
+    }
+
+    pub fn update() void {
+        if (following) |v| {
+            position = v.*;
+        }
+    }
 };
 
 /// Key: entity.id - Value: Previously rendered data
@@ -92,6 +104,7 @@ pub fn update() void {
     while (KIt.next()) |key| {
         var entity = ecs.getEntity(key.*).?.*;
         var prev: *Previous = undefined;
+
         // var flag: bool = false;
 
         if (PreviousMap.getPtr(entity.id)) |pr| {
@@ -176,6 +189,7 @@ pub fn update() void {
             @intFromFloat(transform.rotation.z),
         );
 
+        rl.unloadTexture(texture);
         texture = rl.loadTextureFromImage(img);
         prev.texture = texture;
         // defer rl.unloadTexture(texture);

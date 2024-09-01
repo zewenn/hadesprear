@@ -68,6 +68,14 @@ pub fn play(self: *Self, id: []const u8) !void {
     }
 }
 
+pub fn isPlaying(self: *Self, id: []const u8) bool {
+    const anim = self.animations.getPtr(id);
+    if (anim) |a| {
+        return a.playing;
+    }
+    return false;
+}
+
 pub fn stop(self: *Self, id: []const u8) void {
     const anim = self.animations.getPtr(id);
     if (anim) |animation| {
@@ -136,6 +144,11 @@ pub fn update(self: *Self) void {
 
         const current_kf = anim.getCurrent();
         const next_kf = anim.getNext();
+
+        if (next_kf == null and current_kf != null) {
+            self.applyKeyframe(current_kf.?);
+            continue;
+        }
 
         if (current_kf == null or next_kf == null) continue;
 

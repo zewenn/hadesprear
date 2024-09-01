@@ -50,18 +50,10 @@ pub fn init(
 }
 
 fn forwardsComp(_: void, a: u8, b: u8) bool {
-    if (a < b) {
-        return false;
-    } else {
-        return true;
-    }
+    return a < b;
 }
 fn backwardsComp(_: void, a: u8, b: u8) bool {
-    if (a < b) {
-        return false;
-    } else {
-        return true;
-    }
+    return b > a;
 }
 
 pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
@@ -74,8 +66,18 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
     switch (self.mode) {
-        .forwards => std.sort.insertion(u8, self.keys_slice.?, {}, forwardsComp),
-        .backwards => std.sort.insertion(u8, self.keys_slice.?, {}, backwardsComp),
+        .forwards => std.sort.insertion(
+            u8,
+            self.keys_slice.?,
+            {},
+            std.sort.asc(u8),
+        ),
+        .backwards => std.sort.insertion(
+            u8,
+            self.keys_slice.?,
+            {},
+            std.sort.desc(u8),
+        ),
     }
 
     self.transition_time_ms_per_kf = @as(
@@ -112,7 +114,7 @@ pub fn getCurrent(self: *Self) ?Keyframe {
 pub fn next(self: *Self) void {
     self.current_frame += 1;
 
-    if (self.keys_slice.?.len - 1 <= self.current_frame) {
+    if (self.keys_slice.?.len <= self.current_frame) {
         if (self.loop) {
             self.current_frame = 0;
             return;

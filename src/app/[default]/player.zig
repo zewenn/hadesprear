@@ -27,7 +27,7 @@ var h1Transform: e.ecs.cTransform = undefined;
 var menu_music: e.Sound = undefined;
 var allocator = std.heap.page_allocator;
 
-const HAND_DISTANCE: comptime_float = 32;
+const HAND_DISTANCE: comptime_float = 24;
 
 // ===================== [Events] =====================
 
@@ -92,7 +92,7 @@ pub fn awake() void {
             {
                 var rotateAnim = e.Animator.Animation.init(
                     &allocator,
-                    "rot",
+                    "walk_left",
                     e.Animator.interpolation.ease_in,
                     1,
                 );
@@ -101,15 +101,19 @@ pub fn awake() void {
                     rotateAnim.chain(
                         1,
                         .{
-                            .rotation = 0,
-                            .tint = e.Color.red,
+                            .sprite = "player_left_0.png",
                         },
                     );
                     rotateAnim.chain(
-                        100,
+                        50,
                         .{
-                            .rotation = 130,
-                            .tint = e.Color.white,
+                            .sprite = "player_left_1.png",
+                        },
+                    );
+                    rotateAnim.chain(
+                        99,
+                        .{
+                            .sprite = "player_left_0.png",
                         },
                     );
                 }
@@ -213,6 +217,10 @@ pub fn update() void {
     }
     if (e.isKeyDown(.key_e)) {
         pTransform.rotate(10);
+    }
+
+    if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
+        pAnimator.play("walk_left") catch {};
     }
 
     const normVec = moveVector.normalize();

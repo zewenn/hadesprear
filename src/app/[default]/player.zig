@@ -25,6 +25,8 @@ pub fn awake() void {
     Player = e.ecs.newEntity("Player") catch {
         e.z.panic("Player entity couldn't be created :O");
     };
+
+    // Display
     {
         pDisplay = e.ecs.components.Display{
             .sprite = "player_left_0.png",
@@ -34,6 +36,8 @@ pub fn awake() void {
             e.z.panic("Player's display couldn't be attached");
         };
     }
+
+    // Transform
     {
         pTransform = .{
             .position = e.Vector2.init(0, 0),
@@ -44,6 +48,8 @@ pub fn awake() void {
             e.z.panic("Player's transform couldn't be attached");
         };
     }
+
+    // Stats
     {
         pEntityStats = .{
             .movement_speed = 10,
@@ -52,6 +58,8 @@ pub fn awake() void {
             e.z.panic("Player's stats couldn't be attache");
         };
     }
+
+    // Collider
     {
         pCollider = .{
             .rect = e.Rectangle.init(0, 0, 64, 64),
@@ -62,6 +70,8 @@ pub fn awake() void {
             e.z.panic("Player's collider couldn't be attache");
         };
     }
+
+    // Animator
     {
         pAnimator = e.Animator.init(&allocator, Player) catch {
             e.z.panic("Couldn't create animator");
@@ -90,8 +100,11 @@ pub fn awake() void {
                     },
                 );
             }
-            pAnimator.chain(rotateAnim) catch unreachable;
+            pAnimator.chain(rotateAnim) catch e.z.panic("Couldn't chain rotateAnim :()");
         }
+        Player.attach(&pAnimator, "animator") catch {
+            e.z.panic("Couldn't attach animator to Player");
+        };
     }
 
     menu_music = e.assets.get(e.Sound, "menu.mp3").?;
@@ -99,7 +112,6 @@ pub fn awake() void {
 }
 
 pub fn init() void {
-    e.z.dprint("Hello again!", .{});
     e.playSound(menu_music);
     pAnimator.play("rot") catch unreachable;
 }

@@ -95,7 +95,6 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
     // Rotation
     if (kf.rotation) |v| {
-        z.dprint("rot: {d:.5}", .{v});
         self.transform.rotation.z = v;
     }
 
@@ -124,12 +123,6 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
 pub fn update(self: *Self) void {
     for (self.playing.items) |anim| {
-        z.dprint("anim \"{s}\" at frame: {d}/{d} | loop: {any}", .{
-            anim.id,
-            anim.current_frame,
-            anim.keys_slice.?.len - 1,
-            anim.loop,
-        });
         if (time.current > anim.next_keyframe_at) {
             anim.next();
             if (!anim.playing) {
@@ -140,8 +133,6 @@ pub fn update(self: *Self) void {
             anim.last_keyframe_at = time.current;
             anim.next_keyframe_at = time.current + anim.transition_time_ms_per_kf;
         }
-
-        z.dprint("kfs: {any} | c: {any}", .{ anim.keys_slice, anim.keys_slice.?[anim.current_frame] });
 
         const current_kf = anim.getCurrent();
         const next_kf = anim.getNext();

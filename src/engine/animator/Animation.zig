@@ -72,7 +72,6 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     defer keys_clone.deinit();
 
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
-    z.dprint("attaching: {d} - {any}", .{ percent, self.keys_slice.? });
 
     switch (self.mode) {
         .forwards => std.sort.insertion(u8, self.keys_slice.?, {}, forwardsComp),
@@ -118,7 +117,6 @@ pub fn next(self: *Self) void {
             self.current_frame = 0;
             return;
         }
-        z.dprint("playing: off", .{});
         self.current_frame = @as(u8, @intCast(self.keys_slice.?.len)) - 1;
         self.playing = false;
     }

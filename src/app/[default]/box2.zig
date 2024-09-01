@@ -60,36 +60,3 @@ pub fn awake() void {
         };
     }
 }
-
-// pub fn init() void {
-//     e.z.dprint("Hello again!", .{});
-//     e.playSound(menu_music);
-// }
-
-// pub fn update() void {
-//     var moveVector = e.Vector2.init(0, 0);
-
-//     if (e.isKeyDown(.key_w)) {
-//         moveVector.y -= 1;
-//     }
-//     if (e.isKeyDown(.key_s)) {
-//         moveVector.y += 1;
-//     }
-//     if (e.isKeyDown(.key_a)) {
-//         moveVector.x -= 1;
-//     }
-//     if (e.isKeyDown(.key_d)) {
-//         moveVector.x += 1;
-//     }
-
-//     const normVec = moveVector.normalize();
-//     transform.position.x += normVec.x * stats.movement_speed;
-//     transform.position.y += normVec.y * stats.movement_speed;
-
-//     e.camera.position = transform.position;
-// }
-
-// pub fn deinit() void {
-//     e.stopSound(menu_music);
-//     e.unloadSound(menu_music);
-// }

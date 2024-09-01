@@ -214,12 +214,35 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) voi
     const ix = z.math.f128_to(f32, x).?;
     const iy = z.math.f128_to(f32, y).?;
 
+    var origin: ?rl.Vector2 = trnsfrm.anchor;
+    if (origin == null) {
+        origin = rl.Vector2.init(0, 0);
+    }
+
+    // rl.drawRectanglePro(
+    //     rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
+    //     origin.?,
+    //     trnsfrm.rotation.z,
+    //     rl.Color.light_gray,
+    // );
+
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
         rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
-        rl.Vector2.init(trnsfrm.scale.x / 2, trnsfrm.scale.y / 2),
+        origin.?,
         trnsfrm.rotation.z,
         tint,
     );
+
+    // rl.drawLine(
+    //     @intFromFloat(ix),
+    //     @intFromFloat(iy),
+    //     @intFromFloat(ix - origin.?.x),
+    //     @intFromFloat(iy - origin.?.y),
+    //     rl.Color.yellow,
+    // );
+
+    // rl.drawCircle(@intFromFloat(ix), @intFromFloat(iy), 2, rl.Color.purple);
+    // rl.drawCircle(@intFromFloat(ix - origin.?.x), @intFromFloat(iy - origin.?.y), 2, rl.Color.red);
 }

@@ -8,6 +8,7 @@ pub const Transform = struct {
     position: rl.Vector2,
     rotation: rl.Vector3,
     scale: rl.Vector2,
+    anchor: ?rl.Vector2 = null,
 
     pub fn equals(self: *Self, other: Self) bool {
         if (self.position.equals(other.position) > 0) return false;

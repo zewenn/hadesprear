@@ -12,10 +12,12 @@ var pDisplay: e.ecs.cDisplay = undefined;
 var pTransform: e.ecs.cTransform = undefined;
 var pEntityStats: entity.EntityStats = undefined;
 var pCollider: e.ecs.cCollider = undefined;
+var pAnimator: e.Animator = undefined;
 
 // ===================== [Others] =====================
 
 var menu_music: e.Sound = undefined;
+var allocator = std.heap.page_allocator;
 
 // ===================== [Events] =====================
 
@@ -60,6 +62,37 @@ pub fn awake() void {
             e.z.panic("Player's collider couldn't be attache");
         };
     }
+    {
+        pAnimator = e.Animator.init(&allocator, Player) catch {
+            e.z.panic("Couldn't create animator");
+        };
+        {
+            var rotateAnim = e.Animator.Animation.init(
+                &allocator,
+                "rot",
+                e.Animator.interpolation.ease_in,
+                1,
+            );
+            // rotateAnim.loop = true;
+            {
+                rotateAnim.chain(
+                    1,
+                    .{
+                        .rotation = 0,
+                        .tint = e.Color.red,
+                    },
+                );
+                rotateAnim.chain(
+                    100,
+                    .{
+                        .rotation = 130,
+                        .tint = e.Color.white,
+                    },
+                );
+            }
+            pAnimator.chain(rotateAnim) catch unreachable;
+        }
+    }
 
     menu_music = e.assets.get(e.Sound, "menu.mp3").?;
     e.camera.follow(&(pTransform.position));
@@ -68,9 +101,11 @@ pub fn awake() void {
 pub fn init() void {
     e.z.dprint("Hello again!", .{});
     e.playSound(menu_music);
+    pAnimator.play("rot") catch unreachable;
 }
 
 pub fn update() void {
+    pAnimator.update();
     var moveVector = e.Vector2.init(0, 0);
 
     if (e.isKeyDown(.key_w)) {
@@ -100,4 +135,6 @@ pub fn update() void {
 pub fn deinit() void {
     e.stopSound(menu_music);
     e.unloadSound(menu_music);
+
+    pAnimator.deinit();
 }

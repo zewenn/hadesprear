@@ -107,8 +107,6 @@ pub fn update(alloc: *Allocator) !void {
         const query_e_transform = e.get(ecs.cTransform, "transform");
         if (query_e_transform == null) continue;
 
-        z.dprint("E: {s}", .{e.id});
-
         const e_transform = query_e_transform.?;
 
         const e_collider = e.get(ecs.cCollider, "collider").?;

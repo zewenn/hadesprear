@@ -94,6 +94,9 @@ pub fn deinit() void {
 }
 
 pub fn update() void {
+    rl.setTraceLogLevel(.log_error);
+    defer rl.setTraceLogLevel(.log_debug);
+
     rl.beginDrawing();
     defer rl.endDrawing();
 

@@ -8,9 +8,13 @@ pub const assets = @import("./assets.zig");
 pub const events = @import("./events.zig");
 pub const scenes = @import("./scenes.zig");
 
+pub const time = @import("./time.zig");
+
 pub const display = @import("./display.zig");
 pub const collision = @import("./collision.zig");
 pub const rl = @import("raylib");
+
+pub const Animator = @import("./animator/Animator.zig");
 
 pub inline fn compile() !void {
     try assets.compile();
@@ -22,6 +26,8 @@ pub const camera = display.camera;
 pub usingnamespace rl;
 
 pub fn init(allocator: *Allocator) !void {
+    time.start();
+
     ecs.init(allocator);
     events.init(allocator);
     scenes.init(allocator);
@@ -46,6 +52,8 @@ pub fn deinit() !void {
 }
 
 pub fn update(allocator: *Allocator) !void {
+    time.tick();
+
     events.call(.Update) catch void;
     try collision.update(allocator);
     camera.update();

@@ -52,8 +52,6 @@ pub fn getEntities(component_id: []const u8) ![]*Entity {
     while (it.next()) |key| {
         var value = entities.getPtr(key.*).?;
 
-        z.dprint("E: {s}", .{value.id});
-
         if (value.components.contains(component_id)) {
             try eList.append(value);
         }

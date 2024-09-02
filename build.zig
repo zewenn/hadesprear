@@ -3,6 +3,8 @@ const rlz = @import("raylib-zig");
 const Allocator = @import("std").mem.Allocator;
 const String = @import("./libs/zig-string.zig").String;
 
+const BUF_128MB = 1024000000;
+
 pub fn build(b: *std.Build) !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -110,7 +112,7 @@ pub fn build(b: *std.Build) !void {
                 defer file.close();
 
                 // Max buffer size is 128MB
-                const contents_u8 = file.readToEndAlloc(allocator, 1024000000) catch |err| switch (err) {
+                const contents_u8 = file.readToEndAlloc(allocator, BUF_128MB) catch |err| switch (err) {
                     error.FileTooBig => @panic("Maximum file size exceeded"),
                     else => @panic("Failed to read file"),
                 };

@@ -89,39 +89,78 @@ pub fn awake() void {
             pAnimator = e.Animator.init(&allocator, Player) catch {
                 e.z.panic("Couldn't create animator");
             };
-            {
-                var rotateAnim = e.Animator.Animation.init(
-                    &allocator,
-                    "walk_left",
-                    e.Animator.interpolation.ease_in,
-                    1,
-                );
-                // rotateAnim.loop = true;
-                {
-                    rotateAnim.chain(
-                        1,
-                        .{
-                            .sprite = "player_left_0.png",
-                        },
-                    );
-                    rotateAnim.chain(
-                        50,
-                        .{
-                            .sprite = "player_left_1.png",
-                        },
-                    );
-                    rotateAnim.chain(
-                        99,
-                        .{
-                            .sprite = "player_left_0.png",
-                        },
-                    );
-                }
-                pAnimator.chain(rotateAnim) catch e.z.panic("Couldn't chain rotateAnim :()");
-            }
             Player.attach(&pAnimator, "animator") catch {
                 e.z.panic("Couldn't attach animator to Player");
             };
+
+            // Walk left anim
+            {
+                var walk_left_anim = e.Animator.Animation.init(
+                    &allocator,
+                    "walk_left",
+                    e.Animator.interpolation.ease_in,
+                    0.25,
+                );
+                {
+                    walk_left_anim.chain(
+                        1,
+                        .{
+                            .sprite = "player_left_0.png",
+                            .rotation = 0,
+                        },
+                    );
+                    walk_left_anim.chain(
+                        2,
+                        .{
+                            .sprite = "player_left_1.png",
+                            .rotation = -2.5,
+                        },
+                    );
+                    walk_left_anim.chain(
+                        3,
+                        .{
+                            .sprite = "player_left_0.png",
+                            .rotation = 0,
+                        },
+                    );
+                }
+                pAnimator.chain(walk_left_anim) catch e.z.panic("Couldn't chain walk left anim  :()");
+            }
+
+            // Walk right anim
+            {
+                var walk_right_anim = e.Animator.Animation.init(
+                    &allocator,
+                    "walk_right",
+                    e.Animator.interpolation.ease_in,
+                    0.25,
+                );
+                // rotateAnim.loop = true;
+                {
+                    walk_right_anim.chain(
+                        1,
+                        .{
+                            .sprite = "player_right_0.png",
+                            .rotation = 0,
+                        },
+                    );
+                    walk_right_anim.chain(
+                        2,
+                        .{
+                            .sprite = "player_right_1.png",
+                            .rotation = 2.5,
+                        },
+                    );
+                    walk_right_anim.chain(
+                        3,
+                        .{
+                            .sprite = "player_right_0.png",
+                            .rotation = 0,
+                        },
+                    );
+                }
+                pAnimator.chain(walk_right_anim) catch e.z.panic("Couldn't chain walk right anim :()");
+            }
         }
     }
 
@@ -189,6 +228,7 @@ pub fn awake() void {
     }
 
     menu_music = e.assets.get(e.Sound, "menu.mp3").?;
+    e.setSoundVolume(menu_music, 0.25);
     e.camera.follow(&(pTransform.position));
 }
 
@@ -197,35 +237,53 @@ pub fn init() void {
 }
 
 pub fn update() void {
-    pAnimator.update();
     var moveVector = e.Vector2.init(0, 0);
 
-    if (e.isKeyDown(.key_w)) {
-        moveVector.y -= 1;
-    }
-    if (e.isKeyDown(.key_s)) {
-        moveVector.y += 1;
-    }
-    if (e.isKeyDown(.key_a)) {
-        moveVector.x -= 1;
-    }
-    if (e.isKeyDown(.key_d)) {
-        moveVector.x += 1;
-    }
-    if (e.isKeyDown(.key_q)) {
-        pTransform.rotate(-10);
-    }
-    if (e.isKeyDown(.key_e)) {
-        pTransform.rotate(10);
+    // Movement
+    {
+        if (e.isKeyDown(.key_w)) {
+            moveVector.y -= 1;
+        }
+        if (e.isKeyDown(.key_s)) {
+            moveVector.y += 1;
+        }
+        if (e.isKeyDown(.key_a)) {
+            moveVector.x -= 1;
+        }
+        if (e.isKeyDown(.key_d)) {
+            moveVector.x += 1;
+        }
+        if (e.isKeyDown(.key_q)) {
+            pTransform.rotate(-10);
+        }
+        if (e.isKeyDown(.key_e)) {
+            pTransform.rotate(10);
+        }
+
+        const normVec = moveVector.normalize();
+        pTransform.position.x += normVec.x * pEntityStats.movement_speed * e.getFrameTime();
+        pTransform.position.y += normVec.y * pEntityStats.movement_speed * e.getFrameTime();
     }
 
-    if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
-        pAnimator.play("walk_left") catch {};
-    }
+    // Animator
+    {
+        pAnimator.update();
+        if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
+            pAnimator.stop("walk_right");
+            pAnimator.play("walk_left") catch {};
+        }
+        if (moveVector.x > 0 and !pAnimator.isPlaying("walk_right")) {
+            pAnimator.stop("walk_left");
+            pAnimator.play("walk_right") catch {};
+        }
 
-    const normVec = moveVector.normalize();
-    pTransform.position.x += normVec.x * pEntityStats.movement_speed * e.getFrameTime();
-    pTransform.position.y += normVec.y * pEntityStats.movement_speed * e.getFrameTime();
+        if (moveVector.y != 0) {
+            if (!(pAnimator.isPlaying("walk_left") or pAnimator.isPlaying("walk_right"))) {
+                pAnimator.stop("walk_right");
+                pAnimator.play("walk_left") catch {};
+            }
+        }
+    }
 
     // Hands
     {
@@ -247,13 +305,13 @@ pub fn update() void {
         const rotation: f32 = std.math.radiansToDegrees(std.math.atan2(mouse_relative_pos.y, mouse_relative_pos.x)) - 90;
 
         h0Transform.position = .{
-            .x = pTransform.position.x + 24,
-            .y = pTransform.position.y + 24,
+            .x = pTransform.position.x + 0,
+            .y = pTransform.position.y + 0,
         };
         h0Transform.rotation.z = rotation;
         h1Transform.position = .{
-            .x = pTransform.position.x + 24,
-            .y = pTransform.position.y + 24,
+            .x = pTransform.position.x + 0,
+            .y = pTransform.position.y + 0,
         };
         h1Transform.rotation.z = rotation;
     }

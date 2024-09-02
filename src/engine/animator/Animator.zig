@@ -155,7 +155,7 @@ pub fn update(self: *Self) void {
         const curr = current_kf.?;
         const nxt = next_kf.?;
 
-        const p = @as(
+        const p: f32 = 1 - @as(
             f32,
             @floatCast(anim.next_keyframe_at - time.current),
         ) / @as(
@@ -163,10 +163,12 @@ pub fn update(self: *Self) void {
             @floatCast(anim.transition_time_ms_per_kf),
         );
 
-        self.applyKeyframe(anim.interpolateKeyframes(
-            curr,
-            nxt,
-            p,
-        ));
+        self.applyKeyframe(
+            anim.interpolateKeyframes(
+                curr,
+                nxt,
+                p,
+            ),
+        );
     }
 }

@@ -109,7 +109,11 @@ pub fn build(b: *std.Build) !void {
                 const file = std.fs.cwd().openFile(file_sub, .{}) catch unreachable;
                 defer file.close();
 
-                const contents_u8 = file.readToEndAlloc(allocator, 8192) catch @panic("Couldn't read file");
+                // Max buffer size is 128MB
+                const contents_u8 = file.readToEndAlloc(allocator, 1024000000) catch |err| switch (err) {
+                    error.FileTooBig => @panic("Maximum file size exceeded"),
+                    else => @panic("Failed to read file"),
+                };
                 defer allocator.free(contents_u8);
 
                 var Scontents = String.init_with_contents(allocator, contents_u8) catch unreachable;

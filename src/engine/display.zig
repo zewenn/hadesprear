@@ -204,26 +204,26 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) voi
     var x = z.math.div(window.size.x, 2).?;
     x += z.math.to_f128(trnsfrm.position.x).?;
     x -= z.math.to_f128(camera.position.x).?;
-    x -= z.math.div(trnsfrm.scale.x * camera.zoom, 2).?;
+    // x -= z.math.div(trnsfrm.scale.x * camera.zoom, 2).?;
 
     var y = z.math.div(window.size.y, 2).?;
     y += z.math.to_f128(trnsfrm.position.y).?;
     y -= z.math.to_f128(camera.position.y).?;
-    y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
+    // y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
 
     const ix = z.math.f128_to(f32, x).?;
     const iy = z.math.f128_to(f32, y).?;
 
     var origin: ?rl.Vector2 = trnsfrm.anchor;
     if (origin == null) {
-        origin = rl.Vector2.init(0, 0);
+        origin = rl.Vector2.init(trnsfrm.scale.x * camera.zoom / 2, trnsfrm.scale.y * camera.zoom / 2);
     }
 
     // rl.drawRectanglePro(
     //     rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
     //     origin.?,
     //     trnsfrm.rotation.z,
-    //     rl.Color.light_gray,
+    //     rl.Color.lime,
     // );
 
     rl.drawTexturePro(

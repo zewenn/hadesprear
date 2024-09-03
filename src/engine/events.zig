@@ -8,7 +8,7 @@ pub const EngineEvents = enum {
     Deinit,
 };
 
-const map_fn_type = *const fn () void;
+const map_fn_type = *const fn () anyerror!void;
 const map_fn_struct_type = struct { func: map_fn_type };
 const map_type = std.AutoHashMap(EngineEvents, std.ArrayListAligned(map_fn_struct_type, null));
 
@@ -65,7 +65,7 @@ pub fn call(comptime id: EngineEvents) !void {
     }
 
     for (data.?.items) |func_struct| {
-        func_struct.func();
+        try func_struct.func();
     }
 }
 

@@ -31,13 +31,11 @@ const HAND_DISTANCE: comptime_float = 24;
 
 // ===================== [Events] =====================
 
-pub fn awake() void {
+pub fn awake() !void {
 
     // Player
     {
-        Player = e.ecs.newEntity("Player") catch {
-            e.z.panic("Player entity couldn't be created :O");
-        };
+        Player = try e.ecs.newEntity("Player");
 
         // Display
         {
@@ -45,9 +43,7 @@ pub fn awake() void {
                 .sprite = "player_left_0.png",
                 .scaling = .pixelate,
             };
-            Player.attach(&pDisplay, "display") catch {
-                e.z.panic("Player's display couldn't be attached");
-            };
+            try Player.attach(&pDisplay, "display");
         }
 
         // Transform
@@ -57,9 +53,7 @@ pub fn awake() void {
                 .rotation = e.Vector3.init(0, 0, 0),
                 .scale = e.Vector2.init(64, 64),
             };
-            Player.attach(&pTransform, "transform") catch {
-                e.z.panic("Player's transform couldn't be attached");
-            };
+            try Player.attach(&pTransform, "transform");
         }
 
         // Stats
@@ -67,9 +61,7 @@ pub fn awake() void {
             pEntityStats = .{
                 .movement_speed = 350,
             };
-            Player.attach(&pEntityStats, "stats") catch {
-                e.z.panic("Player's stats couldn't be attache");
-            };
+            try Player.attach(&pEntityStats, "stats");
         }
 
         // Collider
@@ -79,19 +71,13 @@ pub fn awake() void {
                 .dynamic = true,
                 .weight = 1,
             };
-            Player.attach(&pCollider, "collider") catch {
-                e.z.panic("Player's collider couldn't be attache");
-            };
+            try Player.attach(&pCollider, "collider");
         }
 
         // Animator
         {
-            pAnimator = e.Animator.init(&allocator, Player) catch {
-                e.z.panic("Couldn't create animator");
-            };
-            Player.attach(&pAnimator, "animator") catch {
-                e.z.panic("Couldn't attach animator to Player");
-            };
+            pAnimator = try e.Animator.init(&allocator, Player);
+            try Player.attach(&pAnimator, "animator");
 
             // Walk left anim
             {
@@ -124,7 +110,7 @@ pub fn awake() void {
                         },
                     );
                 }
-                pAnimator.chain(walk_left_anim) catch e.z.panic("Couldn't chain walk left anim  :()");
+                try pAnimator.chain(walk_left_anim);
             }
 
             // Walk right anim
@@ -159,7 +145,7 @@ pub fn awake() void {
                         },
                     );
                 }
-                pAnimator.chain(walk_right_anim) catch e.z.panic("Couldn't chain walk right anim :()");
+                try pAnimator.chain(walk_right_anim);
             }
         }
     }
@@ -232,11 +218,11 @@ pub fn awake() void {
     e.camera.follow(&(pTransform.position));
 }
 
-pub fn init() void {
+pub fn init() !void {
     e.playSound(menu_music);
 }
 
-pub fn update() void {
+pub fn update() !void {
     var moveVector = e.Vector2.init(0, 0);
 
     // Movement
@@ -270,17 +256,17 @@ pub fn update() void {
         pAnimator.update();
         if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
             pAnimator.stop("walk_right");
-            pAnimator.play("walk_left") catch {};
+            try pAnimator.play("walk_left");
         }
         if (moveVector.x > 0 and !pAnimator.isPlaying("walk_right")) {
             pAnimator.stop("walk_left");
-            pAnimator.play("walk_right") catch {};
+            try pAnimator.play("walk_right");
         }
 
         if (moveVector.y != 0) {
             if (!(pAnimator.isPlaying("walk_left") or pAnimator.isPlaying("walk_right"))) {
                 pAnimator.stop("walk_right");
-                pAnimator.play("walk_left") catch {};
+                try pAnimator.play("walk_left");
             }
         }
     }
@@ -317,7 +303,7 @@ pub fn update() void {
     }
 }
 
-pub fn deinit() void {
+pub fn deinit() !void {
     e.stopSound(menu_music);
     e.unloadSound(menu_music);
 

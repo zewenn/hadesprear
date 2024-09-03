@@ -6,7 +6,7 @@ const events = @import("./events.zig");
 const Allocator = @import("std").mem.Allocator;
 
 pub const Script = struct {
-    const fn_type: type = *const fn () void;
+    const fn_type: type = *const fn () anyerror!void;
     const Self = @This();
 
     eAwake: ?fn_type = null,
@@ -15,7 +15,7 @@ pub const Script = struct {
     eDeinit: ?fn_type = null,
 };
 
-const map_fn_type = *const fn () void;
+const map_fn_type = *const fn () anyerror!void;
 const String = []const u8;
 const map_type = std.StringHashMap(std.ArrayList(Script));
 

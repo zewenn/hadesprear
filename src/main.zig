@@ -33,7 +33,7 @@ pub fn main() !void {
 
     try e.compile();
     try e.init(&allocator);
-    defer e.deinit() catch void;
+    defer e.deinit() catch {};
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------

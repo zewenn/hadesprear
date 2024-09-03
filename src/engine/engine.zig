@@ -54,7 +54,7 @@ pub fn deinit() !void {
 pub fn update(allocator: *Allocator) !void {
     time.tick();
 
-    events.call(.Update) catch void;
+    try events.call(.Update);
     try collision.update(allocator);
     camera.update();
     display.update();

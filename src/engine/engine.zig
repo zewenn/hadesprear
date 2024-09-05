@@ -13,6 +13,7 @@ pub const time = @import("./time.zig");
 pub const display = @import("./display.zig");
 pub const collision = @import("./collision.zig");
 pub const rl = @import("raylib");
+pub const GUI = @import("./gui/gui.zig");
 
 pub const Animator = @import("./animator/Animator.zig");
 
@@ -22,6 +23,7 @@ pub inline fn compile() !void {
 
 pub const window = display.window;
 pub const camera = display.camera;
+pub const Entity = ecs.Entity;
 
 pub usingnamespace rl;
 
@@ -34,6 +36,8 @@ pub fn init(allocator: *Allocator) !void {
 
     try assets.init(allocator);
 
+    GUI.init(allocator);
+
     display.init(allocator);
 
     try @import("../.temp/script_run.zig").register();
@@ -45,7 +49,11 @@ pub fn deinit() !void {
     try events.call(.Deinit);
 
     display.deinit();
+
+    GUI.deinit();
+
     assets.deinit();
+
     scenes.deinit();
     events.deinit();
     ecs.deinit();

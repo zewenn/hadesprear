@@ -7,5 +7,6 @@ pub const Filenames = [_][]const u8{
 	"test.png",
 	"gloves_1.png",
 	"player_left_1.png",
-	"player_left_0.png"
+	"player_left_0.png",
+	"hud_bg.png"
 };

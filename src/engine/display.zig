@@ -4,6 +4,7 @@ const ecs = @import("./ecs/ecs.zig");
 const rl = @import("raylib");
 const assets = @import("./assets.zig");
 const Allocator = @import("std").mem.Allocator;
+const GUI = @import("./gui/gui.zig");
 
 const Previous = struct {
     transform: ?ecs.components.Transform = null,
@@ -135,37 +136,40 @@ pub fn update() void {
             display = _display.*;
         } else continue;
 
-        // if (prev.transform) |ptransform| {
-        //     if (transform.rotation.equals(ptransform.rotation) == 0 or
-        //         transform.scale.equals(ptransform.scale) == 0)
-        //     {
-        //         prev.transform = transform;
-        //         flag = true;
-        //     }
-        // } else {flag = true;}
+        // Might be reused
+        {
+            // if (prev.transform) |ptransform| {
+            //     if (transform.rotation.equals(ptransform.rotation) == 0 or
+            //         transform.scale.equals(ptransform.scale) == 0)
+            //     {
+            //         prev.transform = transform;
+            //         flag = true;
+            //     }
+            // } else {flag = true;}
 
-        // if (prev.display) |pdisplay| {
-        //     if (!z.arrays.StringEqual(
-        //         display.sprite,
-        //         pdisplay.sprite,
-        //     )) {
-        //         prev.display = display;
-        //         flag = true;
-        //     }
-        // } else flag = true;
+            // if (prev.display) |pdisplay| {
+            //     if (!z.arrays.StringEqual(
+            //         display.sprite,
+            //         pdisplay.sprite,
+            //     )) {
+            //         prev.display = display;
+            //         flag = true;
+            //     }
+            // } else flag = true;
 
-        // if (prev.texture) |_texture| {
-        //     if (!flag) {
-        //         texture = _texture;
-        //     } else {
-        //         rl.unloadTexture(_texture);
-        //     }
-        // } else flag = true;
+            // if (prev.texture) |_texture| {
+            //     if (!flag) {
+            //         texture = _texture;
+            //     } else {
+            //         rl.unloadTexture(_texture);
+            //     }
+            // } else flag = true;
 
-        // if (!flag) {
-        //     drawTetxure(texture, transform.position, rl.Color.white);
-        //     continue;
-        // }
+            // if (!flag) {
+            //     drawTetxure(texture, transform.position, rl.Color.white);
+            //     continue;
+            // }
+        }
 
         if (assets.get(rl.Image, display.sprite)) |_img| {
             img = _img;
@@ -187,28 +191,67 @@ pub fn update() void {
             ),
         }
 
-        // rl.imageRotate(
-        //     &img,
-        //     @intFromFloat(transform.rotation.z),
-        // );
-
         rl.unloadTexture(texture);
         texture = rl.loadTextureFromImage(img);
         prev.texture = texture;
         // defer rl.unloadTexture(texture);
-        drawTetxure(texture, transform, display.tint);
+        drawTetxure(texture, transform, display.tint, display.ignore_world_pos);
+    }
+
+    var GUIIt = GUI.Elements.keyIterator();
+    while (GUIIt.next()) |key| {
+        var element: *GUI.GUIElement = GUI.Elements.getPtr(key.*).?;
+
+        _ = element.calculateTransform();
+
+        if (element.transform) |transform| {
+            rl.drawRectanglePro(
+                rl.Rectangle.init(transform.position.x, transform.position.y, transform.scale.x, transform.scale.y),
+                rl.Vector2.init(0, 0),
+                transform.rotation.z,
+                element.options.style.background_color,
+            );
+
+            if (element.options.style.background_image) |bc_img| {
+                var img: rl.Image = undefined;
+                defer rl.unloadImage(img);
+
+                var texture: rl.Texture = undefined;
+
+                if (assets.get(rl.Image, bc_img)) |_img| {
+                    img = _img;
+                } else {
+                    std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{bc_img});
+                    continue;
+                }
+
+                rl.imageResizeNN(
+                    &img,
+                    @intFromFloat(transform.scale.x * camera.zoom),
+                    @intFromFloat(transform.scale.y * camera.zoom),
+                );
+
+                rl.unloadTexture(texture);
+                texture = rl.loadTextureFromImage(img);
+
+                // defer rl.unloadTexture(texture);
+                drawTetxure(texture, transform, rl.Color.white, true);
+            }
+        }
     }
 }
 
-fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) void {
+fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color, ignore_cam: bool) void {
     var x = z.math.div(window.size.x, 2).?;
     x += z.math.to_f128(trnsfrm.position.x).?;
-    x -= z.math.to_f128(camera.position.x).?;
+    if (!ignore_cam)
+        x -= z.math.to_f128(camera.position.x).?;
     // x -= z.math.div(trnsfrm.scale.x * camera.zoom, 2).?;
 
     var y = z.math.div(window.size.y, 2).?;
     y += z.math.to_f128(trnsfrm.position.y).?;
-    y -= z.math.to_f128(camera.position.y).?;
+    if (!ignore_cam)
+        y -= z.math.to_f128(camera.position.y).?;
     // y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
 
     const ix = z.math.f128_to(f32, x).?;
@@ -219,13 +262,6 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) voi
         origin = rl.Vector2.init(trnsfrm.scale.x * camera.zoom / 2, trnsfrm.scale.y * camera.zoom / 2);
     }
 
-    // rl.drawRectanglePro(
-    //     rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
-    //     origin.?,
-    //     trnsfrm.rotation.z,
-    //     rl.Color.lime,
-    // );
-
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
@@ -235,14 +271,17 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color) voi
         tint,
     );
 
-    // rl.drawLine(
-    //     @intFromFloat(ix),
-    //     @intFromFloat(iy),
-    //     @intFromFloat(ix - origin.?.x),
-    //     @intFromFloat(iy - origin.?.y),
-    //     rl.Color.yellow,
-    // );
+    // Debug
+    {
+        // rl.drawLine(
+        //     @intFromFloat(ix),
+        //     @intFromFloat(iy),
+        //     @intFromFloat(ix - origin.?.x),
+        //     @intFromFloat(iy - origin.?.y),
+        //     rl.Color.yellow,
+        // );
 
-    // rl.drawCircle(@intFromFloat(ix), @intFromFloat(iy), 2, rl.Color.purple);
-    // rl.drawCircle(@intFromFloat(ix - origin.?.x), @intFromFloat(iy - origin.?.y), 2, rl.Color.red);
+        // rl.drawCircle(@intFromFloat(ix), @intFromFloat(iy), 2, rl.Color.purple);
+        // rl.drawCircle(@intFromFloat(ix - origin.?.x), @intFromFloat(iy - origin.?.y), 2, rl.Color.red);
+    }
 }

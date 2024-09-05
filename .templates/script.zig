@@ -9,10 +9,10 @@ const e = @import("../../engine/engine.zig");
 
 // ===================== [Events] =====================
 
-pub fn awake() void {}
+pub fn awake() !void {}
 
-pub fn init() void {}
+pub fn init() !void {}
 
-pub fn update() void {}
+pub fn update() !void {}
 
-pub fn deinit() void {}
+pub fn deinit() !void {}

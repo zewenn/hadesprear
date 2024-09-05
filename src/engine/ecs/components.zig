@@ -10,6 +10,15 @@ pub const Transform = struct {
     scale: rl.Vector2,
     anchor: ?rl.Vector2 = null,
 
+    pub fn new() Self {
+        return Self{
+            .position = rl.Vector2.init(0, 0),
+            .rotation = rl.Vector3.init(0, 0, 0),
+            .scale = rl.Vector2.init(0, 0),
+            .anchor = null,
+        };
+    }
+
     pub fn equals(self: *Self, other: Self) bool {
         if (self.position.equals(other.position) > 0) return false;
         if (self.rotation.equals(other.rotation) > 0) return false;
@@ -44,6 +53,7 @@ pub const Display = struct {
     sprite: []const u8,
     scaling: scalings = .normal,
     tint: rl.Color = rl.Color.white,
+    ignore_world_pos: bool = false,
 };
 
 pub const Collider = struct {

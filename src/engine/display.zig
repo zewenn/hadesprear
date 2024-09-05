@@ -206,7 +206,12 @@ pub fn update() void {
 
         if (element.transform) |transform| {
             rl.drawRectanglePro(
-                rl.Rectangle.init(transform.position.x, transform.position.y, transform.scale.x, transform.scale.y),
+                rl.Rectangle.init(
+                    transform.position.x,
+                    transform.position.y,
+                    transform.scale.x,
+                    transform.scale.y,
+                ),
                 rl.Vector2.init(0, 0),
                 transform.rotation.z,
                 element.options.style.background_color,
@@ -235,7 +240,34 @@ pub fn update() void {
                 texture = rl.loadTextureFromImage(img);
 
                 // defer rl.unloadTexture(texture);
-                drawTetxure(texture, transform, rl.Color.white, true);
+                rl.drawTexturePro(
+                    texture,
+                    rl.Rectangle.init(
+                        0,
+                        0,
+                        transform.scale.x,
+                        transform.scale.y,
+                    ),
+                    rl.Rectangle.init(
+                        transform.position.x,
+                        transform.position.y,
+                        transform.scale.x,
+                        transform.scale.y,
+                    ),
+                    rl.Vector2.init(0, 0),
+                    transform.rotation.z,
+                    rl.Color.white,
+                );
+            }
+
+            if (element.contents) |content| {
+                rl.drawText(
+                    content,
+                    @intFromFloat(transform.position.x),
+                    @intFromFloat(transform.position.y),
+                    12,
+                    rl.Color.black,
+                );
             }
         }
     }

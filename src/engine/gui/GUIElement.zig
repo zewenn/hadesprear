@@ -15,7 +15,7 @@ pub const Options = struct {
 };
 
 children: ?std.ArrayList(Self) = null,
-contents: ?[]const u8 = null,
+contents: ?[*:0]const u8 = null,
 parent: ?*Self = null,
 options: Options,
 transform: ?ecs.cTransform = null,

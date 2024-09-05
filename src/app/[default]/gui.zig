@@ -16,9 +16,11 @@ pub fn awake() !void {
             .style = e.GUI.StyleSheet{
                 .background_color = e.Color.red,
                 .background_image = "player_left_0.png",
+                .width = .{ .value = 40, .unit = .vw },
             },
         },
         &[_]e.GUI.GUIElement{},
+        "Hello fucking world!",
     );
 }
 

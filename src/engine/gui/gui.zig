@@ -20,7 +20,7 @@ pub fn deinit() void {
     Elements.deinit();
 }
 
-pub fn Element(options: GUIElement.Options, children: []GUIElement) !*GUIElement {
+pub fn Element(options: GUIElement.Options, children: []GUIElement, content: [*:0]const u8) !*GUIElement {
     var childrn = std.ArrayList(GUIElement).init(alloc.*);
     for (children) |child| {
         try childrn.append(child);
@@ -28,6 +28,7 @@ pub fn Element(options: GUIElement.Options, children: []GUIElement) !*GUIElement
 
     var Parent = GUIElement{.options = options};
     Parent.children = childrn;
+    Parent.contents = content;
     
     try Elements.put(options.id, Parent);
 

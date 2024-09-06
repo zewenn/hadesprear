@@ -14,12 +14,24 @@ pub fn awake() !void {
         .{
             .id = "Test1",
             .style = e.GUI.StyleSheet{
-                .background_color = e.Color.red,
-                .background_image = "player_left_0.png",
+                .background = .{
+                    .color = e.Color.red,
+                },
                 .width = .{ .value = 40, .unit = .vw },
             },
         },
-        &[_]e.GUI.GUIElement{},
+        @constCast(&[_]*e.GUI.GUIElement{
+            try e.GUI.TextElement(
+                .{
+                    .id = "Text",
+                    .style = .{ .top = .{
+                        .value = 10,
+                        .unit = .vh,
+                    } },
+                },
+                "Zig is the best!",
+            ),
+        }),
         "Hello fucking world!",
     );
 }

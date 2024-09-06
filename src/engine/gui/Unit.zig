@@ -29,8 +29,6 @@ pub fn equals(self: *Self, other: Self) bool {
 }
 
 pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
-    std.log.debug("Unit value: {any}", .{self.value});
-
     return switch (self.unit) {
         .px => parent + self.value,
         .unit => parent + self.value * 16,

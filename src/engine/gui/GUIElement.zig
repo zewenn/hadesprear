@@ -14,7 +14,7 @@ pub const Options = struct {
     style: StyleSheet = StyleSheet{},
 };
 
-children: ?std.ArrayList(Self) = null,
+children: ?std.ArrayList(*Self) = null,
 contents: ?[*:0]const u8 = null,
 parent: ?*Self = null,
 options: Options,

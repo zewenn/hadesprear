@@ -18,8 +18,19 @@ height: Unit = Unit.init(64, .px),
 
 color: rl.Color = rl.Color.black,
 
-background_color: rl.Color = rl.Color.white,
-background_image: ?[]const u8 = null,
+background: struct {
+    color: ?rl.Color = null,
+    image: ?[]const u8 = null,
+} = .{},
+
+font: struct {
+    family: []const u8 = "press_play.ttf",
+    size: f32 = 12,
+    spacing: f32 = 0,
+} = .{},
+
+// background_color: rl.Color = rl.Color.white,
+// background_image: ?[]const u8 = null,
 
 pub fn equals(self: *Self, other: Self) bool {
     if (!self.top.equals(other.top)) return false;

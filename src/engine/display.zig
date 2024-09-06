@@ -107,18 +107,9 @@ pub fn update() void {
 
     while (KIt.next()) |key| {
         var entity = ecs.getEntity(key.*).?.*;
-        var prev: *Previous = undefined;
+        // var prev: *Previous = undefined;
 
         // var flag: bool = false;
-
-        if (PreviousMap.getPtr(entity.id)) |pr| {
-            prev = pr;
-        } else {
-            PreviousMap.put(entity.id, Previous{}) catch {
-                z.panic("Failed to allocate memory for Previous object");
-            };
-            prev = PreviousMap.getPtr(entity.id).?;
-        }
 
         var transform: ecs.components.Transform = undefined;
         var display: ecs.components.Display = undefined;
@@ -193,8 +184,7 @@ pub fn update() void {
 
         rl.unloadTexture(texture);
         texture = rl.loadTextureFromImage(img);
-        prev.texture = texture;
-        // defer rl.unloadTexture(texture);
+
         drawTetxure(texture, transform, display.tint, display.ignore_world_pos);
     }
 
@@ -204,7 +194,20 @@ pub fn update() void {
 
         _ = element.calculateTransform();
 
-        if (element.transform) |transform| {
+        var transform: ecs.cTransform = undefined;
+
+        if (element.transform) |t| {
+            transform = t;
+        } else continue;
+
+        // std.log.debug("Display Before Background", .{});
+
+        BackgroundColorRendering: {
+            var background_color: rl.Color = undefined;
+            if (element.options.style.background.color) |c| {
+                background_color = c;
+            } else break :BackgroundColorRendering;
+
             rl.drawRectanglePro(
                 rl.Rectangle.init(
                     transform.position.x,
@@ -214,90 +217,115 @@ pub fn update() void {
                 ),
                 rl.Vector2.init(0, 0),
                 transform.rotation.z,
-                element.options.style.background_color,
+                background_color,
+            );
+        }
+
+        BacgroundImageRendering: {
+            // background_image
+            var background_image: []const u8 = undefined;
+            if (element.options.style.background.image) |bc_img| {
+                background_image = bc_img;
+            } else break :BacgroundImageRendering;
+
+            var img: rl.Image = undefined;
+            defer rl.unloadImage(img);
+
+            var texture: rl.Texture = undefined;
+
+            if (assets.get(rl.Image, background_image)) |_img| {
+                img = _img;
+            } else {
+                std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{background_image});
+                break :BacgroundImageRendering;
+            }
+
+            rl.imageResizeNN(
+                &img,
+                @intFromFloat(transform.scale.x * camera.zoom),
+                @intFromFloat(transform.scale.y * camera.zoom),
             );
 
-            if (element.options.style.background_image) |bc_img| {
-                var img: rl.Image = undefined;
-                defer rl.unloadImage(img);
+            rl.unloadTexture(texture);
+            texture = rl.loadTextureFromImage(img);
 
-                var texture: rl.Texture = undefined;
+            // defer rl.unloadTexture(texture);
+            rl.drawTexturePro(
+                texture,
+                rl.Rectangle.init(
+                    0,
+                    0,
+                    transform.scale.x,
+                    transform.scale.y,
+                ),
+                rl.Rectangle.init(
+                    transform.position.x,
+                    transform.position.y,
+                    transform.scale.x,
+                    transform.scale.y,
+                ),
+                rl.Vector2.init(0, 0),
+                transform.rotation.z,
+                rl.Color.white,
+            );
+        }
 
-                if (assets.get(rl.Image, bc_img)) |_img| {
-                    img = _img;
-                } else {
-                    std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{bc_img});
-                    continue;
-                }
+        FontRendering: {
+            var content: [*:0]const u8 = undefined;
+            if (element.contents) |c| {
+                content = c;
+            } else break :FontRendering;
 
-                rl.imageResizeNN(
-                    &img,
-                    @intFromFloat(transform.scale.x * camera.zoom),
-                    @intFromFloat(transform.scale.y * camera.zoom),
-                );
+            var font: rl.Font = undefined;
+            if (assets.get(rl.Font, element.options.style.font.family)) |_font| {
+                font = _font;
+            } else break :FontRendering;
 
-                rl.unloadTexture(texture);
-                texture = rl.loadTextureFromImage(img);
-
-                // defer rl.unloadTexture(texture);
-                rl.drawTexturePro(
-                    texture,
-                    rl.Rectangle.init(
-                        0,
-                        0,
-                        transform.scale.x,
-                        transform.scale.y,
-                    ),
-                    rl.Rectangle.init(
-                        transform.position.x,
-                        transform.position.y,
-                        transform.scale.x,
-                        transform.scale.y,
-                    ),
-                    rl.Vector2.init(0, 0),
-                    transform.rotation.z,
-                    rl.Color.white,
-                );
-            }
-
-            if (element.contents) |content| {
-                rl.drawText(
-                    content,
-                    @intFromFloat(transform.position.x),
-                    @intFromFloat(transform.position.y),
-                    12,
-                    rl.Color.black,
-                );
-            }
+            rl.drawTextPro(
+                font,
+                content,
+                transform.position,
+                rl.Vector2.init(0, 0),
+                transform.rotation.z,
+                element.options.style.font.size,
+                element.options.style.font.spacing,
+                element.options.style.color,
+            );
         }
     }
 }
 
 fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color, ignore_cam: bool) void {
-    var x = z.math.div(window.size.x, 2).?;
-    x += z.math.to_f128(trnsfrm.position.x).?;
-    if (!ignore_cam)
-        x -= z.math.to_f128(camera.position.x).?;
-    // x -= z.math.div(trnsfrm.scale.x * camera.zoom, 2).?;
+    const X = GetX: {
+        var x: f128 = 0;
+        x = z.math.div(window.size.x, 2).?;
+        x += z.math.to_f128(trnsfrm.position.x).?;
+        if (!ignore_cam) x -= z.math.to_f128(camera.position.x).?;
 
-    var y = z.math.div(window.size.y, 2).?;
-    y += z.math.to_f128(trnsfrm.position.y).?;
-    if (!ignore_cam)
-        y -= z.math.to_f128(camera.position.y).?;
-    // y -= z.math.div(trnsfrm.scale.y * camera.zoom, 2).?;
+        break :GetX z.math.f128_to(f32, x).?;
+    };
 
-    const ix = z.math.f128_to(f32, x).?;
-    const iy = z.math.f128_to(f32, y).?;
+    const Y = GetY: {
+        var y = z.math.div(window.size.y, 2).?;
+        y += z.math.to_f128(trnsfrm.position.y).?;
+        if (!ignore_cam)
+            y -= z.math.to_f128(camera.position.y).?;
+
+        break :GetY z.math.f128_to(f32, y).?;
+    };
 
     var origin: ?rl.Vector2 = trnsfrm.anchor;
     if (origin == null) {
-        origin = rl.Vector2.init(trnsfrm.scale.x * camera.zoom / 2, trnsfrm.scale.y * camera.zoom / 2);
+        origin = rl.Vector2.init(
+            trnsfrm.scale.x * camera.zoom / 2,
+            trnsfrm.scale.y * camera.zoom / 2,
+        );
     }
 
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
-        rl.Rectangle.init(ix, iy, trnsfrm.scale.x, trnsfrm.scale.y),
+        rl.Rectangle.init(X, Y, trnsfrm.scale.x, trnsfrm.scale.y),
         origin.?,
         trnsfrm.rotation.z,
         tint,
@@ -306,14 +334,14 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color, ign
     // Debug
     {
         // rl.drawLine(
-        //     @intFromFloat(ix),
-        //     @intFromFloat(iy),
-        //     @intFromFloat(ix - origin.?.x),
-        //     @intFromFloat(iy - origin.?.y),
+        //     @intFromFloat(X),
+        //     @intFromFloat(X),
+        //     @intFromFloat(X - origin.?.x),
+        //     @intFromFloat(Y - origin.?.y),
         //     rl.Color.yellow,
         // );
 
-        // rl.drawCircle(@intFromFloat(ix), @intFromFloat(iy), 2, rl.Color.purple);
-        // rl.drawCircle(@intFromFloat(ix - origin.?.x), @intFromFloat(iy - origin.?.y), 2, rl.Color.red);
+        // rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
+        // rl.drawCircle(@intFromFloat(X - origin.?.x), @intFromFloat(Y - origin.?.y), 2, rl.Color.red);
     }
 }

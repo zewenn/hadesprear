@@ -2,6 +2,8 @@ const sc = @import("../engine/scenes.zig");
 
 pub fn register() !void {
 	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/background.zig").awake,
+	});	try sc.register("default", sc.Script{
 		.eAwake = @import("../app/[default]/gui.zig").awake,
 		.eInit = @import("../app/[default]/gui.zig").init,
 		.eUpdate = @import("../app/[default]/gui.zig").update,

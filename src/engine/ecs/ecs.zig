@@ -14,7 +14,7 @@ pub const Entity = @import("./Entity.zig");
 
 // =====================================================
 
-var alloc: *Allocator = undefined;
+pub var alloc: *Allocator = undefined;
 pub var entities: std.StringHashMap(Entity) = undefined;
 
 pub fn init(allocator: *Allocator) void {

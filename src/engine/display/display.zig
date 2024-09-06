@@ -1,56 +1,16 @@
 const std = @import("std");
-const z = @import("./z/z.zig");
-const ecs = @import("./ecs/ecs.zig");
-const rl = @import("raylib");
-const assets = @import("./assets.zig");
 const Allocator = @import("std").mem.Allocator;
-const GUI = @import("./gui/gui.zig");
 
-const Previous = struct {
-    transform: ?ecs.components.Transform = null,
-    display: ?ecs.components.Display = null,
-    texture: ?rl.Texture2D = null,
-};
+const assets = @import("../assets.zig");
+const ecs = @import("../ecs/ecs.zig");
+const GUI = @import("../gui/gui.zig");
 
-pub const window = struct {
-    pub var size = rl.Vector2.init(0, 0);
-    pub var borderless = false;
-    pub var fullscreen = false;
+const rl = @import("raylib");
+const z = @import("../z/z.zig");
 
-    pub fn resize(to: rl.Vector2) void {
-        rl.setWindowSize(
-            @intFromFloat(to.x),
-            @intFromFloat(to.y),
-        );
-        size = to;
-    }
+// ==================================================
 
-    pub fn toggleBorderless() void {
-        if (borderless) {
-            resize(rl.Vector2.init(1280, 720));
-        } else {
-            size = rl.Vector2.init(
-                @floatFromInt(rl.getScreenWidth()),
-                @floatFromInt(rl.getScreenHeight()),
-            );
-        }
-        borderless = !borderless;
-        rl.toggleBorderlessWindowed();
-    }
-
-    pub fn toggleFullscreen() void {
-        if (fullscreen) {
-            resize(rl.Vector2.init(1280, 720));
-        } else {
-            size = rl.Vector2.init(
-                @floatFromInt(rl.getScreenWidth()),
-                @floatFromInt(rl.getScreenHeight()),
-            );
-        }
-        fullscreen = !fullscreen;
-        rl.toggleFullscreen();
-    }
-};
+pub const window = @import("./window.zig");
 
 pub const camera = struct {
     pub var position = rl.Vector2.init(0, 0);
@@ -69,32 +29,46 @@ pub const camera = struct {
     }
 };
 
-/// Key: entity.id - Value: Previously rendered data
-var PreviousMap: std.StringHashMap(Previous) = undefined;
+// ==================================================
+
+const Previous = struct {
+    transform: ?ecs.components.Transform = null,
+    display: ?ecs.components.Display = null,
+    img: ?rl.Image = null,
+    texture: ?rl.Texture = null,
+};
+
+const PreviousMap = std.StringHashMap(Previous);
+var previous_map: PreviousMap = undefined;
 var alloc: *Allocator = undefined;
 
 pub fn init(allocator: *Allocator) void {
+    previous_map = PreviousMap.init(allocator.*);
     alloc = allocator;
-
-    PreviousMap = std.StringHashMap(Previous).init(alloc.*);
-    z.dprint("[MODULE] DISPLAY: LOADED", .{});
 }
 
 pub fn deinit() void {
-    var kIt = PreviousMap.keyIterator();
-
-    while (kIt.next()) |key| {
-        const value = PreviousMap.getPtr(key.*);
-        if (value) |val| {
-            if (val.texture) |txtr| {
-                rl.unloadTexture(txtr);
-            }
-        }
-    }
-    PreviousMap.deinit();
+    previous_map.deinit();
 }
 
-pub fn update() void {
+pub fn sortEntities(_: void, lsh: *ecs.Entity, rsh: *ecs.Entity) bool {
+    const lsh_transform = lsh.get(ecs.cTransform, "transform").?;
+    const rsh_transform = rsh.get(ecs.cTransform, "transform").?;
+
+    return (
+    //
+        lsh_transform.position.y -
+        if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
+    //
+    ) < (
+    //
+        rsh_transform.position.y -
+        if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
+    //
+    );
+}
+
+pub fn update() !void {
     rl.setTraceLogLevel(.log_error);
     defer rl.setTraceLogLevel(.log_debug);
 
@@ -103,14 +77,11 @@ pub fn update() void {
 
     rl.clearBackground(rl.Color.white);
 
-    var KIt = ecs.entities.keyIterator();
+    const entities = try ecs.getEntities("transform");
+    defer ecs.alloc.free(entities);
+    std.sort.insertion(*ecs.Entity, entities, {}, sortEntities);
 
-    while (KIt.next()) |key| {
-        var entity = ecs.getEntity(key.*).?.*;
-        // var prev: *Previous = undefined;
-
-        // var flag: bool = false;
-
+    for (entities) |entity| {
         var transform: ecs.components.Transform = undefined;
         var display: ecs.components.Display = undefined;
 
@@ -127,65 +98,81 @@ pub fn update() void {
             display = _display.*;
         } else continue;
 
-        // Might be reused
-        {
-            // if (prev.transform) |ptransform| {
-            //     if (transform.rotation.equals(ptransform.rotation) == 0 or
-            //         transform.scale.equals(ptransform.scale) == 0)
-            //     {
-            //         prev.transform = transform;
-            //         flag = true;
-            //     }
-            // } else {flag = true;}
+        const path: bool = Decide: {
+            if (!previous_map.contains(entity.id)) {
+                previous_map.put(entity.id, .{
+                    .transform = transform,
+                    .display = display,
+                    .img = null,
+                }) catch {
+                    std.log.debug("failed to store entity", .{});
+                };
+                break :Decide false;
+            }
 
-            // if (prev.display) |pdisplay| {
-            //     if (!z.arrays.StringEqual(
-            //         display.sprite,
-            //         pdisplay.sprite,
-            //     )) {
-            //         prev.display = display;
-            //         flag = true;
-            //     }
-            // } else flag = true;
+            const last = previous_map.getPtr(entity.id).?;
 
-            // if (prev.texture) |_texture| {
-            //     if (!flag) {
-            //         texture = _texture;
-            //     } else {
-            //         rl.unloadTexture(_texture);
-            //     }
-            // } else flag = true;
+            if (last.transform == null) break :Decide false;
+            if (last.display == null) break :Decide false;
+            if (last.img == null) break :Decide false;
 
-            // if (!flag) {
-            //     drawTetxure(texture, transform.position, rl.Color.white);
-            //     continue;
-            // }
-        }
+            if (last.transform.?.rotation.equals(transform.rotation) != 0 and
+                last.transform.?.scale.equals(transform.scale) != 0 and
+                z.arrays.StringEqual(last.display.?.sprite, display.sprite) and
+                last.display.?.scaling == display.scaling)
+            {
+                break :Decide true;
+            }
 
-        if (assets.get(rl.Image, display.sprite)) |_img| {
-            img = _img;
+            break :Decide false;
+        };
+
+        const last = previous_map.getPtr(entity.id).?;
+
+        if (path) {
+            img = rl.imageCopy(last.img.?);
+            texture = last.texture.?;
         } else {
-            std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
-            continue;
+            if (assets.get(rl.Image, display.sprite)) |_img| {
+                img = _img;
+            } else {
+                std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
+                continue;
+            }
+
+            switch (display.scaling) {
+                .normal => rl.imageResize(
+                    &img,
+                    @intFromFloat(transform.scale.x * camera.zoom),
+                    @intFromFloat(transform.scale.y * camera.zoom),
+                ),
+                .pixelate => rl.imageResizeNN(
+                    &img,
+                    @intFromFloat(transform.scale.x * camera.zoom),
+                    @intFromFloat(transform.scale.y * camera.zoom),
+                ),
+            }
+            if (last.img) |image| {
+                rl.unloadImage(image);
+            }
+            if (last.texture) |t| {
+                rl.unloadTexture(t);
+            }
+            last.img = rl.imageCopy(img);
+            last.texture = rl.loadTextureFromImage(img);
+
+            texture = last.texture.?;
+
+            last.display = display;
+            last.transform = transform;
         }
 
-        switch (display.scaling) {
-            .normal => rl.imageResize(
-                &img,
-                @intFromFloat(transform.scale.x * camera.zoom),
-                @intFromFloat(transform.scale.y * camera.zoom),
-            ),
-            .pixelate => rl.imageResizeNN(
-                &img,
-                @intFromFloat(transform.scale.x * camera.zoom),
-                @intFromFloat(transform.scale.y * camera.zoom),
-            ),
-        }
-
-        rl.unloadTexture(texture);
-        texture = rl.loadTextureFromImage(img);
-
-        drawTetxure(texture, transform, display.tint, display.ignore_world_pos);
+        drawTetxure(
+            texture,
+            transform,
+            display.tint,
+            display.ignore_world_pos,
+        );
     }
 
     var GUIIt = GUI.Elements.keyIterator();
@@ -295,7 +282,12 @@ pub fn update() void {
     }
 }
 
-fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color, ignore_cam: bool) void {
+fn drawTetxure(
+    texture: rl.Texture,
+    trnsfrm: ecs.cTransform,
+    tint: rl.Color,
+    ignore_cam: bool,
+) void {
     const X = GetX: {
         var x: f128 = 0;
         x = z.math.div(window.size.x, 2).?;
@@ -314,34 +306,56 @@ fn drawTetxure(texture: rl.Texture, trnsfrm: ecs.cTransform, tint: rl.Color, ign
         break :GetY z.math.f128_to(f32, y).?;
     };
 
-    var origin: ?rl.Vector2 = trnsfrm.anchor;
-    if (origin == null) {
-        origin = rl.Vector2.init(
+    const origin: rl.Vector2 = if (trnsfrm.anchor) |anchor|
+        anchor
+    else
+        rl.Vector2.init(
             trnsfrm.scale.x * camera.zoom / 2,
             trnsfrm.scale.y * camera.zoom / 2,
         );
-    }
 
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
         rl.Rectangle.init(X, Y, trnsfrm.scale.x, trnsfrm.scale.y),
-        origin.?,
+        origin,
         trnsfrm.rotation.z,
         tint,
     );
 
     // Debug
     {
+        // const collider = entity.get(ecs.cCollider, "collider");
+        // if (collider) |col| {
+        //     rl.drawRectangleLinesEx(
+        //         rl.Rectangle.init(
+        //             X + col.rect.x - col.rect.width / 2,
+        //             Y + col.rect.y - col.rect.height / 2,
+        //             col.rect.width,
+        //             col.rect.height,
+        //         ),
+        //         2,
+        //         rl.Color.pink,
+        //     );
+        // }
+
+        // rl.drawRectangleLines(
+        //     @intFromFloat(X - origin.x),
+        //     @intFromFloat(Y - origin.y),
+        //     @intFromFloat(trnsfrm.scale.x),
+        //     @intFromFloat(trnsfrm.scale.y),
+        //     rl.Color.lime,
+        // );
+
         // rl.drawLine(
         //     @intFromFloat(X),
-        //     @intFromFloat(X),
-        //     @intFromFloat(X - origin.?.x),
-        //     @intFromFloat(Y - origin.?.y),
+        //     @intFromFloat(Y),
+        //     @intFromFloat(X - origin.x),
+        //     @intFromFloat(Y - origin.y),
         //     rl.Color.yellow,
         // );
 
         // rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
-        // rl.drawCircle(@intFromFloat(X - origin.?.x), @intFromFloat(Y - origin.?.y), 2, rl.Color.red);
+        // rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
     }
 }

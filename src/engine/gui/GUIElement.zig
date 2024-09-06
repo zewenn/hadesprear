@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
-const window = @import("../display.zig").window;
+const window = @import("../display/display.zig").window;
 
 const StyleSheet = @import("StyleSheet.zig");
 

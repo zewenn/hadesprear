@@ -10,7 +10,7 @@ pub const scenes = @import("./scenes.zig");
 
 pub const time = @import("./time.zig");
 
-pub const display = @import("./display.zig");
+pub const display = @import("./display/display.zig");
 pub const collision = @import("./collision.zig");
 pub const rl = @import("raylib");
 pub const GUI = @import("./gui/gui.zig");
@@ -65,5 +65,7 @@ pub fn update(allocator: *Allocator) !void {
     try events.call(.Update);
     try collision.update(allocator);
     camera.update();
-    display.update();
+    try display.update();
+
+    std.log.debug("FPS: {d:.5}", .{rl.getFPS()});
 }

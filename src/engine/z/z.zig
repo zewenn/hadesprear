@@ -14,7 +14,8 @@ pub fn panic(msg: anytype) noreturn {
 pub const math = @import("math.zig");
 pub const arrays = @import("arrays.zig");
 
-pub const print = @import("./print.zig").print;
-pub const println = @import("./print.zig").println;
-pub const dprint = @import("print.zig").dprint;
-pub const addrprint = @import("./print.zig").addrprint;
+pub const debug = @import("./debug.zig");
+pub const print = debug.print;
+pub const println = debug.println;
+pub const dprint = debug.dprint;
+pub const addrprint = debug.addrprint;

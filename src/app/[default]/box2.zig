@@ -31,7 +31,7 @@ pub fn awake() !void {
         transform = .{
             .position = e.Vector2.init(-64, 0),
             .rotation = e.Vector3.init(0, 0, 0),
-            .scale = e.Vector2.init(64, 64),
+            .scale = e.Vector2.init(64, 128),
         };
         try box.attach(&transform, "transform");
     }
@@ -43,7 +43,7 @@ pub fn awake() !void {
     }
     {
         collider = .{
-            .rect = e.Rectangle.init(0, 0, 64, 64),
+            .rect = e.Rectangle.init(0, 32, 64, 64),
             .weight = 6,
             .dynamic = false,
         };

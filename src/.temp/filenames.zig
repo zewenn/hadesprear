@@ -1,4 +1,5 @@
 pub const Filenames = [_][]const u8{
+	"background4.png",
 	"empty_icon.png",
 	"menu.mp3",
 	"player_right_1.png",

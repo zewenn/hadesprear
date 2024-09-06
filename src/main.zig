@@ -1,5 +1,4 @@
 const std = @import("std");
-const rl = @import("raylib");
 const os = @import("std").os;
 const fs = @import("std").fs;
 
@@ -13,34 +12,24 @@ pub fn main() !void {
 
     // Initialization
     //--------------------------------------------------------------------------------------
-    const screenWidth = 1280;
-    const screenHeight = 720;
-
-    rl.initWindow(
-        screenWidth,
-        screenHeight,
-        "HADESPEAR",
+    e.window.init(
+        "HadeSpear",
+        e.Vector2.init(
+            1280,
+            720,
+        ),
     );
-    e.display.window.resize(e.Vector2.init(1280, 720));
-    defer rl.closeWindow(); // Close window and OpenGL context
-
-    rl.initAudioDevice();
-    defer rl.closeAudioDevice();
-
-    if (!rl.isAudioDeviceReady()) {
-        e.z.dprint("Error initalising audio devide", .{});
-    }
+    defer e.window.deinit();
 
     try e.compile();
     try e.init(&allocator);
     defer e.deinit() catch {};
 
-    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
+    e.setTargetFPS(144); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
-
     // Main game loop
-    while (!rl.windowShouldClose()) { // Detect window close button or ESC key
+    while (!e.windowShouldClose()) { // Detect window close button or ESC key
         e.update(&allocator) catch {};
     }
 }

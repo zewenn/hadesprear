@@ -1,7 +1,7 @@
 const std = @import("std");
 const ecs = @import("../ecs/ecs.zig");
 
-const window = @import("../display.zig").window;
+const window = @import("../display/display.zig").window;
 const Self = @This();
 
 const UnitEnum = enum {

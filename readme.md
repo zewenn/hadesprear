@@ -1,8 +1,9 @@
 # **HADES**PEAR
 
-> [!INFO]
+> [!NOTE]
 > ## Commit naming convention
 > - `new`: new module is created
+> - `fix`: fixed something in the module/file
 > - `add`: added new parts to module/added new files
 > - `update`: improved/expanded existing code
 > - `remove`: removed module/file

@@ -1,5 +1,7 @@
+const Import = @import("../.temp/imports.zig").Import;
+
 const std = @import("std");
-const z = @import("./z/z.zig");
+const z = Import(.z);
 
 pub const EngineEvents = enum {
     Awake,

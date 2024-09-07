@@ -1,7 +1,9 @@
+const Import = @import("../../.temp/imports.zig").Import;
+
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
-const ecs = @import("../ecs/ecs.zig");
+const ecs = Import(.ecs);
 
 pub const GUIElement = @import("GUIElement.zig");
 pub const StyleSheet = @import("StyleSheet.zig");

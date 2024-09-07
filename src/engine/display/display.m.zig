@@ -1,12 +1,14 @@
+const Import = @import("../../.temp/imports.zig").Import;
+
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-const assets = @import("../assets.zig");
-const ecs = @import("../ecs/ecs.zig");
-const GUI = @import("../gui/gui.zig");
+const assets = Import(.assets);
+const ecs = Import(.ecs);
+const GUI = Import(.gui);
 
 const rl = @import("raylib");
-const z = @import("../z/z.zig");
+const z = Import(.z);
 
 // ==================================================
 
@@ -284,14 +286,14 @@ pub fn update() !void {
 
 fn drawTetxure(
     texture: rl.Texture,
-    trnsfrm: ecs.cTransform,
+    transform: ecs.cTransform,
     tint: rl.Color,
     ignore_cam: bool,
 ) void {
     const X = GetX: {
         var x: f128 = 0;
         x = z.math.div(window.size.x, 2).?;
-        x += z.math.to_f128(trnsfrm.position.x).?;
+        x += z.math.to_f128(transform.position.x).?;
         if (!ignore_cam) x -= z.math.to_f128(camera.position.x).?;
 
         break :GetX z.math.f128_to(f32, x).?;
@@ -299,63 +301,51 @@ fn drawTetxure(
 
     const Y = GetY: {
         var y = z.math.div(window.size.y, 2).?;
-        y += z.math.to_f128(trnsfrm.position.y).?;
+        y += z.math.to_f128(transform.position.y).?;
         if (!ignore_cam)
             y -= z.math.to_f128(camera.position.y).?;
 
         break :GetY z.math.f128_to(f32, y).?;
     };
 
-    const origin: rl.Vector2 = if (trnsfrm.anchor) |anchor|
+    const origin: rl.Vector2 = if (transform.anchor) |anchor|
         anchor
     else
         rl.Vector2.init(
-            trnsfrm.scale.x * camera.zoom / 2,
-            trnsfrm.scale.y * camera.zoom / 2,
+            transform.scale.x * camera.zoom / 2,
+            transform.scale.y * camera.zoom / 2,
         );
 
     rl.drawTexturePro(
         texture,
-        rl.Rectangle.init(0, 0, trnsfrm.scale.x, trnsfrm.scale.y),
-        rl.Rectangle.init(X, Y, trnsfrm.scale.x, trnsfrm.scale.y),
+        rl.Rectangle.init(0, 0, transform.scale.x, transform.scale.y),
+        rl.Rectangle.init(X, Y, transform.scale.x, transform.scale.y),
         origin,
-        trnsfrm.rotation.z,
+        transform.rotation.z,
         tint,
     );
 
     // Debug
-    {
-        // const collider = entity.get(ecs.cCollider, "collider");
-        // if (collider) |col| {
-        //     rl.drawRectangleLinesEx(
-        //         rl.Rectangle.init(
-        //             X + col.rect.x - col.rect.width / 2,
-        //             Y + col.rect.y - col.rect.height / 2,
-        //             col.rect.width,
-        //             col.rect.height,
-        //         ),
-        //         2,
-        //         rl.Color.pink,
-        //     );
-        // }
+    Debug: {
+        if (!z.debug.debugDisplay) break :Debug;
 
-        // rl.drawRectangleLines(
-        //     @intFromFloat(X - origin.x),
-        //     @intFromFloat(Y - origin.y),
-        //     @intFromFloat(trnsfrm.scale.x),
-        //     @intFromFloat(trnsfrm.scale.y),
-        //     rl.Color.lime,
-        // );
+        rl.drawRectangleLines(
+            @intFromFloat(X - origin.x),
+            @intFromFloat(Y - origin.y),
+            @intFromFloat(transform.scale.x),
+            @intFromFloat(transform.scale.y),
+            rl.Color.lime,
+        );
 
-        // rl.drawLine(
-        //     @intFromFloat(X),
-        //     @intFromFloat(Y),
-        //     @intFromFloat(X - origin.x),
-        //     @intFromFloat(Y - origin.y),
-        //     rl.Color.yellow,
-        // );
+        rl.drawLine(
+            @intFromFloat(X),
+            @intFromFloat(Y),
+            @intFromFloat(X - origin.x),
+            @intFromFloat(Y - origin.y),
+            rl.Color.yellow,
+        );
 
-        // rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
-        // rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
+        rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
+        rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
     }
 }

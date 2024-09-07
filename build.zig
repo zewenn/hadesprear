@@ -11,7 +11,7 @@ pub fn build(b: *std.Build) !void {
 
     var allocator = gpa.allocator();
 
-    filenames: {
+    Filenames: {
         const files_dir = "./src/assets/";
         const output_file = std.fs.cwd().createFile(
             "src/.temp/filenames.zig",
@@ -44,10 +44,11 @@ pub fn build(b: *std.Build) !void {
             }
         }
         _ = writer.write("\n};") catch unreachable;
-        break :filenames;
+        break :Filenames;
     }
+
     // Handling Scenes & Scripts
-    scenes: {
+    Scenes: {
         const output_file = std.fs.cwd().createFile(
             "src/.temp/script_run.zig",
             .{
@@ -58,7 +59,8 @@ pub fn build(b: *std.Build) !void {
 
         var writer = output_file.writer();
         writer.writeAll("") catch unreachable;
-        _ = writer.write("const sc = @import(\"../engine/scenes.zig\");\n\n") catch unreachable;
+        _ = writer.write("const Import = @import(\"./imports.zig\").Import;\n\n") catch unreachable;
+        _ = writer.write("const sc = Import(.scenes);\n\n") catch unreachable;
         _ = writer.write("pub fn register() !void {\n") catch unreachable;
 
         var files_dirs = getEntries("./src/app/", &allocator);
@@ -158,7 +160,93 @@ pub fn build(b: *std.Build) !void {
 
         }
         _ = writer.write("\n}") catch unreachable;
-        break :scenes;
+        break :Scenes;
+    }
+
+    ModuleImports: {
+        const modules = getAllModules(&allocator) catch break :ModuleImports;
+        defer allocator.free(modules);
+
+        var EnumString = String.init(allocator);
+        defer EnumString.deinit();
+
+        EnumString.concat("const InternalLibrarires = enum {\n") catch break :ModuleImports;
+
+        var FnString = String.init(allocator);
+        defer FnString.deinit();
+
+        FnString.concat("pub inline fn Import(comptime lib: InternalLibrarires) type {\n") catch break :ModuleImports;
+        FnString.concat("\treturn switch (lib) {\n") catch break :ModuleImports;
+
+        for (modules) |*module| {
+            defer module.destory();
+
+            EnumString.concat("\t") catch break :ModuleImports;
+            EnumString.concat(module.name) catch break :ModuleImports;
+            EnumString.concat(",\n") catch break :ModuleImports;
+
+            FnString.concat("\t\t") catch break :ModuleImports;
+            FnString.concat(".") catch break :ModuleImports;
+            FnString.concat(module.name) catch break :ModuleImports;
+            FnString.concat(" => ") catch break :ModuleImports;
+            FnString.concat("@import(\"") catch break :ModuleImports;
+            FnString.concat(module.abs_path) catch break :ModuleImports;
+            FnString.concat("\"),\n") catch break :ModuleImports;
+        }
+
+        EnumString.concat("};\n") catch break :ModuleImports;
+
+        FnString.concat("\t};\n") catch break :ModuleImports;
+        FnString.concat("\n}\n") catch break :ModuleImports;
+
+        const enum_slice = EnumString.toOwned() catch break :ModuleImports;
+        defer allocator.free(enum_slice.?);
+
+        const fn_slice = FnString.toOwned() catch break :ModuleImports;
+        defer allocator.free(fn_slice.?);
+
+        if (enum_slice == null or fn_slice == null) break :ModuleImports;
+
+        const cwd = std.fs.cwd();
+
+        const file = cwd.createFile("src/.temp/imports.zig", .{}) catch break :ModuleImports;
+        defer file.close();
+
+        file.writeAll("") catch break :ModuleImports;
+        _ = file.write(enum_slice.?) catch break :ModuleImports;
+        _ = file.write(fn_slice.?) catch break :ModuleImports;
+
+        // const InternalLibrarires = enum {
+        //     animator,
+        //     display,
+        //     ecs,
+        //     gui,
+        //     z,
+        //     assets,
+        //     collision,
+        //     engine,
+        //     events,
+        //     scenes,
+        //     time,
+        // };
+
+        // pub inline fn Import(comptime lib: InternalLibrarires) type {
+        //     return switch (lib) {
+        //         .animator => @import("./animator/Animator.zig"),
+        //         .display => @import("./display/display.zig"),
+        //         .ecs => @import("./ecs/ecs.zig"),
+        //         .gui => @import("./gui/gui.zig"),
+        //         .z => @import("./z/z.zig"),
+        //         .assets => @import("./assets.zig"),
+        //         .collision => @import("./collision.zig"),
+        //         .engine => @import("./engine.zig"),
+        //         .events => @import("./events.zig"),
+        //         .scenes => @import("./scenes.zig"),
+        //         .time => @import("./time.zig"),
+        //     };
+        // }
+
+        break :ModuleImports;
     }
 
     const target = b.standardTargetOptions(.{});
@@ -256,4 +344,71 @@ fn getEntries(files_dir: []const u8, alloc: *Allocator) std.ArrayList([]const u8
     }
 
     return result;
+}
+
+const ModuleEntry = struct {
+    const Self = @This();
+
+    name: []const u8,
+    abs_path: []const u8,
+    alloc: *Allocator,
+
+    pub fn init(allocator: *Allocator, name: []const u8, abs_path: []const u8) !Self {
+        return Self{
+            .name = try allocator.dupe(u8, name),
+            .abs_path = try allocator.dupe(u8, abs_path),
+            .alloc = allocator,
+        };
+    }
+
+    pub fn destory(self: *Self) void {
+        self.alloc.free(self.name);
+        self.alloc.free(self.abs_path);
+    }
+};
+
+fn getAllModules(allocator: *Allocator) ![]ModuleEntry {
+    var cwd = try std.fs.cwd().openDir(".", .{ .iterate = true });
+    defer cwd.close();
+
+    const p_cwd = try std.process.getCwdAlloc(allocator.*);
+    defer allocator.free(p_cwd);
+
+    std.log.debug("p_cwd: {s}", .{p_cwd});
+
+    var walker = try cwd.walk(allocator.*);
+    defer walker.deinit();
+
+    var List = std.ArrayList(ModuleEntry).init(allocator.*);
+    defer List.deinit();
+
+    while (try walker.next()) |entry| {
+        if (entry.kind != .file) continue;
+
+        // var abs_pth = try String.init_with_contents(allocator.*, p_cwd);
+        var abs_pth = try String.init_with_contents(allocator.*, "../../");
+        // try abs_pth.concat("/");
+        try abs_pth.concat(entry.path);
+
+        defer abs_pth.deinit();
+
+        const path = try abs_pth.toOwned();
+        if (path == null) continue;
+
+        defer allocator.free(path.?);
+
+        const extension: []const u8 = ".m.zig";
+        if (!std.mem.endsWith(u8, entry.path, extension))
+            continue;
+
+        try List.append(
+            try ModuleEntry.init(
+                allocator,
+                entry.basename[0 .. entry.basename.len - extension.len],
+                path.?,
+            ),
+        );
+    }
+
+    return try List.toOwnedSlice();
 }

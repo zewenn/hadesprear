@@ -10,7 +10,13 @@ pub fn println(comptime msg: []const u8, args: anytype) void {
 
 pub fn dprint(comptime msg: []const u8, args: anytype) void {
     print(
-        "\n=========================================\n\n" ++ msg ++ "\n\n=========================================\n\n",
+        (
+        //
+            "\n=========================================\n\n" ++
+            msg ++
+            "\n\n=========================================\n\n"
+        //
+        ),
         args,
     );
 }
@@ -21,3 +27,5 @@ pub fn addrprint(name: []const u8, ptr: anytype) void {
         else => print("{any}", .{ptr}),
     }
 }
+
+pub var debugDisplay = false;

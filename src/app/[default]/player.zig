@@ -1,5 +1,7 @@
+const Import = @import("../../.temp/imports.zig").Import;
+
 const std = @import("std");
-const e = @import("../../engine/engine.zig");
+const e = Import(.engine);
 const entity = @import("../entity.zig");
 
 // ===================== [Entity] =====================
@@ -26,6 +28,8 @@ var h1Transform: e.ecs.cTransform = undefined;
 
 var menu_music: e.Sound = undefined;
 var allocator = std.heap.page_allocator;
+
+var p_facing: enum { left, right } = .left;
 
 const HAND_DISTANCE: comptime_float = 24;
 
@@ -181,6 +185,7 @@ pub fn awake() !void {
             };
         }
     }
+
     // Hand1
     {
         Hand1 = e.ecs.newEntity("player_hand_1") catch {
@@ -252,23 +257,31 @@ pub fn update() !void {
     }
 
     // Animator
-    {
+    Animator: {
         pAnimator.update();
         if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
             pAnimator.stop("walk_right");
             try pAnimator.play("walk_left");
+
+            p_facing = .left;
         }
         if (moveVector.x > 0 and !pAnimator.isPlaying("walk_right")) {
             pAnimator.stop("walk_left");
             try pAnimator.play("walk_right");
+
+            p_facing = .right;
         }
 
-        if (moveVector.y != 0) {
-            if (!(pAnimator.isPlaying("walk_left") or pAnimator.isPlaying("walk_right"))) {
-                pAnimator.stop("walk_right");
-                try pAnimator.play("walk_left");
-            }
-        }
+        if (moveVector.y == 0) break :Animator;
+
+        if (pAnimator.isPlaying("walk_left") or pAnimator.isPlaying("walk_right")) break :Animator;
+
+        try pAnimator.play(
+            switch (p_facing) {
+                .left => "walk_left",
+                .right => "walk_right",
+            },
+        );
     }
 
     // Hands

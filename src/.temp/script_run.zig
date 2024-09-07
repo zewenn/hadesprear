@@ -1,4 +1,6 @@
-const sc = @import("../engine/scenes.zig");
+const Import = @import("./imports.zig").Import;
+
+const sc = Import(.scenes);
 
 pub fn register() !void {
 	try sc.register("default", sc.Script{

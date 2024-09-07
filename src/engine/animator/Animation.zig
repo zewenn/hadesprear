@@ -1,10 +1,12 @@
+const Import = @import("../../.temp/imports.zig").Import;
+
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const Keyframe = @import("Keyframe.zig");
 const Number = @import("interpolation.zig").Number;
-const time = @import("../time.zig");
 
-const z = @import("../z/z.zig");
+const time = Import(.time);
+const z = Import(.z);
 
 const Self = @This();
 

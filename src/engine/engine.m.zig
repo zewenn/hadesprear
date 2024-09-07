@@ -1,21 +1,24 @@
+const Import = @import("../.temp/imports.zig").Import;
+
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-pub const z = @import("./z/z.zig");
-pub const ecs = @import("./ecs/ecs.zig");
-pub const assets = @import("./assets.zig");
+pub const z = Import(.z);
+pub const ecs = Import(.ecs);
+pub const assets = Import(.assets);
 
-pub const events = @import("./events.zig");
-pub const scenes = @import("./scenes.zig");
+pub const events = Import(.events);
+pub const scenes = Import(.scenes);
 
-pub const time = @import("./time.zig");
+pub const time = Import(.time);
 
-pub const display = @import("./display/display.zig");
-pub const collision = @import("./collision.zig");
+pub const display = Import(.display);
+pub const collision = Import(.collision);
+pub const GUI = Import(.gui);
+pub const Animator = Import(.animator);
+
 pub const rl = @import("raylib");
-pub const GUI = @import("./gui/gui.zig");
-
-pub const Animator = @import("./animator/Animator.zig");
+pub usingnamespace rl;
 
 pub inline fn compile() !void {
     try assets.compile();
@@ -24,8 +27,6 @@ pub inline fn compile() !void {
 pub const window = display.window;
 pub const camera = display.camera;
 pub const Entity = ecs.Entity;
-
-pub usingnamespace rl;
 
 pub fn init(allocator: *Allocator) !void {
     time.start();
@@ -67,5 +68,5 @@ pub fn update(allocator: *Allocator) !void {
     camera.update();
     try display.update();
 
-    std.log.debug("FPS: {d:.5}", .{rl.getFPS()});
+    // std.log.debug("FPS: {d:.5}", .{rl.getFPS()});
 }

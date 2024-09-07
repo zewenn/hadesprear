@@ -1,8 +1,11 @@
 const std = @import("std");
+
+const Import = @import(".temp/imports.zig").Import;
+
 const os = @import("std").os;
 const fs = @import("std").fs;
 
-const e = @import("./engine/engine.zig");
+const e = Import(.engine);
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

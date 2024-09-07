@@ -1,9 +1,12 @@
-const std = @import("std");
-const z = @import("./z/z.zig");
-const ecs = @import("./ecs/ecs.zig");
+const Import = @import("../.temp/imports.zig").Import;
+
 const rl = @import("raylib");
-const events = @import("./events.zig");
+const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
+
+const z = Import(.z);
+const ecs = Import(.ecs);
+const events = Import(.events);
 
 pub const Script = struct {
     const fn_type: type = *const fn () anyerror!void;

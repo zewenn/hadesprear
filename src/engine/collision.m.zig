@@ -1,8 +1,10 @@
+const Import = @import("../.temp/imports.zig").Import;
+
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-pub const z = @import("./z/z.zig");
-pub const ecs = @import("./ecs/ecs.zig");
+pub const z = Import(.z);
+pub const ecs = Import(.ecs);
 
 pub const rl = @import("raylib");
 

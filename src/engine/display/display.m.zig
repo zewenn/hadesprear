@@ -189,6 +189,18 @@ pub fn update() !void {
             transform = t;
         } else continue;
 
+        const origin: rl.Vector2 = switch (element.options.style.translate) {
+            .left => rl.Vector2.init(0, 0),
+            .center => rl.Vector2.init(
+                transform.scale.x * camera.zoom / 2,
+                transform.scale.y * camera.zoom / 2,
+            ),
+            .right => rl.Vector2.init(
+                transform.scale.x * camera.zoom,
+                transform.scale.y * camera.zoom,
+            ),
+        };
+
         // std.log.debug("Display Before Background", .{});
 
         BackgroundColorRendering: {
@@ -204,7 +216,7 @@ pub fn update() !void {
                     transform.scale.x,
                     transform.scale.y,
                 ),
-                rl.Vector2.init(0, 0),
+                origin,
                 transform.rotation.z,
                 background_color,
             );
@@ -253,7 +265,7 @@ pub fn update() !void {
                     transform.scale.x,
                     transform.scale.y,
                 ),
-                rl.Vector2.init(0, 0),
+                origin,
                 transform.rotation.z,
                 rl.Color.white,
             );
@@ -274,7 +286,7 @@ pub fn update() !void {
                 font,
                 content,
                 transform.position,
-                rl.Vector2.init(0, 0),
+                origin,
                 transform.rotation.z,
                 element.options.style.font.size,
                 element.options.style.font.spacing,

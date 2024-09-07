@@ -3,21 +3,26 @@ const Import = @import("./imports.zig").Import;
 const sc = Import(.scenes);
 
 pub fn register() !void {
-	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/background.zig").awake,
+	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/background.zig").awake,
+	});	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/gui.zig").awake,
+		.eInit = @import("../app/[game]/gui.zig").init,
+		.eUpdate = @import("../app/[game]/gui.zig").update,
+		.eDeinit = @import("../app/[game]/gui.zig").deinit,
+	});	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/box2.zig").awake,
+	});	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/box.zig").awake,
+	});	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/player.zig").awake,
+		.eInit = @import("../app/[game]/player.zig").init,
+		.eUpdate = @import("../app/[game]/player.zig").update,
+		.eDeinit = @import("../app/[game]/player.zig").deinit,
 	});	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/gui.zig").awake,
-		.eInit = @import("../app/[default]/gui.zig").init,
-		.eUpdate = @import("../app/[default]/gui.zig").update,
-		.eDeinit = @import("../app/[default]/gui.zig").deinit,
-	});	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/box2.zig").awake,
-	});	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/box.zig").awake,
-	});	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/player.zig").awake,
-		.eInit = @import("../app/[default]/player.zig").init,
-		.eUpdate = @import("../app/[default]/player.zig").update,
-		.eDeinit = @import("../app/[default]/player.zig").deinit,
+		.eAwake = @import("../app/[default]/main.zig").awake,
+		.eInit = @import("../app/[default]/main.zig").init,
+		.eUpdate = @import("../app/[default]/main.zig").update,
+		.eDeinit = @import("../app/[default]/main.zig").deinit,
 	});
 }

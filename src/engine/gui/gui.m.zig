@@ -56,9 +56,16 @@ pub fn Container(options: GUIElement.Options, children: []*GUIElement) !*GUIElem
 }
 
 pub fn TextElement(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {
-    return try Element(options, &[_]*GUIElement{}, text);
+    var el = try Element(options, &[_]*GUIElement{}, text);
+
+    const len = std.mem.indexOfSentinel(u8, 0, text);
+
+    el.options.style.width = .{ .value = (@as(f32, @floatFromInt(len)) * el.options.style.font.size), .unit = .px };
+    el.options.style.height = .{ .value = el.options.style.font.size, .unit = .px };
+
+    return el;
 }
 
 pub fn UI(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !void {
-    _ = Element(options, children, content);
+    _ = try Element(options, children, content);
 }

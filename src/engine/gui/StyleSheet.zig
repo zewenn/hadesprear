@@ -14,6 +14,12 @@ const Self = @This();
 top: Unit = Unit.init(0, .px),
 left: Unit = Unit.init(0, .px),
 
+translate: enum {
+    left,
+    center,
+    right,
+} = .left,
+
 rotation: f32 = 0,
 
 width: Unit = Unit.init(64, .px),

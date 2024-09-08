@@ -4,6 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
 const ecs = Import(.ecs);
+const z = Import(.z);
 
 pub const GUIElement = @import("GUIElement.zig");
 pub const StyleSheet = @import("StyleSheet.zig");
@@ -27,6 +28,35 @@ pub fn deinit() void {
     }
 
     Elements.deinit();
+}
+
+pub fn select(selector: []const u8) ?*GUIElement {
+    var it = Elements.iterator();
+
+    while (it.next()) |entry| {
+        const value = entry.value_ptr;
+
+        switch (selector[0]) {
+            '.' => {
+                // Class based search
+                if (std.mem.containsAtLeast(
+                    u8,
+                    value.options.class,
+                    1,
+                    selector[1..],
+                )) {
+                    return value;
+                }
+            },
+            '#' => {
+                // ID based search
+                if (z.arrays.StringEqual(value.options.id, selector[1..])) {
+                    return value;
+                }
+            },
+        }
+        return null;
+    }
 }
 
 pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !*GUIElement {

@@ -10,15 +10,15 @@ const z = Import(.z);
 const Unit = @import("Unit.zig");
 
 const Self = @This();
+const Translate = enum { min, center, max };
 
 top: Unit = Unit.init(0, .px),
 left: Unit = Unit.init(0, .px),
 
-translate: enum {
-    left,
-    center,
-    right,
-} = .left,
+translate: struct {
+    x: Translate = .min,
+    y: Translate = .min,
+} = .{},
 
 rotation: f32 = 0,
 

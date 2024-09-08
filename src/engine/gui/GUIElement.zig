@@ -13,6 +13,7 @@ const Self = @This();
 
 pub const Options = struct {
     id: []const u8,
+    class: []const u8 = "",
     style: StyleSheet = StyleSheet{},
 };
 

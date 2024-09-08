@@ -374,8 +374,6 @@ fn getAllModules(allocator: *Allocator) ![]ModuleEntry {
     const p_cwd = try std.process.getCwdAlloc(allocator.*);
     defer allocator.free(p_cwd);
 
-    std.log.debug("p_cwd: {s}", .{p_cwd});
-
     var walker = try cwd.walk(allocator.*);
     defer walker.deinit();
 

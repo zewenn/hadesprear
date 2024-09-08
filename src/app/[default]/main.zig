@@ -15,7 +15,21 @@ const GUI = e.GUI;
 
 pub fn awake() !void {
     try GUI.UI(
-        .{ .id = "body" },
+        .{ .id = "body", .style = .{
+            .left = .{ .value = 50, .unit = .vw },
+            .top = .{ .value = 50, .unit = .vh },
+
+            .height = .{ .value = 50, .unit = .vh },
+            .width = .{ .value = 50, .unit = .vw },
+
+            .translate = .{
+                .x = .center,
+                .y = .center,
+            },
+            .background = .{
+                .color = e.Color.red,
+            },
+        } },
         @constCast(
             &[_]*GUI.GUIElement{
                 try GUI.Container(
@@ -29,7 +43,10 @@ pub fn awake() !void {
                             .color = e.Color.pink,
                             .left = .{ .value = 50, .unit = .vw },
                             .top = .{ .value = 50, .unit = .vh },
-                            .translate = .center,
+                            .translate = .{
+                                .x = .center,
+                                .y = .center,
+                            },
                             // .rotation = 90,
                             .background = .{
                                 .color = e.Color.red,
@@ -46,9 +63,12 @@ pub fn awake() !void {
                             .spacing = 1,
                         },
                         .color = e.Color.pink,
-                        .left = .{ .value = 50, .unit = .vw },
-                        .top = .{ .value = 50, .unit = .vh },
-                        .translate = .center,
+                        // .left = .{ .value = 50, .unit = .vw },
+                        // .top = .{ .value = 50, .unit = .vh },
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
                     },
                 }, "Hello World!"),
             },

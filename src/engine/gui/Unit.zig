@@ -36,7 +36,7 @@ pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
         .px => parent + self.value,
         .unit => parent + self.value * 16,
         .percent => percent_parent * (self.value / 100),
-        .vw => window.size.x * (self.value / 100),
-        .vh => window.size.y * (self.value / 100),
+        .vw => parent + window.size.x * (self.value / 100),
+        .vh => parent + window.size.y * (self.value / 100),
     };
 }

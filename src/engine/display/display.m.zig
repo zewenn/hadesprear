@@ -189,17 +189,18 @@ pub fn update() !void {
             transform = t;
         } else continue;
 
-        const origin: rl.Vector2 = switch (element.options.style.translate) {
-            .left => rl.Vector2.init(0, 0),
-            .center => rl.Vector2.init(
-                transform.scale.x * camera.zoom / 2,
-                transform.scale.y * camera.zoom / 2,
-            ),
-            .right => rl.Vector2.init(
-                transform.scale.x * camera.zoom,
-                transform.scale.y * camera.zoom,
-            ),
-        };
+        var origin: rl.Vector2 = rl.Vector2.init(0, 0);
+
+        switch (element.options.style.translate.x) {
+            .min => origin.x = 0,
+            .center => origin.x = transform.scale.x * camera.zoom / 2,
+            .max => origin.x = transform.scale.x * camera.zoom,
+        }
+        switch (element.options.style.translate.y) {
+            .min => origin.y = 0,
+            .center => origin.y = transform.scale.y * camera.zoom / 2,
+            .max => origin.y = transform.scale.y * camera.zoom,
+        }
 
         // std.log.debug("Display Before Background", .{});
 

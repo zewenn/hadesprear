@@ -177,10 +177,15 @@ pub fn update() !void {
         );
     }
 
-    var GUIIt = GUI.Elements.keyIterator();
-    while (GUIIt.next()) |key| {
-        var element: *GUI.GUIElement = GUI.Elements.getPtr(key.*).?;
+    var GUIElements = std.ArrayList(*GUI.GUIElement).init(alloc.*);
+    defer GUIElements.deinit();
 
+    var GUIIt = GUI.Elements.iterator();
+    while (GUIIt.next()) |entry| {
+        try GUIElements.insert(0, entry.value_ptr);
+    }
+
+    for (GUIElements.items) |element| {
         _ = element.calculateTransform();
 
         var transform: ecs.cTransform = undefined;
@@ -189,18 +194,21 @@ pub fn update() !void {
             transform = t;
         } else continue;
 
-        var origin: rl.Vector2 = rl.Vector2.init(0, 0);
+        const origin: rl.Vector2 = GetOrigin: {
+            var anchor = rl.Vector2.init(0, 0);
 
-        switch (element.options.style.translate.x) {
-            .min => origin.x = 0,
-            .center => origin.x = transform.scale.x * camera.zoom / 2,
-            .max => origin.x = transform.scale.x * camera.zoom,
-        }
-        switch (element.options.style.translate.y) {
-            .min => origin.y = 0,
-            .center => origin.y = transform.scale.y * camera.zoom / 2,
-            .max => origin.y = transform.scale.y * camera.zoom,
-        }
+            switch (element.options.style.translate.x) {
+                .min => anchor.x = 0,
+                .center => anchor.x = transform.scale.x * camera.zoom / 2,
+                .max => anchor.x = transform.scale.x * camera.zoom,
+            }
+            switch (element.options.style.translate.y) {
+                .min => anchor.y = 0,
+                .center => anchor.y = transform.scale.y * camera.zoom / 2,
+                .max => anchor.y = transform.scale.y * camera.zoom,
+            }
+            break :GetOrigin anchor;
+        };
 
         // std.log.debug("Display Before Background", .{});
 

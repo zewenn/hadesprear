@@ -59,6 +59,17 @@ pub fn select(selector: []const u8) ?*GUIElement {
     }
 }
 
+pub fn clear() void {
+    var elIt = Elements.iterator();
+    while (elIt.next()) |entry| {
+        if (entry.value_ptr.children) |children| {
+            children.deinit();
+        }
+    }
+
+    Elements.clearAndFree();
+}
+
 pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !*GUIElement {
     var childrn = std.ArrayList(*GUIElement).init(alloc.*);
 

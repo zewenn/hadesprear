@@ -77,7 +77,9 @@ pub fn awake() !void {
     );
 }
 
-pub fn init() !void {}
+pub fn init() !void {
+    try e.scenes.load("game");
+}
 
 pub fn update() !void {}
 

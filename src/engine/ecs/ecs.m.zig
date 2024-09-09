@@ -36,6 +36,10 @@ pub fn deinit() void {
     }
 }
 
+pub fn clear() void {
+    entities.clearAndFree();
+}
+
 pub fn newEntity(id: []const u8) !*Entity {
     try entities.put(id, Entity.init(alloc, id));
     return entities.getPtr(id).?;

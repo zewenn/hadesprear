@@ -11,11 +11,6 @@ const components = @import("./components.zig");
 
 // =====================================================
 
-const c = @cImport({
-    @cInclude("stdio.h");
-    @cInclude("stdlib.h");
-});
-
 const Self = @This();
 
 id: []const u8,
@@ -42,12 +37,10 @@ pub fn attach(self: *Self, component: *anyopaque, id: []const u8) !void {
         component,
     );
 }
-// pub fn attach(self: *Self, comptime T: type, component: *T, id: []const u8) !void {
-//     try self.components.put(
-//         id,
-//         @as(*anyopaque, @ptrCast(component)),
-//     );
-// }
+
+pub fn detach(self: *Self, id: []const u8) void {
+    _ = self.components.remove(id);
+}
 
 pub fn get(self: *Self, comptime T: type, id: []const u8) ?*T {
     const res = self.components.get(id);

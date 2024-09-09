@@ -7,6 +7,7 @@ const Allocator = @import("std").mem.Allocator;
 const z = Import(.z);
 const ecs = Import(.ecs);
 const events = Import(.events);
+const GUI = Import(.gui);
 
 pub const Script = struct {
     const fn_type: type = *const fn () anyerror!void;
@@ -21,6 +22,8 @@ pub const Script = struct {
 const map_fn_type = *const fn () anyerror!void;
 const String = []const u8;
 const map_type = std.StringHashMap(std.ArrayList(Script));
+
+pub var current: ?[]const u8 = null;
 
 var script_map: map_type = undefined;
 var allocator_ptr: *std.mem.Allocator = undefined;
@@ -68,7 +71,16 @@ pub fn register(comptime id: String, script: Script) !void {
 }
 
 pub fn load(comptime id: String) !void {
+    if (current) |_| {
+        try events.call(.Deinit);
+    }
+
+    current = id;
+
     events.clear();
+    GUI.clear();
+    ecs.clear();
+
     const data = script_map.get(id);
 
     if (data == null) {

@@ -44,6 +44,17 @@ pub const Transform = struct {
 
         self.rotation.z = new_rot;
     }
+
+    pub fn getRect(self: *Self) rl.Rectangle {
+        return rl.Rectangle.init(
+            if (self.anchor) |anchor| self.position.x - anchor.x else self.position.x,
+            if (self.anchor) |anchor| self.position.y - anchor.y else self.position.y,
+            self.scale.x,
+            self.scale.y,
+        );
+    }
+
+    
 };
 
 pub const Display = struct {

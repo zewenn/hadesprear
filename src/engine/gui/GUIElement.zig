@@ -5,6 +5,7 @@ const Allocator = @import("std").mem.Allocator;
 const window = Import(.display).window;
 
 const StyleSheet = @import("StyleSheet.zig");
+const ButtonInterface = @import("ButtonInterface.zig");
 
 const rl = @import("raylib");
 const ecs = Import(.ecs);
@@ -15,6 +16,7 @@ pub const Options = struct {
     id: []const u8,
     class: []const u8 = "",
     style: StyleSheet = StyleSheet{},
+    hover: StyleSheet = StyleSheet{},
 };
 
 children: ?std.ArrayList(*Self) = null,
@@ -22,6 +24,8 @@ contents: ?[*:0]const u8 = null,
 parent: ?*Self = null,
 options: Options,
 transform: ?ecs.cTransform = null,
+is_button: bool = false,
+button_interface_ptr: ?*ButtonInterface = null,
 
 /// Sets the elements transform and returns the value.
 /// Might calculate the parent elements value.
@@ -52,6 +56,21 @@ pub fn calculateTransform(self: *Self) ecs.cTransform {
         .position = rl.Vector2.init(x, y),
         .rotation = rl.Vector3.init(0, 0, self.options.style.rotation),
         .scale = rl.Vector2.init(width, height),
+        .anchor = CalculateAnchor: {
+            var anchor = rl.Vector2.init(0, 0);
+
+            switch (self.options.style.translate.x) {
+                .min => anchor.x = 0,
+                .center => anchor.x = width / 2,
+                .max => anchor.x = width,
+            }
+            switch (self.options.style.translate.y) {
+                .min => anchor.y = 0,
+                .center => anchor.y = height / 2,
+                .max => anchor.y = height,
+            }
+            break :CalculateAnchor anchor;
+        },
     };
 
     return self.transform.?;

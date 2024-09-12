@@ -11,6 +11,12 @@ pub fn panic(msg: anytype) noreturn {
     unreachable;
 }
 
+pub fn eql(a: anytype, b: anytype) bool {
+    if (@TypeOf(a) != @TypeOf(b)) return false;
+
+    return std.meta.eql(a, b);
+}
+
 pub const math = @import("math.zig");
 pub const arrays = @import("arrays.zig");
 

@@ -40,3 +40,26 @@ pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
         .vh => parent + window.size.y * (self.value / 100),
     };
 }
+
+/// Parses the given input, if the input is incorrect
+/// *(syntax is not `<number><'x' | 'u' | '%' | 'h' | 'w'>`)* returns 0x/0 pixels,
+pub fn u(from: []const u8) Self {
+    const str_value = from[0 .. from.len - 1];
+    const str_unit = from[from.len - 1 ..];
+
+    const unit: UnitEnum = switch (str_unit[0]) {
+        'x' => .px,
+        'u' => .unit,
+        '%' => .percent,
+        'h' => .vh,
+        'w' => .vw,
+        else => .px,
+    };
+
+    const float_value = std.fmt.parseFloat(f32, str_value) catch 0;
+
+    return Self{
+        .value = float_value,
+        .unit = unit,
+    };
+}

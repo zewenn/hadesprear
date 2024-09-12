@@ -4,6 +4,7 @@ const std = @import("std");
 const e = Import(.engine);
 
 const GUI = e.GUI;
+const u = GUI.u;
 
 // ===================== [Entity] =====================
 
@@ -14,22 +15,27 @@ const GUI = e.GUI;
 // ===================== [Events] =====================
 
 pub fn awake() !void {
+    e.input.ui_mode = true;
+
     try GUI.UI(
-        .{ .id = "body", .style = .{
-            .left = .{ .value = 50, .unit = .vw },
-            .top = .{ .value = 50, .unit = .vh },
+        .{
+            .id = "body",
+            .style = .{
+                .left = .{ .value = 50, .unit = .vw },
+                .top = .{ .value = 50, .unit = .vh },
 
-            .height = .{ .value = 50, .unit = .vh },
-            .width = .{ .value = 50, .unit = .vw },
+                .height = .{ .value = 50, .unit = .vh },
+                .width = .{ .value = 50, .unit = .vw },
 
-            .translate = .{
-                .x = .center,
-                .y = .center,
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
+                .background = .{
+                    .color = e.Color.red,
+                },
             },
-            .background = .{
-                .color = e.Color.red,
-            },
-        } },
+        },
         @constCast(
             &[_]*GUI.GUIElement{
                 try GUI.Container(
@@ -41,8 +47,8 @@ pub fn awake() !void {
                                 .spacing = 1,
                             },
                             .color = e.Color.pink,
-                            .left = .{ .value = 50, .unit = .vw },
-                            .top = .{ .value = 50, .unit = .vh },
+                            .left = u("50w"),
+                            .top = u("50h"),
                             .translate = .{
                                 .x = .center,
                                 .y = .center,
@@ -55,22 +61,32 @@ pub fn awake() !void {
                     },
                     @constCast(&[_]*GUI.GUIElement{}),
                 ),
-                try GUI.TextElement(.{
-                    .id = "hello-world-2",
-                    .style = GUI.StyleSheet{
-                        .font = .{
-                            .size = 64,
-                            .spacing = 1,
-                        },
-                        .color = e.Color.pink,
-                        // .left = .{ .value = 50, .unit = .vw },
-                        // .top = .{ .value = 50, .unit = .vh },
-                        .translate = .{
-                            .x = .center,
-                            .y = .center,
+                try GUI.Button(
+                    .{
+                        .id = "hello-world-2",
+                        .style = GUI.StyleSheet{
+                            .font = .{
+                                .size = 64,
+                                .spacing = 1,
+                            },
+                            .color = e.Color.pink,
+                            .translate = .{
+                                .x = .center,
+                                .y = .center,
+                            },
+                            .background = .{
+                                .color = e.Color.blue,
+                            },
                         },
                     },
-                }, "Hello World!"),
+                    "Hello World!",
+                    e.Vector2.init(4, 7),
+                    struct {
+                        pub fn printTest() anyerror!void {
+                            std.log.debug("Clicked!", .{});
+                        }
+                    }.printTest,
+                ),
             },
         ),
         "",
@@ -78,7 +94,7 @@ pub fn awake() !void {
 }
 
 pub fn init() !void {
-    try e.scenes.load("game");
+    // try e.scenes.load("game");
 }
 
 pub fn update() !void {}

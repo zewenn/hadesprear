@@ -38,9 +38,6 @@ font: struct {
     spacing: f32 = 0,
 } = .{},
 
-// background_color: rl.Color = rl.Color.white,
-// background_image: ?[]const u8 = null,
-
 pub fn equals(self: *Self, other: Self) bool {
     if (!self.top.equals(other.top)) return false;
     if (!self.left.equals(other.left)) return false;
@@ -63,4 +60,17 @@ pub fn equals(self: *Self, other: Self) bool {
     } else if (other.background_image != null) return false;
 
     return true;
+}
+
+pub fn merge(self: *Self, other: Self) Self {
+    var result = self.*;
+
+    if (!z.eql(result.background.color, other.background.color))
+        result.background.color = other.background.color;
+
+    if (!z.eql(result.background.image, other.background.image))
+        result.background.image = other.background.image;
+
+    if (!z.eql(result.font.family, other.font.family))
+        result.font.family = other.font.family;
 }

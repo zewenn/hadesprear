@@ -9,6 +9,7 @@ pub const assets = Import(.assets);
 
 pub const events = Import(.events);
 pub const scenes = Import(.scenes);
+pub const input = Import(.input);
 
 pub const time = Import(.time);
 
@@ -62,6 +63,9 @@ pub fn deinit() !void {
 
 pub fn update(allocator: *Allocator) !void {
     time.tick();
+    input.update();
+
+    GUI.update();
 
     try events.call(.Update);
     try collision.update(allocator);

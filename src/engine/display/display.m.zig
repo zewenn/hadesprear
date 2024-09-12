@@ -6,6 +6,7 @@ const Allocator = @import("std").mem.Allocator;
 const assets = Import(.assets);
 const ecs = Import(.ecs);
 const GUI = Import(.gui);
+const input = Import(.input);
 
 const rl = @import("raylib");
 const z = Import(.z);
@@ -194,21 +195,24 @@ pub fn update() !void {
             transform = t;
         } else continue;
 
-        const origin: rl.Vector2 = GetOrigin: {
-            var anchor = rl.Vector2.init(0, 0);
+        // const origin: rl.Vector2 = GetOrigin: {
+        //     var anchor = rl.Vector2.init(0, 0);
 
-            switch (element.options.style.translate.x) {
-                .min => anchor.x = 0,
-                .center => anchor.x = transform.scale.x * camera.zoom / 2,
-                .max => anchor.x = transform.scale.x * camera.zoom,
-            }
-            switch (element.options.style.translate.y) {
-                .min => anchor.y = 0,
-                .center => anchor.y = transform.scale.y * camera.zoom / 2,
-                .max => anchor.y = transform.scale.y * camera.zoom,
-            }
-            break :GetOrigin anchor;
-        };
+        //     switch (element.options.style.translate.x) {
+        //         .min => anchor.x = 0,
+        //         .center => anchor.x = transform.scale.x * camera.zoom / 2,
+        //         .max => anchor.x = transform.scale.x * camera.zoom,
+        //     }
+        //     switch (element.options.style.translate.y) {
+        //         .min => anchor.y = 0,
+        //         .center => anchor.y = transform.scale.y * camera.zoom / 2,
+        //         .max => anchor.y = transform.scale.y * camera.zoom,
+        //     }
+        //     break :GetOrigin anchor;
+        // };
+        const origin = transform.anchor.?.multiply(
+            rl.Vector2.init(camera.zoom, camera.zoom),
+        );
 
         // std.log.debug("Display Before Background", .{});
 
@@ -303,6 +307,14 @@ pub fn update() !void {
             );
         }
     }
+
+    rl.drawRectangle(
+        @intFromFloat(input.mouse_position.x - 5),
+        @intFromFloat(input.mouse_position.y - 5),
+        5,
+        5,
+        rl.Color.black,
+    );
 }
 
 fn drawTetxure(

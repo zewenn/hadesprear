@@ -38,6 +38,8 @@ font: struct {
     spacing: f32 = 0,
 } = .{},
 
+z_index: usize = 0,
+
 pub fn equals(self: *Self, other: Self) bool {
     if (!self.top.equals(other.top)) return false;
     if (!self.left.equals(other.left)) return false;
@@ -150,6 +152,11 @@ pub fn _merge(self: *Self, other: Self) Self {
 
     if (!z.eql(result.color, other.color))
         result.color = other.color;
+
+    // Z-Index
+
+    if (!z.eql(result.z_index, other.z_index))
+        result.z_index = other.z_index;
 
     return result;
 }

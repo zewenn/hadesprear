@@ -34,8 +34,8 @@ pub fn update() void {
 
     switch (input.input_mode) {
         .KeyboardAndMouse => {
-            for (ButtonMatrix) |row| {
-                for (row) |btn| {
+            for (ButtonMatrix, 0..) |row, y| {
+                for (row, 0..) |btn, x| {
                     if (btn == null) continue;
 
                     const button = btn.?.element_ptr.?;
@@ -53,6 +53,9 @@ pub fn update() void {
                         button.is_hovered = false;
                         continue;
                     }
+
+                    keyboard_cursor_position.x = @floatFromInt(x);
+                    keyboard_cursor_position.y = @floatFromInt(y);
 
                     button.is_hovered = true;
 
@@ -181,6 +184,8 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
     const el_ptr = Elements.getPtr(Parent.options.id).?;
 
     for (childrn.items) |child| {
+        if (child.options.style.z_index == 0)
+            child.options.style.z_index = Parent.options.style.z_index;
         child.parent = el_ptr;
     }
 

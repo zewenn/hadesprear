@@ -24,5 +24,6 @@ pub fn register() !void {
 		.eInit = @import("../app/[default]/main.zig").init,
 		.eUpdate = @import("../app/[default]/main.zig").update,
 		.eDeinit = @import("../app/[default]/main.zig").deinit,
+	});	try sc.register("default", sc.Script{
 	});
 }

@@ -72,7 +72,6 @@ pub fn awake() !void {
                             .background = .{
                                 .color = e.Color.blue,
                             },
-                            .left = u("-150x"),
                             .top = u("-150x"),
                         },
                         .hover = .{

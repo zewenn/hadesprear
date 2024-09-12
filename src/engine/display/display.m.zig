@@ -54,7 +54,7 @@ pub fn deinit() void {
     previous_map.deinit();
 }
 
-pub fn sortEntities(_: void, lsh: *ecs.Entity, rsh: *ecs.Entity) bool {
+fn sortEntities(_: void, lsh: *ecs.Entity, rsh: *ecs.Entity) bool {
     const lsh_transform = lsh.get(ecs.cTransform, "transform").?;
     const rsh_transform = rsh.get(ecs.cTransform, "transform").?;
 
@@ -71,6 +71,13 @@ pub fn sortEntities(_: void, lsh: *ecs.Entity, rsh: *ecs.Entity) bool {
     );
 }
 
+fn sortGUIElements(_: void, lsh: *GUI.GUIElement, rsh: *GUI.GUIElement) bool {
+    const lsh_z_index = lsh.options.style.z_index;
+    const rsh_z_index = rsh.options.style.z_index;
+
+    return lsh_z_index < rsh_z_index;
+}
+
 pub fn update() !void {
     rl.setTraceLogLevel(.log_error);
     defer rl.setTraceLogLevel(.log_debug);
@@ -79,6 +86,12 @@ pub fn update() !void {
     defer rl.endDrawing();
 
     rl.clearBackground(rl.Color.white);
+
+    // ==============================================
+
+    //                    Entities
+
+    // ==============================================
 
     const entities = try ecs.getEntities("transform");
     defer ecs.alloc.free(entities);
@@ -178,6 +191,12 @@ pub fn update() !void {
         );
     }
 
+    // ==============================================
+
+    //                      GUI
+
+    // ==============================================
+
     var GUIElements = std.ArrayList(*GUI.GUIElement).init(alloc.*);
     defer GUIElements.deinit();
 
@@ -187,7 +206,12 @@ pub fn update() !void {
         // try GUIElements.append(entry.value_ptr);
     }
 
-    for (GUIElements.items) |element| {
+    const sorted_elements = try GUIElements.toOwnedSlice();
+    defer GUIElements.allocator.free(sorted_elements);
+
+    std.sort.insertion(*GUI.GUIElement, sorted_elements, {}, sortGUIElements);
+
+    for (sorted_elements) |element| {
         _ = element.calculateTransform();
 
         const style = GetStyle: {

@@ -26,6 +26,7 @@ options: Options,
 transform: ?ecs.cTransform = null,
 is_button: bool = false,
 button_interface_ptr: ?*ButtonInterface = null,
+is_hovered: bool = false,
 
 /// Sets the elements transform and returns the value.
 /// Might calculate the parent elements value.
@@ -46,25 +47,32 @@ pub fn calculateTransform(self: *Self) ecs.cTransform {
         }
     }
 
-    const x = self.options.style.left.calculate(parent_transform.position.x, parent_transform.scale.x);
-    const y = self.options.style.top.calculate(parent_transform.position.y, parent_transform.scale.y);
+    var style = GetStyle: {
+        if (self.is_hovered) {
+            break :GetStyle self.options.style.merge(self.options.hover);
+        }
+        break :GetStyle self.options.style;
+    };
 
-    const width = self.options.style.width.calculate(0, parent_transform.scale.x);
-    const height = self.options.style.height.calculate(0, parent_transform.scale.y);
+    const x = style.left.calculate(parent_transform.position.x, parent_transform.scale.x);
+    const y = style.top.calculate(parent_transform.position.y, parent_transform.scale.y);
+
+    const width = style.width.calculate(0, parent_transform.scale.x);
+    const height = style.height.calculate(0, parent_transform.scale.y);
 
     self.transform = ecs.cTransform{
         .position = rl.Vector2.init(x, y),
-        .rotation = rl.Vector3.init(0, 0, self.options.style.rotation),
+        .rotation = rl.Vector3.init(0, 0, style.rotation),
         .scale = rl.Vector2.init(width, height),
         .anchor = CalculateAnchor: {
             var anchor = rl.Vector2.init(0, 0);
 
-            switch (self.options.style.translate.x) {
+            switch (style.translate.x) {
                 .min => anchor.x = 0,
                 .center => anchor.x = width / 2,
                 .max => anchor.x = width,
             }
-            switch (self.options.style.translate.y) {
+            switch (style.translate.y) {
                 .min => anchor.y = 0,
                 .center => anchor.y = height / 2,
                 .max => anchor.y = height,
@@ -74,4 +82,11 @@ pub fn calculateTransform(self: *Self) ecs.cTransform {
     };
 
     return self.transform.?;
+}
+
+pub fn addChild(self: *Self, child: *Self) !void {
+    if (self.children) |*children| {
+        child.parent = self;
+        try children.append(child);
+    }
 }

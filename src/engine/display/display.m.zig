@@ -101,7 +101,7 @@ pub fn update() !void {
             display = _display.*;
         } else continue;
 
-        const path: bool = Decide: {
+        const use_previous: bool = Decide: {
             if (!previous_map.contains(entity.id)) {
                 previous_map.put(entity.id, .{
                     .transform = transform,
@@ -132,7 +132,7 @@ pub fn update() !void {
 
         const last = previous_map.getPtr(entity.id).?;
 
-        if (path) {
+        if (use_previous) {
             img = rl.imageCopy(last.img.?);
             texture = last.texture.?;
         } else {
@@ -184,10 +184,18 @@ pub fn update() !void {
     var GUIIt = GUI.Elements.iterator();
     while (GUIIt.next()) |entry| {
         try GUIElements.insert(0, entry.value_ptr);
+        // try GUIElements.append(entry.value_ptr);
     }
 
     for (GUIElements.items) |element| {
         _ = element.calculateTransform();
+
+        const style = GetStyle: {
+            if (element.is_hovered) {
+                break :GetStyle element.options.style.merge(element.options.hover);
+            }
+            break :GetStyle element.options.style;
+        };
 
         var transform: ecs.cTransform = undefined;
 
@@ -218,7 +226,7 @@ pub fn update() !void {
 
         BackgroundColorRendering: {
             var background_color: rl.Color = undefined;
-            if (element.options.style.background.color) |c| {
+            if (style.background.color) |c| {
                 background_color = c;
             } else break :BackgroundColorRendering;
 
@@ -238,7 +246,7 @@ pub fn update() !void {
         BacgroundImageRendering: {
             // background_image
             var background_image: []const u8 = undefined;
-            if (element.options.style.background.image) |bc_img| {
+            if (style.background.image) |bc_img| {
                 background_image = bc_img;
             } else break :BacgroundImageRendering;
 
@@ -291,7 +299,7 @@ pub fn update() !void {
             } else break :FontRendering;
 
             var font: rl.Font = undefined;
-            if (assets.get(rl.Font, element.options.style.font.family)) |_font| {
+            if (assets.get(rl.Font, style.font.family)) |_font| {
                 font = _font;
             } else break :FontRendering;
 
@@ -301,9 +309,9 @@ pub fn update() !void {
                 transform.position,
                 origin,
                 transform.rotation.z,
-                element.options.style.font.size,
-                element.options.style.font.spacing,
-                element.options.style.color,
+                style.font.size,
+                style.font.spacing,
+                style.color,
             );
         }
     }

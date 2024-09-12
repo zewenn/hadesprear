@@ -11,7 +11,7 @@ pub var mouse_position: rl.Vector2 = rl.Vector2.init(0, 0);
 pub var ui_mode: bool = false;
 
 pub fn update() void {
-    if (mouse_position.distance(rl.getMousePosition()) > 10) {
+    if (mouse_position.distance(rl.getMousePosition()) > 5) {
         mouse_position = rl.getMousePosition();
         input_mode = .KeyboardAndMouse;
         return;

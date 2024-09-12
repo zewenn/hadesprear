@@ -4,6 +4,7 @@ const std = @import("std");
 
 const ecs = Import(.ecs);
 const window = Import(.display).window;
+const z = Import(.z);
 
 const Self = @This();
 
@@ -35,7 +36,7 @@ pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
     return switch (self.unit) {
         .px => parent + self.value,
         .unit => parent + self.value * 16,
-        .percent => percent_parent * (self.value / 100),
+        .percent => parent + percent_parent * (self.value / 100),
         .vw => parent + window.size.x * (self.value / 100),
         .vh => parent + window.size.y * (self.value / 100),
     };
@@ -61,5 +62,14 @@ pub fn u(from: []const u8) Self {
     return Self{
         .value = float_value,
         .unit = unit,
+    };
+}
+
+pub fn toUnit(from: anytype) Self {
+    const float = if (z.math.f128_to(f32, z.math.to_f128(from).?)) |v| v else 0;
+
+    return Self{
+        .value = float,
+        .unit = .px,
     };
 }

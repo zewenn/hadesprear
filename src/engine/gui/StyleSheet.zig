@@ -63,14 +63,93 @@ pub fn equals(self: *Self, other: Self) bool {
 }
 
 pub fn merge(self: *Self, other: Self) Self {
+    const base = Self{};
+
     var result = self.*;
 
-    if (!z.eql(result.background.color, other.background.color))
-        result.background.color = other.background.color;
+    if (!z.eql(base.font.family, other.font.family))
+        result.font.family = other.font.family;
 
-    if (!z.eql(result.background.image, other.background.image))
-        result.background.image = other.background.image;
+    if (!z.eql(base.font.size, other.font.size))
+        result.font.size = other.font.size;
+
+    if (!z.eql(base.font.spacing, other.font.spacing))
+        result.font.spacing = other.font.spacing;
+
+    // Transform
+
+    if (!z.eql(base.top, other.top))
+        result.top = other.top;
+
+    if (!z.eql(base.left, other.left))
+        result.left = other.left;
+
+    if (!z.eql(base.rotation, other.rotation))
+        result.rotation = other.rotation;
+
+    if (!z.eql(base.width, other.width))
+        result.width = other.width;
+
+    if (!z.eql(base.height, other.height))
+        result.height = other.height;
+
+    // Translate
+
+    if (!z.eql(base.translate.x, other.translate.x))
+        result.translate.x = other.translate.x;
+
+    if (!z.eql(base.translate.y, other.translate.y))
+        result.translate.y = other.translate.y;
+
+    // Color
+
+    if (!z.eql(base.color, other.color))
+        result.color = other.color;
+
+    return result;
+}
+
+pub fn _merge(self: *Self, other: Self) Self {
+    var result = self.*;
 
     if (!z.eql(result.font.family, other.font.family))
         result.font.family = other.font.family;
+
+    if (!z.eql(result.font.size, other.font.size))
+        result.font.size = other.font.size;
+
+    if (!z.eql(result.font.spacing, other.font.spacing))
+        result.font.spacing = other.font.spacing;
+
+    // Transform
+
+    if (!z.eql(result.top, other.top))
+        result.top = other.top;
+
+    if (!z.eql(result.left, other.left))
+        result.left = other.left;
+
+    if (!z.eql(result.rotation, other.rotation))
+        result.rotation = other.rotation;
+
+    if (!z.eql(result.width, other.width))
+        result.width = other.width;
+
+    if (!z.eql(result.height, other.height))
+        result.height = other.height;
+
+    // Translate
+
+    if (!z.eql(result.translate.x, other.translate.x))
+        result.translate.x = other.translate.x;
+
+    if (!z.eql(result.translate.y, other.translate.y))
+        result.translate.y = other.translate.y;
+
+    // Color
+
+    if (!z.eql(result.color, other.color))
+        result.color = other.color;
+
+    return result;
 }

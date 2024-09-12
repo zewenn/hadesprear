@@ -11,6 +11,7 @@ pub const GUIElement = @import("GUIElement.zig");
 pub const StyleSheet = @import("StyleSheet.zig");
 pub const ButtonInterface = @import("ButtonInterface.zig");
 pub const u = @import("Unit.zig").u;
+pub const toUnit = @import("Unit.zig").toUnit;
 
 pub var Elements: std.StringHashMap(GUIElement) = undefined;
 pub var ButtonMatrix: [9][16]?ButtonInterface = undefined;
@@ -33,7 +34,7 @@ pub fn update() void {
 
     switch (input.input_mode) {
         .KeyboardAndMouse => {
-            row_loop: for (ButtonMatrix) |row| {
+            for (ButtonMatrix) |row| {
                 for (row) |btn| {
                     if (btn == null) continue;
 
@@ -48,38 +49,64 @@ pub fn update() void {
                         5,
                     );
 
-                    if (!mouse_rect.checkCollision(button_rect)) continue;
-
-                    if (rl.isMouseButtonPressed(.mouse_button_left)) {
-                        std.log.debug("btn transform: {any}", .{button.transform});
-                        std.log.debug("btn rect: {any}", .{button_rect});
-                        btn.?.callback_fn() catch {};
+                    if (!mouse_rect.checkCollision(button_rect)) {
+                        button.is_hovered = false;
+                        continue;
                     }
 
-                    break :row_loop;
+                    button.is_hovered = true;
+
+                    if (rl.isMouseButtonPressed(.mouse_button_left)) {
+                        btn.?.callback_fn() catch {};
+                    }
                 }
             }
         },
 
         // TODO: Jump to next button automatically
         .Keyboard => {
+            for (ButtonMatrix) |row| {
+                for (row) |btn| {
+                    if (btn) |button| button.element_ptr.?.is_hovered = false;
+                }
+            }
+
+            var towards: ?z.arrays.Direction = null;
+
             if (rl.isKeyPressed(.key_left) and keyboard_cursor_position.x > 0)
-                keyboard_cursor_position.x -= 1;
+                towards = .left;
 
             if (rl.isKeyPressed(.key_right) and keyboard_cursor_position.x < 15)
-                keyboard_cursor_position.x += 1;
+                towards = .right;
 
             if (rl.isKeyPressed(.key_up) and keyboard_cursor_position.y > 0)
-                keyboard_cursor_position.y -= 1;
+                towards = .up;
 
             if (rl.isKeyPressed(.key_down) and keyboard_cursor_position.y < 8)
-                keyboard_cursor_position.y += 1;
+                towards = .down;
 
-            if (rl.isKeyPressed(.key_space) or rl.isKeyPressed(.key_enter)) {
-                std.log.debug("kcp: {any}", .{keyboard_cursor_position});
-                const button = ButtonMatrix[@intFromFloat(keyboard_cursor_position.y)][@intFromFloat(keyboard_cursor_position.x)];
+            if (towards) |direction| {
+                const next_tuple = z.arrays.SearchMatrixForNext(
+                    ButtonInterface,
+                    16,
+                    9,
+                    ButtonMatrix,
+                    direction,
+                    @intFromFloat(keyboard_cursor_position.x),
+                    @intFromFloat(keyboard_cursor_position.y),
+                );
 
-                if (button) |btn| {
+                keyboard_cursor_position.x = @floatFromInt(next_tuple[0]);
+                keyboard_cursor_position.y = @floatFromInt(next_tuple[1]);
+            }
+            const button = ButtonMatrix[@intFromFloat(keyboard_cursor_position.y)][@intFromFloat(keyboard_cursor_position.x)];
+
+            if (button) |btn| {
+                btn.element_ptr.?.is_hovered = true;
+
+                if (rl.isKeyPressed(.key_space) or rl.isKeyPressed(.key_enter)) {
+                    std.log.debug("kcp: {any}", .{keyboard_cursor_position});
+
                     btn.callback_fn() catch {};
                 }
             }
@@ -181,7 +208,16 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
         .callback_fn = callback,
     };
 
-    var element = try TextElement(options, text);
+    var O = options;
+    if (z.eql(O.hover, StyleSheet{})) {
+        O.hover = StyleSheet{
+            .font = .{
+                .size = O.style.font.size + 2,
+            },
+        };
+    }
+
+    var element = try TextElement(O, text);
     element.is_button = true;
     element.button_interface_ptr = &ButtonMatrix[@intFromFloat(grid_pos.y)][@intFromFloat(grid_pos.x)].?;
 

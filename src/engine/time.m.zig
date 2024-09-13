@@ -1,34 +1,53 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
 
-const tm = std.time;
+const rl = @import("raylib");
 
-/// Seconds since UTC 1970-01-01
-pub var current: f64 = 0;
+const Timeout = struct {
+    func: *const fn () anyerror!void,
+    ends: f64,
+};
 
-/// Time passed since the last `time.update()` call
-pub var delta: f64 = 0;
+var timeouts: std.ArrayList(Timeout) = undefined;
+var alloc: *Allocator = undefined;
 
-var max: f64 = 0;
-var stored_max: u16 = 0;
+/// The current time in seconds
+pub var currentTime: f64 = 0;
 
-pub fn start() void {
-    setCurrentToNow();
+// The delta time in seconds
+pub var deltaTime: f64 = 0;
+
+pub fn init(allocator: *Allocator) void {
+    alloc = allocator;
+
+    timeouts = std.ArrayList(Timeout).init(allocator.*);
 }
 
-fn setCurrentToNow() void {
-    current = @floatFromInt(tm.milliTimestamp());
-    current = current / @as(f64, 1000.0);
+pub fn deinit() void {
+    timeouts.deinit();
 }
 
-pub fn tick() void {
-    const _curr = current;
-    setCurrentToNow();
-    delta = current - _curr;
+pub fn setTimeout(time_seconds: f64, callback: fn () anyerror!void) !void {
+    const obj = Timeout{
+        .ends = rl.getTime() + time_seconds,
+        .func = callback,
+    };
 
-    // if (stored_max != max_fps) {
-    //     updateMax(max_fps);
-    // }
+    try timeouts.append(obj);
+}
 
-    // if (delta >= max) return;
-    // tm.sleep(@intFromFloat((max - delta) * @as(f64, 1000) * @as(f64, 1000)));
+pub fn tick() !void {
+    currentTime = rl.getTime();
+    deltaTime = @floatCast(rl.getFrameTime());
+
+    for (timeouts.items, 0..) |timeout, i| {
+        if (timeout.ends > currentTime) continue;
+
+        timeout.func() catch {
+            std.log.err("Failed execution of timeout callback...\nResuming execution...", .{});
+        };
+
+        _ = timeouts.orderedRemove(i);
+        break;
+    }
 }

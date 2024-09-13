@@ -10,7 +10,6 @@ const InternalLibrarires = enum {
 	gui,
 	display,
 	engine,
-	timeout,
 	assets,
 	strings,
 };
@@ -27,7 +26,6 @@ pub inline fn Import(comptime lib: InternalLibrarires) type {
 		.gui => @import("../../src/engine/gui/gui.m.zig"),
 		.display => @import("../../src/engine/display/display.m.zig"),
 		.engine => @import("../../src/engine/engine.m.zig"),
-		.timeout => @import("../../src/engine/timeout.m.zig"),
 		.assets => @import("../../src/engine/assets.m.zig"),
 		.strings => @import("../../src/engine/strings.m.zig"),
 	};

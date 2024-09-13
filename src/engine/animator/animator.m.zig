@@ -65,8 +65,8 @@ pub fn play(self: *Self, id: []const u8) !void {
         try self.playing.append(animation);
         animation.playing = true;
         animation.current_frame = 0;
-        animation.last_keyframe_at = time.current;
-        animation.next_keyframe_at = time.current + animation.transition_time_ms_per_kf;
+        animation.last_keyframe_at = time.currentTime;
+        animation.next_keyframe_at = time.currentTime + animation.transition_time_ms_per_kf;
     }
 }
 
@@ -133,15 +133,15 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
 pub fn update(self: *Self) void {
     for (self.playing.items) |anim| {
-        if (time.current > anim.next_keyframe_at) {
+        if (time.currentTime > anim.next_keyframe_at) {
             anim.next();
             if (!anim.playing) {
                 self.stop(anim.id);
                 break;
             }
 
-            anim.last_keyframe_at = time.current;
-            anim.next_keyframe_at = time.current + anim.transition_time_ms_per_kf;
+            anim.last_keyframe_at = time.currentTime;
+            anim.next_keyframe_at = time.currentTime + anim.transition_time_ms_per_kf;
         }
 
         const current_kf = anim.getCurrent();
@@ -159,7 +159,7 @@ pub fn update(self: *Self) void {
 
         const p: f32 = 1 - @as(
             f32,
-            @floatCast(anim.next_keyframe_at - time.current),
+            @floatCast(anim.next_keyframe_at - time.currentTime),
         ) / @as(
             f32,
             @floatCast(anim.transition_time_ms_per_kf),

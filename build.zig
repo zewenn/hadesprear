@@ -1,7 +1,7 @@
 const std = @import("std");
 const rlz = @import("raylib-zig");
 const Allocator = @import("std").mem.Allocator;
-const String = @import("./libs/zig-string.zig").String;
+const String = @import("./src/engine/strings.m.zig").String;
 
 const BUF_128MB = 1024000000;
 

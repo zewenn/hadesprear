@@ -3,20 +3,24 @@ const Import = @import("../.temp/imports.zig").Import;
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-pub const z = Import(.z);
-pub const ecs = Import(.ecs);
-pub const assets = Import(.assets);
+pub const z = @import("./z/z.m.zig");
+pub const ecs = @import("./ecs/ecs.m.zig");
+pub const assets = @import("./assets.m.zig");
 
-pub const events = Import(.events);
-pub const scenes = Import(.scenes);
-pub const input = Import(.input);
+pub const events = @import("./events.m.zig");
+pub const scenes = @import("./scenes.m.zig");
+pub const input = @import("./input.m.zig");
+pub const zString = @import("./strings.m.zig").String;
 
-pub const time = Import(.time);
+pub const time = @import("./time.m.zig");
 
-pub const display = Import(.display);
-pub const collision = Import(.collision);
-pub const GUI = Import(.gui);
-pub const Animator = Import(.animator);
+pub const display = @import("./display/display.m.zig");
+pub const collision = @import("./collision.m.zig");
+pub const GUI = @import("./gui/gui.m.zig");
+pub const Animator = @import("./animator/animator.m.zig");
+
+pub const timeout = @import("./timeout.m.zig");
+pub const setTimeout = timeout.setTimeout;
 
 pub const rl = @import("raylib");
 pub usingnamespace rl;
@@ -31,6 +35,7 @@ pub const Entity = ecs.Entity;
 
 pub fn init(allocator: *Allocator) !void {
     time.start();
+    timeout.init(allocator);
 
     ecs.init(allocator);
     events.init(allocator);
@@ -59,10 +64,14 @@ pub fn deinit() !void {
     scenes.deinit();
     events.deinit();
     ecs.deinit();
+
+    timeout.deinit();
 }
 
 pub fn update(allocator: *Allocator) !void {
     time.tick();
+    try timeout.tick();
+
     input.update();
 
     GUI.update();

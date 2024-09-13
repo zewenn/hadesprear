@@ -27,5 +27,9 @@
 			"if (!z.eql(result.$1, other.$1))",
 			"    result.$1 = other.$1;\n"
 		]
+	},
+	"import raylib": {
+		"prefix": "irl",
+		"body": "const rl = @import(\"raylib\");",
 	}
 }

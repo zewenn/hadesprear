@@ -17,7 +17,7 @@ const u = GUI.u;
 pub fn awake() !void {
     e.input.ui_mode = true;
 
-    try GUI.UI(
+    try GUI.Body(
         .{
             .id = "body",
             .style = .{
@@ -31,72 +31,38 @@ pub fn awake() !void {
                 },
             },
         },
-        @constCast(
-            &[_]*GUI.GUIElement{
-                try GUI.Button(
-                    .{
-                        .id = "hello-world-2",
-                        .style = GUI.StyleSheet{
-                            .font = .{
-                                .size = 64,
-                                .spacing = 1,
-                            },
-                            .color = e.Color.pink,
-                            .translate = .{
-                                .x = .center,
-                                .y = .center,
-                            },
+        @constCast(&[_]*GUI.GUIElement{
+            try GUI.Button(
+                .{
+                    .id = "hello-world-2",
+                    .style = GUI.StyleSheet{
+                        .font = .{
+                            .size = 64,
+                            .spacing = 1,
+                        },
+                        .color = e.Color.pink,
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
                         },
                     },
-                    "Hello World!",
-                    e.Vector2.init(7, 7),
-                    struct {
-                        pub fn printTest() anyerror!void {
-                            std.log.debug("Clicked!", .{});
-                        }
-                    }.printTest,
-                ),
-                try GUI.Button(
-                    .{
-                        .id = "hello-world-3",
-                        .style = GUI.StyleSheet{
-                            .font = .{
-                                .size = 32,
-                                .spacing = 1,
-                            },
-                            .color = e.Color.yellow,
-                            .translate = .{
-                                .x = .center,
-                                .y = .center,
-                            },
-                            .background = .{
-                                .color = e.Color.blue,
-                            },
-                            .top = u("-150x"),
-                        },
-                        .hover = .{
-                            .font = .{
-                                .size = 48,
-                            },
-                            .left = u("-100x"),
-                        },
-                    },
-                    "Hello World!",
-                    e.Vector2.init(3, 6),
-                    struct {
-                        pub fn printTest() anyerror!void {
-                            std.log.debug("Yesssh!", .{});
-                        }
-                    }.printTest,
-                ),
-            },
-        ),
+                },
+                "Play!",
+                e.Vector2.init(7, 7),
+                struct {
+                    pub fn printTest() !void {
+                        e.input.ui_mode = false;
+                        try e.scenes.load("game");
+                    }
+                }.printTest,
+            ),
+        }),
         "",
     );
 }
 
 pub fn init() !void {
-    // try e.scenes.load("game");
+    try e.scenes.load("game");
 }
 
 pub fn update() !void {}

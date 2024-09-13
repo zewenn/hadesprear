@@ -12,11 +12,12 @@ pub const Transform = struct {
     scale: rl.Vector2,
     anchor: ?rl.Vector2 = null,
 
+    /// Creates a new transform with 64x64 `scale` and everything else set to 0.
     pub fn new() Self {
         return Self{
             .position = rl.Vector2.init(0, 0),
             .rotation = rl.Vector3.init(0, 0, 0),
-            .scale = rl.Vector2.init(0, 0),
+            .scale = rl.Vector2.init(64, 64),
             .anchor = null,
         };
     }
@@ -53,8 +54,6 @@ pub const Transform = struct {
             self.scale.y,
         );
     }
-
-    
 };
 
 pub const Display = struct {

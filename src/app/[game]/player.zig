@@ -20,9 +20,11 @@ var pAnimator: e.Animator = undefined;
 
 var h0Display: e.ecs.cDisplay = undefined;
 var h0Transform: e.ecs.cTransform = undefined;
+var h0Animator: e.Animator = undefined;
 
 var h1Display: e.ecs.cDisplay = undefined;
 var h1Transform: e.ecs.cTransform = undefined;
+var h1Animator: e.Animator = undefined;
 
 // ===================== [Others] =====================
 
@@ -31,11 +33,119 @@ var allocator = std.heap.page_allocator;
 
 var p_facing: enum { left, right } = .left;
 
+const weapons = struct {
+    var gloves: Weapon = undefined;
+    var plates: Weapon = undefined;
+
+    var current: ?*Weapon = null;
+
+    pub fn equip(weapon: *Weapon) void {
+        current = weapon;
+        h0Display.sprite = current.?.sprites.left;
+        h1Display.sprite = current.?.sprites.right;
+    }
+
+    const types = enum {
+        gloves,
+        plates,
+    };
+
+    const Sprites = struct {
+        left: []const u8,
+        right: []const u8,
+    };
+
+    const Weapon = struct {
+        const Self = @This();
+
+        sprites: Sprites,
+        damage: f32,
+        pojectile_transform: e.ecs.cTransform,
+
+        pub fn init(
+            sprites: Sprites,
+            damage: f32,
+            projectile_transorm: e.ecs.cTransform,
+        ) Self {
+            return Self{
+                .sprites = sprites,
+                .damage = damage,
+                .pojectile_transform = projectile_transorm,
+            };
+        }
+
+        pub fn deinit(self: *Self) void {
+            allocator.free(self.sprites.left);
+            allocator.free(self.sprites.right);
+        }
+
+        pub fn equip(self: *Self) void {
+            weapons.equip(self);
+        }
+
+        pub fn deequip(self: *Self) void {
+            if (!e.z.eql(self, current)) return;
+            current = null;
+        }
+    };
+
+    fn getSideSpecificSprite(
+        prefix: []const u8,
+        middle: []const u8,
+        side: enum { left, right },
+        ext: []const u8,
+    ) ![]u8 {
+        var final_zS = e.zString.init(allocator);
+        defer final_zS.deinit();
+
+        try final_zS.concat(prefix);
+        try final_zS.concat("_");
+        try final_zS.concat(middle);
+        try final_zS.concat("_");
+        try final_zS.concat(switch (side) {
+            .left => "left",
+            .right => "right",
+        });
+        try final_zS.concat(ext);
+
+        return (try final_zS.toOwned()).?;
+    }
+
+    /// Returned Sprites object conntains heap allocated
+    /// string slices which will be automatically freed
+    /// when `Weapon.deinit()` is called
+    pub fn getSprites(T: types) !Sprites {
+        const middle_string: []const u8 = switch (T) {
+            .gloves => "gloves",
+            .plates => "plates",
+        };
+
+        const prefix = "wpn";
+        const fileext = ".png";
+
+        return Sprites{
+            .left = try getSideSpecificSprite(
+                prefix,
+                middle_string,
+                .left,
+                fileext,
+            ),
+            .right = try getSideSpecificSprite(
+                prefix,
+                middle_string,
+                .right,
+                fileext,
+            ),
+        };
+    }
+};
+
 const HAND_DISTANCE: comptime_float = 24;
 
 // ===================== [Events] =====================
 
 pub fn awake() !void {
+    e.z.debug.disable();
 
     // Player
     {
@@ -184,6 +294,43 @@ pub fn awake() !void {
                 e.z.panic("Hand0 transform couldn't be attached");
             };
         }
+
+        // Animator
+        {
+            h0Animator = try e.Animator.init(&allocator, Hand0);
+            try Hand0.attach(&h0Animator, "animator");
+
+            // Walk left anim
+            {
+                var hit_gloves = e.Animator.Animation.init(
+                    &allocator,
+                    "hit_gloves",
+                    e.Animator.interpolation.ease_out,
+                    0.25,
+                );
+                {
+                    hit_gloves.chain(
+                        1,
+                        .{
+                            .y = 0,
+                        },
+                    );
+                    hit_gloves.chain(
+                        2,
+                        .{
+                            .y = 100,
+                        },
+                    );
+                    hit_gloves.chain(
+                        3,
+                        .{
+                            .y = 0,
+                        },
+                    );
+                }
+                try h0Animator.chain(hit_gloves);
+            }
+        }
     }
 
     // Hand1
@@ -216,15 +363,62 @@ pub fn awake() !void {
                 e.z.panic("Hand1 transform couldn't be attached");
             };
         }
+
+        // Animator
+        {
+            h1Animator = try e.Animator.init(&allocator, Hand1);
+            try Hand1.attach(&h1Animator, "animator");
+
+            // Walk left anim
+            {
+                var hit_gloves = e.Animator.Animation.init(
+                    &allocator,
+                    "hit_gloves",
+                    e.Animator.interpolation.ease_out,
+                    0.25,
+                );
+                {
+                    hit_gloves.chain(
+                        1,
+                        .{
+                            .y = 0,
+                        },
+                    );
+                    hit_gloves.chain(
+                        2,
+                        .{
+                            .y = 100,
+                        },
+                    );
+                    hit_gloves.chain(
+                        3,
+                        .{
+                            .y = 0,
+                        },
+                    );
+                }
+                try h1Animator.chain(hit_gloves);
+            }
+        }
     }
 
-    menu_music = e.assets.get(e.Sound, "menu.mp3").?;
-    e.setSoundVolume(menu_music, 0.25);
-    e.camera.follow(&(pTransform.position));
+    weapons.gloves = weapons.Weapon.init(
+        try weapons.getSprites(.gloves),
+        20,
+        e.ecs.cTransform.new(),
+    );
+    weapons.plates = weapons.Weapon.init(
+        try weapons.getSprites(.plates),
+        20,
+        e.ecs.cTransform.new(),
+    );
+
+    e.camera.follow(&pTransform.position);
 }
 
 pub fn init() !void {
-    e.playSound(menu_music);
+    // weapons.plates.equip();
+    weapons.gloves.equip();
 }
 
 pub fn update() !void {
@@ -244,11 +438,18 @@ pub fn update() !void {
         if (e.isKeyDown(.key_d)) {
             moveVector.x += 1;
         }
-        if (e.isKeyDown(.key_q)) {
-            pTransform.rotate(-10);
-        }
-        if (e.isKeyDown(.key_e)) {
-            pTransform.rotate(10);
+
+        if (e.isMouseButtonPressed(.mouse_button_left)) {
+            std.log.debug("Playing", .{});
+            try h0Animator.play("hit_gloves");
+            try e.setTimeout(
+                0.125,
+                struct {
+                    pub fn cb() !void {
+                        try h1Animator.play("hit_gloves");
+                    }
+                }.cb,
+            );
         }
 
         const normVec = moveVector.normalize();
@@ -259,6 +460,9 @@ pub fn update() !void {
     // Animator
     Animator: {
         pAnimator.update();
+        h0Animator.update();
+        h1Animator.update();
+
         if (moveVector.x < 0 and !pAnimator.isPlaying("walk_left")) {
             pAnimator.stop("walk_right");
             try pAnimator.play("walk_left");
@@ -293,9 +497,17 @@ pub fn update() !void {
         );
 
         var rotator_vector0 = e.Vector2.init(HAND_DISTANCE, h0Transform.scale.x);
+        if (h0Animator.isPlaying("hit_gloves")) {
+            rotator_vector0.x += h0Transform.position.y;
+        }
+
         const finished0 = rotator_vector0.rotate(std.math.degreesToRadians(90)).negate();
 
         var rotator_vector1 = e.Vector2.init(HAND_DISTANCE, 0);
+        if (h1Animator.isPlaying("hit_gloves")) {
+            rotator_vector1.x += h1Transform.position.y;
+        }
+
         const finished1 = rotator_vector1.rotate(std.math.degreesToRadians(90)).negate();
 
         h0Transform.anchor = finished0;
@@ -304,8 +516,8 @@ pub fn update() !void {
         const rotation: f32 = std.math.radiansToDegrees(std.math.atan2(mouse_relative_pos.y, mouse_relative_pos.x)) - 90;
 
         h0Transform.position = .{
-            .x = pTransform.position.x + 0,
-            .y = pTransform.position.y + 0,
+            .x = pTransform.position.x,
+            .y = pTransform.position.y,
         };
         h0Transform.rotation.z = rotation;
         h1Transform.position = .{
@@ -317,8 +529,10 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    e.stopSound(menu_music);
-    e.unloadSound(menu_music);
-
     pAnimator.deinit();
+    h0Animator.deinit();
+    h1Animator.deinit();
+
+    weapons.gloves.deinit();
+    weapons.plates.deinit();
 }

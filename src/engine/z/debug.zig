@@ -28,4 +28,12 @@ pub fn addrprint(name: []const u8, ptr: anytype) void {
     }
 }
 
-pub var debugDisplay = true;
+pub fn enable() void {
+    debugDisplay = true;
+}
+
+pub fn disable() void {
+    debugDisplay = false;
+}
+
+pub var debugDisplay = false;

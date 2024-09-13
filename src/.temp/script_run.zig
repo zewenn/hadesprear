@@ -6,11 +6,6 @@ pub fn register() !void {
 	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/background.zig").awake,
 	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/gui.zig").awake,
-		.eInit = @import("../app/[game]/gui.zig").init,
-		.eUpdate = @import("../app/[game]/gui.zig").update,
-		.eDeinit = @import("../app/[game]/gui.zig").deinit,
-	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/box2.zig").awake,
 	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/box.zig").awake,
@@ -24,6 +19,5 @@ pub fn register() !void {
 		.eInit = @import("../app/[default]/main.zig").init,
 		.eUpdate = @import("../app/[default]/main.zig").update,
 		.eDeinit = @import("../app/[default]/main.zig").deinit,
-	});	try sc.register("default", sc.Script{
 	});
 }

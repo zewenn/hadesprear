@@ -165,6 +165,10 @@ pub fn clear() void {
         }
     }
 
+    ButtonMatrix = [_][16]?ButtonInterface{
+        [_]?ButtonInterface{null} ** 16,
+    } ** 9;
+
     Elements.clearAndFree();
 }
 
@@ -196,7 +200,7 @@ pub fn Container(options: GUIElement.Options, children: []*GUIElement) !*GUIElem
     return try Element(options, children, "");
 }
 
-pub fn TextElement(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {
+pub fn Text(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {
     var el = try Element(options, &[_]*GUIElement{}, text);
 
     const len = std.mem.indexOfSentinel(u8, 0, text);
@@ -217,12 +221,12 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
     if (z.eql(O.hover, StyleSheet{})) {
         O.hover = StyleSheet{
             .font = .{
-                .size = O.style.font.size + 2,
+                .size = O.style.font.size + 1,
             },
         };
     }
 
-    var element = try TextElement(O, text);
+    var element = try Text(O, text);
     element.is_button = true;
     element.button_interface_ptr = &ButtonMatrix[@intFromFloat(grid_pos.y)][@intFromFloat(grid_pos.x)].?;
 
@@ -231,6 +235,6 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
     return element;
 }
 
-pub fn UI(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !void {
+pub fn Body(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !void {
     _ = try Element(options, children, content);
 }

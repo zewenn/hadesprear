@@ -58,16 +58,19 @@ const weapons = struct {
     const Weapon = struct {
         const Self = @This();
 
+        type: types,
         sprites: Sprites,
         damage: f32,
         pojectile_transform: e.ecs.cTransform,
 
         pub fn init(
+            T: types,
             sprites: Sprites,
             damage: f32,
             projectile_transorm: e.ecs.cTransform,
         ) Self {
             return Self{
+                .type = T,
                 .sprites = sprites,
                 .damage = damage,
                 .pojectile_transform = projectile_transorm,
@@ -141,6 +144,28 @@ const weapons = struct {
 };
 
 const HAND_DISTANCE: comptime_float = 24;
+const HIT_GLOVE_DISTANCE: f32 = 100;
+const HIT_PLATES_ROTATION: f32 = 42.5;
+
+fn playAttack(cw: *weapons.Weapon) !void {
+    switch (cw.type) {
+        .gloves => {
+            try h0Animator.play("hit_gloves");
+            try e.setTimeout(
+                0.125,
+                struct {
+                    pub fn cb() !void {
+                        try h1Animator.play("hit_gloves");
+                    }
+                }.cb,
+            );
+        },
+        .plates => {
+            try h0Animator.play("hit_plates");
+            try h1Animator.play("hit_plates");
+        },
+    }
+}
 
 // ===================== [Events] =====================
 
@@ -300,7 +325,6 @@ pub fn awake() !void {
             h0Animator = try e.Animator.init(&allocator, Hand0);
             try Hand0.attach(&h0Animator, "animator");
 
-            // Walk left anim
             {
                 var hit_gloves = e.Animator.Animation.init(
                     &allocator,
@@ -318,7 +342,7 @@ pub fn awake() !void {
                     hit_gloves.chain(
                         2,
                         .{
-                            .y = 100,
+                            .y = HIT_GLOVE_DISTANCE,
                         },
                     );
                     hit_gloves.chain(
@@ -329,6 +353,35 @@ pub fn awake() !void {
                     );
                 }
                 try h0Animator.chain(hit_gloves);
+            }
+            {
+                var hit_plates = e.Animator.Animation.init(
+                    &allocator,
+                    "hit_plates",
+                    e.Animator.interpolation.ease_out,
+                    0.25,
+                );
+                {
+                    hit_plates.chain(
+                        1,
+                        .{
+                            .rotation = 0,
+                        },
+                    );
+                    hit_plates.chain(
+                        2,
+                        .{
+                            .rotation = -HIT_PLATES_ROTATION,
+                        },
+                    );
+                    hit_plates.chain(
+                        3,
+                        .{
+                            .rotation = 0,
+                        },
+                    );
+                }
+                try h0Animator.chain(hit_plates);
             }
         }
     }
@@ -369,7 +422,6 @@ pub fn awake() !void {
             h1Animator = try e.Animator.init(&allocator, Hand1);
             try Hand1.attach(&h1Animator, "animator");
 
-            // Walk left anim
             {
                 var hit_gloves = e.Animator.Animation.init(
                     &allocator,
@@ -387,7 +439,7 @@ pub fn awake() !void {
                     hit_gloves.chain(
                         2,
                         .{
-                            .y = 100,
+                            .y = HIT_GLOVE_DISTANCE,
                         },
                     );
                     hit_gloves.chain(
@@ -399,15 +451,46 @@ pub fn awake() !void {
                 }
                 try h1Animator.chain(hit_gloves);
             }
+            {
+                var hit_plates = e.Animator.Animation.init(
+                    &allocator,
+                    "hit_plates",
+                    e.Animator.interpolation.ease_out,
+                    0.25,
+                );
+                {
+                    hit_plates.chain(
+                        1,
+                        .{
+                            .rotation = 0,
+                        },
+                    );
+                    hit_plates.chain(
+                        2,
+                        .{
+                            .rotation = HIT_PLATES_ROTATION,
+                        },
+                    );
+                    hit_plates.chain(
+                        3,
+                        .{
+                            .rotation = 0,
+                        },
+                    );
+                }
+                try h1Animator.chain(hit_plates);
+            }
         }
     }
 
     weapons.gloves = weapons.Weapon.init(
+        .gloves,
         try weapons.getSprites(.gloves),
         20,
         e.ecs.cTransform.new(),
     );
     weapons.plates = weapons.Weapon.init(
+        .plates,
         try weapons.getSprites(.plates),
         20,
         e.ecs.cTransform.new(),
@@ -417,8 +500,8 @@ pub fn awake() !void {
 }
 
 pub fn init() !void {
-    // weapons.plates.equip();
-    weapons.gloves.equip();
+    weapons.plates.equip();
+    // weapons.gloves.equip();
 }
 
 pub fn update() !void {
@@ -439,17 +522,18 @@ pub fn update() !void {
             moveVector.x += 1;
         }
 
-        if (e.isMouseButtonPressed(.mouse_button_left)) {
-            std.log.debug("Playing", .{});
-            try h0Animator.play("hit_gloves");
-            try e.setTimeout(
-                0.125,
-                struct {
-                    pub fn cb() !void {
-                        try h1Animator.play("hit_gloves");
-                    }
-                }.cb,
-            );
+        if (weapons.current) |cw| {
+            if (e.isKeyPressed(.key_tab)) {
+                switch (cw.type) {
+                    .gloves => weapons.plates.equip(),
+                    .plates => weapons.gloves.equip(),
+                }
+
+                try playAttack(weapons.current.?);
+            }
+            if (e.isMouseButtonPressed(.mouse_button_left)) {
+                try playAttack(cw);
+            }
         }
 
         const normVec = moveVector.normalize();
@@ -519,12 +603,30 @@ pub fn update() !void {
             .x = pTransform.position.x,
             .y = pTransform.position.y,
         };
-        h0Transform.rotation.z = rotation;
+        h0Transform.rotation.z = GetRotation: {
+            var rot = rotation;
+            if (weapons.current) |cw| {
+                if (cw.type == .plates) rot += 20;
+            }
+
+            if (!h0Animator.isPlaying("hit_plates")) break :GetRotation rot;
+
+            break :GetRotation rot + h0Transform.rotation.z;
+        };
         h1Transform.position = .{
             .x = pTransform.position.x + 0,
             .y = pTransform.position.y + 0,
         };
-        h1Transform.rotation.z = rotation;
+        h1Transform.rotation.z = GetRotation: {
+            var rot = rotation;
+            if (weapons.current) |cw| {
+                if (cw.type == .plates) rot -= 20;
+            }
+
+            if (!h1Animator.isPlaying("hit_plates")) break :GetRotation rot;
+
+            break :GetRotation rot + h1Transform.rotation.z;
+        };
     }
 }
 

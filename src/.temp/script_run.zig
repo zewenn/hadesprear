@@ -8,7 +8,9 @@ pub fn register() !void {
 	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/box2.zig").awake,
 	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/box.zig").awake,
+		.eAwake = @import("../app/[game]/enemy.zig").awake,
+		.eUpdate = @import("../app/[game]/enemy.zig").update,
+		.eDeinit = @import("../app/[game]/enemy.zig").deinit,
 	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/player.zig").awake,
 		.eInit = @import("../app/[game]/player.zig").init,

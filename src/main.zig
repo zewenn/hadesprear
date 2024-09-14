@@ -17,7 +17,7 @@ pub fn main() !void {
     //--------------------------------------------------------------------------------------
     e.window.init(
         "HadeSpear",
-        e.Vector2.init(
+        e.Vec2(
             1280,
             720,
         ),
@@ -35,4 +35,9 @@ pub fn main() !void {
     while (!e.windowShouldClose()) { // Detect window close button or ESC key
         e.update(&allocator) catch {};
     }
+
+    const str = try e.z.arrays.NumberToString(allocator, 123);
+    defer allocator.free(str);
+
+    std.log.debug("123 to string: {s}", .{str});
 }

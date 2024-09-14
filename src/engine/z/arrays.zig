@@ -1,4 +1,7 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
+
+const math = @import("math.zig");
 
 pub fn Array(comptime T: type, comptime len: usize, comptime val: [len]T) type {
     return struct {
@@ -32,6 +35,41 @@ pub fn StringEqual(string1: []const u8, string2: []const u8) bool {
     }
 
     return true;
+}
+
+pub fn toManyItemPointerSentinel(alloc: Allocator, m: []const u8) ![*:0]const u8 {
+    return @as([*:0]const u8, try alloc.dupeZ(u8, m));
+}
+
+pub fn freeManyItemPointerSentinel(alloc: Allocator, m: [*:0]const u8) void {
+    alloc.free(std.mem.span(m));
+}
+
+pub fn NumberToString(alloc: Allocator, number: anytype) ![]u8 {
+    const int_number: i128 = @intFromFloat(math.to_f128(number).?);
+
+    var arr = std.ArrayList(u8).init(alloc);
+    defer arr.deinit();
+
+    var pow: i128 = 0;
+    while (true) : (pow += 1) {
+        const current: i128 = @divTrunc(
+            int_number,
+            std.math.pow(i128, 10, pow),
+        );
+        const next: i128 = @divTrunc(
+            int_number,
+            std.math.pow(i128, 10, pow + 1),
+        ) * 10;
+
+        const value: i128 = current - next;
+
+        try arr.insert(0, @as(u8, @intCast(value)) + '0');
+
+        if (next <= 0) break;
+    }
+
+    return arr.toOwnedSlice();
 }
 
 pub const Direction = enum { up, down, left, right };

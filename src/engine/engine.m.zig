@@ -31,6 +31,27 @@ pub const window = display.window;
 pub const camera = display.camera;
 pub const Entity = ecs.Entity;
 
+pub fn Vec2(x: anytype, y: anytype) rl.Vector2 {
+    var _x: f32 = 0;
+    var _y: f32 = 0;
+
+    _x = switch (@typeInfo(@TypeOf(x))) {
+        .Int, .ComptimeInt => @floatFromInt(x),
+        .Float, .ComptimeFloat => @floatCast(x),
+        .Bool => @floatFromInt(@intFromBool(x)),
+        else => 0,
+    };
+
+    _y = switch (@typeInfo(@TypeOf(y))) {
+        .Int => @floatFromInt(y),
+        .Float => @floatCast(y),
+        .Bool => @floatFromInt(@intFromBool(y)),
+        else => 0,
+    };
+
+    return rl.Vector2.init(x, y);
+}
+
 pub fn init(allocator: *Allocator) !void {
     time.init(allocator);
 

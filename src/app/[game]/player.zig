@@ -147,12 +147,14 @@ const HAND_DISTANCE: comptime_float = 24;
 const HIT_GLOVE_DISTANCE: f32 = 100;
 const HIT_PLATES_ROTATION: f32 = 42.5;
 
-fn playAttack(cw: *weapons.Weapon) !void {
+fn playAttackAnimation(cw: *weapons.Weapon) !void {
     switch (cw.type) {
         .gloves => {
+            h0Animator.stop("hit_plates");
+            h1Animator.stop("hit_plates");
             try h0Animator.play("hit_gloves");
             try e.setTimeout(
-                0.125,
+                0.075,
                 struct {
                     pub fn cb() !void {
                         try h1Animator.play("hit_gloves");
@@ -161,6 +163,8 @@ fn playAttack(cw: *weapons.Weapon) !void {
             );
         },
         .plates => {
+            h0Animator.stop("hit_gloves");
+            h1Animator.stop("hit_gloves");
             try h0Animator.play("hit_plates");
             try h1Animator.play("hit_plates");
         },
@@ -507,8 +511,7 @@ pub fn init() !void {
 pub fn update() !void {
     var moveVector = e.Vector2.init(0, 0);
 
-    // Movement
-    {
+    Input: {
         if (e.isKeyDown(.key_w)) {
             moveVector.y -= 1;
         }
@@ -522,23 +525,24 @@ pub fn update() !void {
             moveVector.x += 1;
         }
 
-        if (weapons.current) |cw| {
-            if (e.isKeyPressed(.key_tab)) {
-                switch (cw.type) {
-                    .gloves => weapons.plates.equip(),
-                    .plates => weapons.gloves.equip(),
-                }
-
-                try playAttack(weapons.current.?);
-            }
-            if (e.isMouseButtonPressed(.mouse_button_left)) {
-                try playAttack(cw);
-            }
-        }
-
         const normVec = moveVector.normalize();
         pTransform.position.x += normVec.x * pEntityStats.movement_speed * e.getFrameTime();
         pTransform.position.y += normVec.y * pEntityStats.movement_speed * e.getFrameTime();
+
+        if (weapons.current == null) break :Input;
+        const cw = weapons.current.?;
+
+        if (e.isKeyPressed(.key_tab)) {
+            switch (cw.type) {
+                .gloves => weapons.plates.equip(),
+                .plates => weapons.gloves.equip(),
+            }
+
+            try playAttackAnimation(weapons.current.?);
+        }
+        if (e.isMouseButtonPressed(.mouse_button_left)) {
+            try playAttackAnimation(cw);
+        }
     }
 
     // Animator

@@ -15,22 +15,7 @@ const z = Import(.z);
 
 pub const window = @import("./window.zig");
 
-pub const camera = struct {
-    pub var position = rl.Vector2.init(0, 0);
-    pub var zoom: f32 = 1;
-
-    pub var following: ?*rl.Vector2 = null;
-
-    pub fn follow(vec: *rl.Vector2) void {
-        following = vec;
-    }
-
-    pub fn update() void {
-        if (following) |v| {
-            position = v.*;
-        }
-    }
-};
+pub const camera = @import("./camera.zig");
 
 // ==================================================
 

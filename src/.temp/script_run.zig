@@ -6,6 +6,10 @@ pub fn register() !void {
 	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/background.zig").awake,
 	});	try sc.register("game", sc.Script{
+		.eAwake = @import("../app/[game]/projectiles.zig").awake,
+		.eUpdate = @import("../app/[game]/projectiles.zig").update,
+		.eDeinit = @import("../app/[game]/projectiles.zig").deinit,
+	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/box2.zig").awake,
 	});	try sc.register("game", sc.Script{
 		.eAwake = @import("../app/[game]/enemy.zig").awake,

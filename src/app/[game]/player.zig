@@ -3,6 +3,7 @@ const Import = @import("../../.temp/imports.zig").Import;
 const std = @import("std");
 const e = Import(.engine);
 const entity = @import("../entity.zig");
+const projectiles = @import("projectiles.zig");
 
 // ===================== [Entity] =====================
 
@@ -523,6 +524,17 @@ pub fn update() !void {
         }
         if (e.isKeyDown(.key_d)) {
             moveVector.x += 1;
+        }
+        if (e.isMouseButtonPressed(.mouse_button_left)) {
+            const proj = try projectiles.new(
+                .player,
+                1,
+                100,
+                0,
+                e.ecs.cTransform.new(),
+            );
+
+            try projectiles.shoot(proj);
         }
 
         const normVec = moveVector.normalize();

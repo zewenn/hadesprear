@@ -23,6 +23,8 @@ pub const setTimeout = time.setTimeout;
 pub const rl = @import("raylib");
 pub usingnamespace rl;
 
+pub var ALLOCATOR: Allocator = undefined;
+
 pub inline fn compile() !void {
     try assets.compile();
 }
@@ -53,6 +55,7 @@ pub fn Vec2(x: anytype, y: anytype) rl.Vector2 {
 }
 
 pub fn init(allocator: *Allocator) !void {
+    ALLOCATOR = allocator.*;
     time.init(allocator);
 
     ecs.init(allocator);

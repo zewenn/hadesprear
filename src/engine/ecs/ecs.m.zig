@@ -49,6 +49,10 @@ pub fn getEntity(id: []const u8) ?*Entity {
     return entities.getPtr(id);
 }
 
+pub fn removeEntity(id: []const u8) void {
+    _ = entities.remove(id);
+}
+
 /// Caller owns the returned memory
 pub fn getEntities(component_id: []const u8) ![]*Entity {
     var eList = std.ArrayList(*Entity).init(alloc.*);

@@ -10,6 +10,7 @@ pub const entities = entities_module.make(struct {
     display: entities_module.Display,
     collider: ?entities_module.Collider = null,
     cached_display: ?entities_module.CachedDisplay = null,
+    shooting_stats: ?ShootingStats = null,
 
     projectile_data: ?ProjectileData = null,
 
@@ -34,4 +35,10 @@ pub const ProjectileData = struct {
     speed: f32,
     direction: f32,
     scale: rl.Vector2,
+};
+
+pub const ShootingStats = struct {
+    damage: f32 = 20,
+    timeout: f64 = 0.1,
+    timeout_end: f64 = 0,
 };

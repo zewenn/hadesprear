@@ -44,9 +44,6 @@ fn sortGUIElements(_: void, lsh: *GUI.GUIElement, rsh: *GUI.GUIElement) bool {
 }
 
 pub fn update() !void {
-    rl.setTraceLogLevel(.log_error);
-    defer rl.setTraceLogLevel(.log_debug);
-
     rl.beginDrawing();
     defer rl.endDrawing();
 
@@ -127,8 +124,6 @@ pub fn update() !void {
             };
 
             texture = entity.cached_display.?.texture.?;
-
-            std.log.info("Loaded cache for {s}", .{entity.id});
         }
 
         drawTetxure(

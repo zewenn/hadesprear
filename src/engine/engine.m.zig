@@ -73,6 +73,8 @@ pub fn init(allocator: *Allocator) !void {
 
     try @import("../.temp/script_run.zig").register();
 
+    std.log.info("Initalised with Entity size: {d}", .{@sizeOf(entities.Entity)});
+
     try scenes.load("default");
 }
 

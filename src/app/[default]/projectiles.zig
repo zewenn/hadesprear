@@ -12,40 +12,87 @@ const e = Import(.engine);
 
 // ===================== [Events] =====================
 
-const ProjectileArrayType = std.ArrayList(e.entities.Entity);
-var projectile_array: ProjectileArrayType = undefined;
+const heap = struct {
+    const ProjectileArrayType = ?e.entities.Entity;
+
+    // 1 MB
+    const MaxSize: comptime_int = 8_000_000;
+    const EntitySize: comptime_int = @sizeOf(?e.entities.Entity);
+
+    const ProjectileArrayLen: comptime_int = @divFloor(MaxSize, EntitySize);
+    var projectile_array: [ProjectileArrayLen]ProjectileArrayType = [_]ProjectileArrayType{
+        null,
+    } ** ProjectileArrayLen;
+
+    pub fn searchNextIndex(override: bool) usize {
+        for (projectile_array, 0..) |value, index| {
+            if (index == 0) continue;
+            if (value == null) return index;
+        }
+
+        // No null, everything is used...
+
+        // This saves your ass 1 time
+        if (!override) {
+            projectile_array[0] = null;
+            return 0;
+        }
+
+        const rIndex = std.crypto.random.uintLessThan(usize, ProjectileArrayLen);
+
+        if (projectile_array[rIndex]) |_| {
+            free(rIndex);
+        }
+
+        projectile_array[rIndex] = null;
+        return rIndex;
+    }
+
+    pub fn malloc(value: e.entities.Entity) void {
+        const index = searchNextIndex(true);
+        projectile_array[index] = value;
+    }
+
+    pub fn free(index: usize) void {
+        var value = projectile_array[index];
+
+        if (value == null) return;
+
+        value.?.freeRaylibStructs();
+        if (e.entities.exists(value.?.id)) {
+            _ = e.entities.delete(value.?.id);
+        }
+        e.ALLOCATOR.free(value.?.id);
+
+        projectile_array[index] = null;
+    }
+};
 
 pub fn awake() !void {
-    projectile_array = ProjectileArrayType.init(e.ALLOCATOR);
+    std.log.info("Maximum projectile count: {d}", .{heap.ProjectileArrayLen});
 }
 
 pub fn init() !void {}
 
 pub fn update() !void {
-    var i: usize = 0;
-    while (i < projectile_array.items.len) : (i += 1) {
-        const index = i;
-        const item = &projectile_array.items[index];
+    for (heap.projectile_array, 0..) |value, index| {
+        if (value == null) continue;
+
+        const item = &heap.projectile_array[index].?;
 
         if (item.projectile_data == null) {
             std.log.err("Projectile without projectile data!", .{});
             std.log.err("Removing...", .{});
 
-            item.freeRaylibStructs();
-            _ = e.entities.delete(item.id);
-
-            _ = projectile_array.swapRemove(index);
-            break;
+            heap.free(index);
+            continue;
         }
 
         const projectile_data = item.projectile_data.?;
 
         if (projectile_data.lifetime_end < e.time.currentTime) {
-            item.freeRaylibStructs();
-            _ = e.entities.delete(item.id);
-            e.ALLOCATOR.free(item.id);
-            _ = projectile_array.swapRemove(index);
-            break;
+            heap.free(index);
+            continue;
         }
 
         if (!e.entities.exists(item.id)) {
@@ -60,18 +107,14 @@ pub fn update() !void {
 
         item.transform.position.x += direction_vector.x * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
         item.transform.position.y += direction_vector.y * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
-        std.log.debug("index: {d} - {s}", .{ index, item.id });
+        // std.log.debug("index: {d} - {s}", .{ index, item.id });
     }
 }
 
 pub fn deinit() !void {
-    for (projectile_array.items) |*item| {
-        item.freeRaylibStructs();
-        _ = e.entities.delete(item.id);
-
-        e.ALLOCATOR.free(item.id);
+    for (0..heap.projectile_array.len) |index| {
+        heap.free(index);
     }
-    projectile_array.deinit();
 }
 
 pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
@@ -96,8 +139,7 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
         .projectile_data = data,
     };
 
-    try projectile_array.append(New);
+    heap.malloc(New);
 
-    std.log.debug("Id: {s}", .{New.id});
-    std.log.debug("Arr len: {d}", .{projectile_array.items.len});
+    // std.log.debug("Id: {s}", .{New.id});
 }

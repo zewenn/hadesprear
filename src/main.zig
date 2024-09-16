@@ -15,6 +15,8 @@ pub fn main() !void {
 
     var allocator = gpa.allocator();
 
+    e.setTraceLogLevel(.log_error);
+
     // Initialization
     // --------------------------------------------------------------------------------------
     e.window.init(

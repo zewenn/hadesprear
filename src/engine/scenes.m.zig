@@ -5,7 +5,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
 const z = Import(.z);
-const ecs = Import(.ecs);
+const entities = @import("./engine.m.zig").entities;
 const events = Import(.events);
 const GUI = Import(.gui);
 
@@ -79,7 +79,7 @@ pub fn load(comptime id: String) !void {
 
     events.clear();
     GUI.clear();
-    ecs.clear();
+    entities.clear();
 
     const data = script_map.get(id);
 

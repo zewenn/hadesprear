@@ -73,3 +73,21 @@ pub const Collider = struct {
     weight: f32,
     dynamic: bool,
 };
+
+pub const CachedDisplay = struct {
+    const Self = @This();
+
+    display: Display,
+    transform: Transform,
+    img: ?rl.Image,
+    texture: ?rl.Texture,
+
+    pub fn init(display: Display, transform: Transform, img: rl.Image, texture: rl.Texture) Self {
+        return Self{
+            .display = display,
+            .transform = transform,
+            .img = img,
+            .texture = texture,
+        };
+    }
+};

@@ -2,7 +2,7 @@ const Import = @import("../../.temp/imports.zig").Import;
 
 const std = @import("std");
 
-const ecs = Import(.ecs);
+const entities = Import(.ecs);
 const window = Import(.display).window;
 const z = Import(.z);
 

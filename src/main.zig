@@ -1,20 +1,22 @@
 const std = @import("std");
 
-const Import = @import(".temp/imports.zig").Import;
+// const Import = @import(".temp/imports.zig").Import;
 
 const os = @import("std").os;
 const fs = @import("std").fs;
 
-const e = Import(.engine);
+const e = @import("./engine/engine.m.zig");
 
 pub fn main() !void {
+    std.log.debug("Hello World", .{});
+
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var allocator = gpa.allocator();
 
     // Initialization
-    //--------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------
     e.window.init(
         "HadeSpear",
         e.Vec2(
@@ -35,9 +37,4 @@ pub fn main() !void {
     while (!e.windowShouldClose()) { // Detect window close button or ESC key
         e.update(&allocator) catch {};
     }
-
-    const str = try e.z.arrays.NumberToString(allocator, 123);
-    defer allocator.free(str);
-
-    std.log.debug("123 to string: {s}", .{str});
 }

@@ -4,7 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
 pub const interpolation = @import("interpolation.zig");
-const ecs = Import(.ecs);
+const entities = @import("../engine.m.zig").entities;
 
 pub const Keyframe = @import("Keyframe.zig");
 pub const Animation = @import("Animation.zig");
@@ -15,9 +15,9 @@ const z = Import(.z);
 
 const Self = @This();
 
-entity: *ecs.Entity,
-transform: *ecs.cTransform,
-display: *ecs.cDisplay,
+entity: *entities.Entity,
+transform: *entities.Transform,
+display: *entities.Display,
 
 animations: std.StringHashMap(Animation),
 playing: std.ArrayList(*Animation),
@@ -29,11 +29,11 @@ const AnimatorCreationFailed = error{
     EntityNoDisplay,
 };
 
-pub fn init(allocator: *Allocator, entity: *ecs.Entity) !Self {
-    const transform = entity.get(ecs.cTransform, "transform");
+pub fn init(allocator: *Allocator, entity: *entities.Entity) !Self {
+    const transform = entity.get(entities.Transform, "transform");
     if (transform == null) return AnimatorCreationFailed.EntityNoTransform;
 
-    const display = entity.get(ecs.cDisplay, "display");
+    const display = entity.get(entities.Display, "display");
     if (display == null) return AnimatorCreationFailed.EntityNoDisplay;
 
     return Self{

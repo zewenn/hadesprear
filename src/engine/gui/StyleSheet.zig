@@ -4,7 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
 
-const ecs = Import(.ecs);
+const entities = Import(.ecs);
 const z = Import(.z);
 
 const Unit = @import("Unit.zig");

@@ -4,7 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
 const assets = Import(.assets);
-const ecs = Import(.ecs);
+const entities = @import("../engine.m.zig").entities;
 const GUI = Import(.gui);
 const input = Import(.input);
 
@@ -19,29 +19,9 @@ pub const camera = @import("./camera.zig");
 
 // ==================================================
 
-const Previous = struct {
-    transform: ?ecs.components.Transform = null,
-    display: ?ecs.components.Display = null,
-    img: ?rl.Image = null,
-    texture: ?rl.Texture = null,
-};
-
-const PreviousMap = std.StringHashMap(Previous);
-var previous_map: PreviousMap = undefined;
-var alloc: *Allocator = undefined;
-
-pub fn init(allocator: *Allocator) void {
-    previous_map = PreviousMap.init(allocator.*);
-    alloc = allocator;
-}
-
-pub fn deinit() void {
-    previous_map.deinit();
-}
-
-fn sortEntities(_: void, lsh: *ecs.Entity, rsh: *ecs.Entity) bool {
-    const lsh_transform = lsh.get(ecs.cTransform, "transform").?;
-    const rsh_transform = rsh.get(ecs.cTransform, "transform").?;
+fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
+    const lsh_transform = lsh.transform;
+    const rsh_transform = rsh.transform;
 
     return (
     //
@@ -78,64 +58,38 @@ pub fn update() !void {
 
     // ==============================================
 
-    const entities = try ecs.getEntities("transform");
-    defer ecs.alloc.free(entities);
-    std.sort.insertion(*ecs.Entity, entities, {}, sortEntities);
+    const entity_slice = try entities.all();
+    defer entities.alloc.free(entity_slice);
+    std.sort.insertion(*entities.Entity, entity_slice, {}, sortEntities);
 
-    for (entities) |entity| {
-        var transform: ecs.components.Transform = undefined;
-        var display: ecs.components.Display = undefined;
+    for (entity_slice) |entity| {
+        const transform = entity.transform;
+        const display = entity.display;
 
         var img: rl.Image = undefined;
         defer rl.unloadImage(img);
 
         var texture: rl.Texture = undefined;
 
-        if (entity.get(ecs.components.Transform, "transform")) |_transform| {
-            transform = _transform.*;
-        } else continue;
-
-        if (entity.get(ecs.components.Display, "display")) |_display| {
-            display = _display.*;
-        } else continue;
-
         const use_previous: bool = Decide: {
-            if (!previous_map.contains(entity.id)) {
-                const got = previous_map.get(entity.id);
-                z.assert(got == null, "Entity is already registered");
+            if (entity.cached_display == null) break :Decide false;
 
-                try previous_map.ensureUnusedCapacity(1);
-                const previous = try previous_map.getOrPut(entity.id);
-                previous.value_ptr.* = .{
-                    .transform = transform,
-                    .display = display,
-                    .img = null,
-                };
-                break :Decide false;
-            }
+            const cached = entity.cached_display.?;
 
-            const last = previous_map.getPtr(entity.id).?;
+            if (cached.transform.scale.equals(transform.scale) == 0) break :Decide false;
+            if (cached.transform.rotation.equals(transform.rotation) == 0) break :Decide false;
+            if (!std.mem.eql(u8, cached.display.sprite, display.sprite)) break :Decide false;
+            if (cached.display.scaling != display.scaling) break :Decide false;
 
-            if (last.transform == null) break :Decide false;
-            if (last.display == null) break :Decide false;
-            if (last.img == null) break :Decide false;
+            if (cached.img == null) break :Decide false;
+            if (cached.texture == null) break :Decide false;
 
-            if (last.transform.?.rotation.equals(transform.rotation) != 0 and
-                last.transform.?.scale.equals(transform.scale) != 0 and
-                z.arrays.StringEqual(last.display.?.sprite, display.sprite) and
-                last.display.?.scaling == display.scaling)
-            {
-                break :Decide true;
-            }
-
-            break :Decide false;
+            break :Decide true;
         };
 
-        const last = previous_map.getPtr(entity.id).?;
-
-        if (use_previous) {
-            img = rl.imageCopy(last.img.?);
-            texture = last.texture.?;
+        if (use_previous and entity.cached_display != null) {
+            img = rl.imageCopy(entity.cached_display.?.img.?);
+            texture = entity.cached_display.?.texture.?;
         } else {
             if (assets.get(rl.Image, display.sprite)) |_img| {
                 img = _img;
@@ -156,19 +110,25 @@ pub fn update() !void {
                     @intFromFloat(transform.scale.y * camera.zoom),
                 ),
             }
-            if (last.img) |image| {
-                rl.unloadImage(image);
+            if (entity.cached_display) |cached| {
+                if (cached.img) |chached_image| {
+                    rl.unloadImage(chached_image);
+                }
+                if (cached.texture) |cached_texture| {
+                    rl.unloadTexture(cached_texture);
+                }
             }
-            if (last.texture) |t| {
-                rl.unloadTexture(t);
-            }
-            last.img = rl.imageCopy(img);
-            last.texture = rl.loadTextureFromImage(img);
 
-            texture = last.texture.?;
+            entity.cached_display = .{
+                .transform = transform,
+                .display = display,
+                .img = rl.imageCopy(img),
+                .texture = rl.loadTextureFromImage(img),
+            };
 
-            last.display = display;
-            last.transform = transform;
+            texture = entity.cached_display.?.texture.?;
+
+            std.log.info("Loaded cache for {s}", .{entity.id});
         }
 
         drawTetxure(
@@ -185,7 +145,7 @@ pub fn update() !void {
 
     // ==============================================
 
-    var GUIElements = std.ArrayList(*GUI.GUIElement).init(alloc.*);
+    var GUIElements = std.ArrayList(*GUI.GUIElement).init(std.heap.page_allocator);
     defer GUIElements.deinit();
 
     var GUIIt = GUI.Elements.iterator();
@@ -209,7 +169,7 @@ pub fn update() !void {
             break :GetStyle element.options.style;
         };
 
-        var transform: ecs.cTransform = undefined;
+        var transform: entities.Transform = undefined;
 
         if (element.transform) |t| {
             transform = t;
@@ -339,7 +299,7 @@ pub fn update() !void {
 
 fn drawTetxure(
     texture: rl.Texture,
-    transform: ecs.cTransform,
+    transform: entities.Transform,
     tint: rl.Color,
     ignore_cam: bool,
 ) void {

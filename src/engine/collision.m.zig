@@ -4,7 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
 pub const z = Import(.z);
-pub const ecs = Import(.ecs);
+pub const entities = @import("./engine.m.zig").entities;
 
 pub const rl = @import("raylib");
 
@@ -45,10 +45,10 @@ pub const Distances = struct {
 
 fn moveBack(
     dists: Distances,
-    e_transform: *ecs.cTransform,
-    e_collider: *ecs.cCollider,
-    other_transform: *ecs.cTransform,
-    other_collider: *ecs.cCollider,
+    e_transform: *entities.Transform,
+    e_collider: *entities.Collider,
+    other_transform: *entities.Transform,
+    other_collider: *entities.Collider,
     mult: f32,
 ) void {
     const smallest = @constCast(&dists).getSmallest();
@@ -102,16 +102,15 @@ fn moveBack(
 }
 
 pub fn update(alloc: *Allocator) !void {
-    const entities = try ecs.getEntities("collider");
-    defer alloc.free(entities);
+    const entities_slice = try entities.all();
+    defer alloc.free(entities_slice);
 
-    dynamic: for (entities) |e| {
-        const query_e_transform = e.get(ecs.cTransform, "transform");
-        if (query_e_transform == null) continue;
+    dynamic: for (entities_slice) |e| {
+        if (e.collider == null) continue;
 
-        const e_transform = query_e_transform.?;
+        const e_transform = e.transform;
 
-        const e_collider = e.get(ecs.cCollider, "collider").?;
+        const e_collider = e.collider.?;
 
         if (!e_collider.dynamic) continue :dynamic;
 
@@ -122,15 +121,14 @@ pub fn update(alloc: *Allocator) !void {
             e_collider.rect.height,
         );
 
-        other: for (entities) |other| {
-            if (z.arrays.StringEqual(e.id, other.id)) continue :other;
+        other: for (entities_slice) |other| {
+            if (other.collider == null) continue;
 
-            const query_other_transform = other.get(ecs.cTransform, "transform");
-            if (query_other_transform == null) continue :other;
+            if (std.mem.eql(u8, e.id, other.id)) continue :other;
 
-            const other_transform = query_other_transform.?;
+            const other_transform = other.transform;
 
-            const other_collider = other.get(ecs.cCollider, "collider").?;
+            const other_collider = other.collider.?;
 
             const other_rect = rl.Rectangle.init(
                 other_collider.rect.x + other_transform.position.x,

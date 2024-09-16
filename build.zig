@@ -234,7 +234,7 @@ pub fn build(b: *std.Build) !void {
         //     return switch (lib) {
         //         .animator => @import("./animator/Animator.zig"),
         //         .display => @import("./display/display.zig"),
-        //         .ecs => @import("./ecs/ecs.zig"),
+        //         .entities => @import("./ecs/ecs.zig"),
         //         .gui => @import("./gui/gui.zig"),
         //         .z => @import("./z/z.zig"),
         //         .assets => @import("./assets.zig"),

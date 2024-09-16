@@ -101,12 +101,15 @@ pub fn update() !void {
 
         const use_previous: bool = Decide: {
             if (!previous_map.contains(entity.id)) {
-                previous_map.put(entity.id, .{
+                const got = previous_map.get(entity.id);
+                z.assert(got == null, "Entity is already registered");
+
+                try previous_map.ensureUnusedCapacity(1);
+                const previous = try previous_map.getOrPut(entity.id);
+                previous.value_ptr.* = .{
                     .transform = transform,
                     .display = display,
                     .img = null,
-                }) catch {
-                    std.log.debug("failed to store entity", .{});
                 };
                 break :Decide false;
             }

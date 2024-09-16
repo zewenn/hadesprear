@@ -44,7 +44,7 @@ pub const Projectile = struct {
         }
 
         const id_slice = try id_arr.toOwnedSlice();
-
+        
         const entity = try e.ecs.newEntity(id_slice);
         const display = e.ecs.cDisplay{
             .scaling = .pixelate,
@@ -92,41 +92,33 @@ pub fn awake() !void {
 }
 
 pub fn update() !void {
-    std.debug.print("\n\n", .{});
-    std.log.info("Projectile update started", .{});
-    var it = living_projectiles.keyIterator();
-    var i: usize = 0;
-
-    while (it.next()) |key| {
-        i += 1;
-        std.log.info("\t[{d}] Updating projectile", .{i});
-        var projectile = living_projectiles.getPtr(key.*).?;
-        const key2 = key.*;
+    var it = living_projectiles.iterator();
+    while (it.next()) |entry| {
+        var projectile = entry.value_ptr;
+        const key = entry.key_ptr.*;
 
         if (e.time.currentTime > projectile.lifetime_end) {
-            std.log.info("\t[{d}] Removing projectile", .{i});
+            std.log.info("\tRemoving projectile", .{});
             projectile.deinit();
-            _ = living_projectiles.remove(key.*);
-            e.ALLOCATOR.free(key2);
-            break;
+            _ = living_projectiles.remove(key);
+            e.ALLOCATOR.free(key);
+            continue;
         }
 
-        std.log.info("\t[{d}] Moving projectile", .{i});
+        std.log.info("\tMoving projectile", .{});
         projectile.move();
-        std.log.info("\t[{d}] Finished projectile", .{i});
+        std.log.info("\tFinished projectile", .{});
     }
-    std.log.info("Projectile update ended", .{});
-    std.debug.print("\n\n", .{});
 }
 
 pub fn deinit() !void {
     var it = living_projectiles.iterator();
     while (it.next()) |entry| {
         var projectile = entry.value_ptr;
-        projectile.deinit();
+        const key = entry.key_ptr.*;
 
-        std.log.debug("Freeing key: {s}", .{entry.key_ptr.*});
-        e.ALLOCATOR.free(entry.key_ptr.*);
+        projectile.deinit();
+        e.ALLOCATOR.free(key);
     }
 
     living_projectiles.deinit();

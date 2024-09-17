@@ -24,23 +24,12 @@ playing: std.ArrayList(*Animation),
 
 alloc: *Allocator,
 
-const AnimatorCreationFailed = error{
-    EntityNoTransform,
-    EntityNoDisplay,
-};
-
-pub fn init(allocator: *Allocator, entity: *entities.Entity) !Self {
-    const transform = entity.get(entities.Transform, "transform");
-    if (transform == null) return AnimatorCreationFailed.EntityNoTransform;
-
-    const display = entity.get(entities.Display, "display");
-    if (display == null) return AnimatorCreationFailed.EntityNoDisplay;
-
+pub fn init(allocator: *Allocator, entity: *entities.Entity) Self {
     return Self{
         .alloc = allocator,
         .entity = entity,
-        .transform = transform.?,
-        .display = display.?,
+        .transform = &entity.transform,
+        .display = &entity.display,
         .animations = std.StringHashMap(Animation).init(allocator.*),
         .playing = std.ArrayList(*Animation).init(allocator.*),
     };
@@ -51,6 +40,7 @@ pub fn deinit(self: *Self) void {
     while (it.next()) |entry| {
         entry.value_ptr.*.deinit();
     }
+    self.playing.deinit();
     self.animations.deinit();
 }
 

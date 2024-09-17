@@ -3,7 +3,7 @@ const Import = @import("../.temp/imports.zig").Import;
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-pub const z = @import("./z/z.m.zig");
+pub const zlib = @import("./z/z.m.zig");
 
 pub const assets = @import("./assets.m.zig");
 
@@ -39,25 +39,21 @@ pub inline fn compile() !void {
 pub const window = display.window;
 pub const camera = display.camera;
 
+pub fn loadf32(v: anytype) f32 {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .Int, .ComptimeInt => @floatFromInt(v),
+        .Float, .ComptimeFloat => @floatCast(v),
+        .Bool => @floatFromInt(@intFromBool(v)),
+        else => 0,
+    };
+}
+
 pub fn Vec2(x: anytype, y: anytype) rl.Vector2 {
-    var _x: f32 = 0;
-    var _y: f32 = 0;
+    return rl.Vector2.init(loadf32(x), loadf32(y));
+}
 
-    _x = switch (@typeInfo(@TypeOf(x))) {
-        .Int, .ComptimeInt => @floatFromInt(x),
-        .Float, .ComptimeFloat => @floatCast(x),
-        .Bool => @floatFromInt(@intFromBool(x)),
-        else => 0,
-    };
-
-    _y = switch (@typeInfo(@TypeOf(y))) {
-        .Int => @floatFromInt(y),
-        .Float => @floatCast(y),
-        .Bool => @floatFromInt(@intFromBool(y)),
-        else => 0,
-    };
-
-    return rl.Vector2.init(x, y);
+pub fn Vec3(x: anytype, y: anytype, z: anytype) rl.Vector3 {
+    return rl.Vector3.init(loadf32(x), loadf32(y), loadf32(z));
 }
 
 pub fn init(allocator: *Allocator) !void {

@@ -32,6 +32,10 @@ pub const ProjectileData = struct {
         player,
         enemy,
     },
+    weight: enum {
+        light,
+        heavy,
+    },
     speed: f32,
     direction: f32,
     scale: rl.Vector2,

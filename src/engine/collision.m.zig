@@ -108,9 +108,9 @@ pub fn update(alloc: *Allocator) !void {
     dynamic: for (entities_slice) |e| {
         if (e.collider == null) continue;
 
-        const e_transform = e.transform;
+        const e_transform = &e.transform;
 
-        const e_collider = e.collider.?;
+        const e_collider = &e.collider.?;
 
         if (!e_collider.dynamic) continue :dynamic;
 
@@ -126,9 +126,9 @@ pub fn update(alloc: *Allocator) !void {
 
             if (std.mem.eql(u8, e.id, other.id)) continue :other;
 
-            const other_transform = other.transform;
+            const other_transform = &other.transform;
 
-            const other_collider = other.collider.?;
+            const other_collider = &other.collider.?;
 
             const other_rect = rl.Rectangle.init(
                 other_collider.rect.x + other_transform.position.x,

@@ -14,7 +14,12 @@ var Player = e.entities.Entity{
         .sprite = "player_left_0.png",
     },
     .shooting_stats = .{
-        .timeout = 0.25,
+        .timeout = 0.2,
+    },
+    .collider = .{
+        .dynamic = true,
+        .rect = e.Rectangle.init(0, 0, 64, 64),
+        .weight = 1,
     },
 };
 
@@ -101,12 +106,29 @@ pub fn update() !void {
     //
     );
 
-    if (shoot and Player.shooting_stats.?.timeout_end < e.time.currentTime) {
+    const shoot_heavy = ((shoot and e.isKeyDown(.key_c)) or
+        e.isMouseButtonPressed(.mouse_button_right));
+
+    if (Player.shooting_stats.?.timeout_end >= e.time.currentTime) return;
+
+    if (shoot_heavy) {
         try projectiles.new(Player.transform.position, .{
             .direction = shoot_angle,
             .lifetime_end = e.time.currentTime + 5,
             .scale = e.Vec2(64, 64),
             .side = .player,
+            .weight = .heavy,
+            .speed = 100,
+        });
+
+        Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
+    } else if (shoot) {
+        try projectiles.new(Player.transform.position, .{
+            .direction = shoot_angle,
+            .lifetime_end = e.time.currentTime + 5,
+            .scale = e.Vec2(64, 64),
+            .side = .player,
+            .weight = .light,
             .speed = 100,
         });
 

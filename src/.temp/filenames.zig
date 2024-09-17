@@ -1,12 +1,15 @@
 pub const Filenames = [_][]const u8{
 	"background4.png",
 	"wpn_gloves_right.png",
+	"projectile_player_heavy.png",
+	"projectile_enemy_heavy.png",
 	"wpn_plates_left.png",
 	"empty_icon.png",
 	"wpn_gloves_left.png",
 	"menu.mp3",
 	"projectile_player_light.png",
 	"player_right_1.png",
+	"projectile_enemy_light.png",
 	"player_right_0.png",
 	"menu_option_generic_bg.png",
 	"test.png",
@@ -14,5 +17,6 @@ pub const Filenames = [_][]const u8{
 	"player_left_0.png",
 	"press_play.ttf",
 	"wpn_plates_right.png",
+	"dash_attack_projectile.png",
 	"hud_bg.png"
 };

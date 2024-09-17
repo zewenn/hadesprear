@@ -12,6 +12,8 @@ pub const scenes = @import("./scenes.m.zig");
 pub const input = @import("./input.m.zig");
 pub const zString = @import("./strings.m.zig").String;
 
+pub const collision = @import("./collision.m.zig");
+
 pub const display = @import("./display/display.m.zig");
 
 pub const GUI = @import("./gui/gui.m.zig");
@@ -92,7 +94,7 @@ pub fn deinit() !void {
     time.deinit();
 }
 
-pub fn update(_: *Allocator) !void {
+pub fn update() !void {
     try time.tick();
 
     input.update();
@@ -101,7 +103,7 @@ pub fn update(_: *Allocator) !void {
 
     try events.call(.Update);
 
-    // try collision.update(allocator);
+    try collision.update(&ALLOCATOR);
     camera.update();
     try display.update();
 }

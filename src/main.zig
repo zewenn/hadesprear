@@ -8,8 +8,6 @@ const fs = @import("std").fs;
 const e = @import("./engine/engine.m.zig");
 
 pub fn main() !void {
-    std.log.debug("Hello World", .{});
-
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
@@ -37,6 +35,6 @@ pub fn main() !void {
 
     // Main game loop
     while (!e.windowShouldClose()) { // Detect window close button or ESC key
-        e.update(&allocator) catch {};
+        e.update() catch {};
     }
 }

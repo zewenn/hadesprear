@@ -65,6 +65,9 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     var keys_clone = self.keys.clone() catch unreachable;
     defer keys_clone.deinit();
 
+    if (self.keys_slice) |slice| {
+        self.alloc.free(slice);
+    }
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
     std.log.debug("ArrItems: {any}", .{keys_clone.items});
@@ -94,11 +97,11 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
 }
 
 pub fn deinit(self: *Self) void {
-    self.keyframes.deinit();
-    self.keys.deinit();
     if (self.keys_slice) |slice| {
         self.alloc.free(slice);
     }
+    self.keyframes.deinit();
+    self.keys.deinit();
 }
 
 pub fn getNext(self: *Self) ?Keyframe {

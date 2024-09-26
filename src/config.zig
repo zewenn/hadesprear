@@ -16,6 +16,7 @@ pub const entities = entities_module.make(struct {
     projectile_data: ?ProjectileData = null,
 
     entity_stats: ?EntityStats = null,
+    dash_modifiers: ?DashModifiers = null,
 
     pub fn freeRaylibStructs(self: *Self) void {
         if (self.cached_display) |cached| {
@@ -60,4 +61,18 @@ pub const EntityStats = struct {
     crit_damage_multiplier: f32 = 2,
 
     is_enemy: bool = false,
+
+    can_move: bool = false,
+    is_dashing: bool = false,
+    is_invalnureable: bool = false,
+};
+
+pub const DashModifiers = struct {
+    movement_speed_multiplier: f32 = 3,
+    dash_time: f64 = 1,
+    towards: rl.Vector2 = rl.Vector2.init(1, 0),
+    charges: usize = 2,
+    charges_available: usize = 2,
+
+    dash_end: f64 = 0,
 };

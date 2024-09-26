@@ -5,6 +5,7 @@ const e = Import(.engine);
 
 const projectiles = @import("projectiles.zig");
 const enemies = @import("enemies.zig");
+const dashing = @import("dashing.zig");
 
 var Player = e.entities.Entity{
     .id = "Player",
@@ -21,6 +22,11 @@ var Player = e.entities.Entity{
         .dynamic = true,
         .rect = e.Rectangle.init(0, 0, 64, 64),
         .weight = 1,
+    },
+
+    .entity_stats = .{},
+    .dash_modifiers = .{
+        .dash_time = 0.25,
     },
 };
 
@@ -136,8 +142,23 @@ pub fn update() !void {
     }
 
     const norm_vector = move_vector.normalize();
-    Player.transform.position.x += norm_vector.x * 350 * @as(f32, @floatCast(e.time.deltaTime));
-    Player.transform.position.y += norm_vector.y * 350 * @as(f32, @floatCast(e.time.deltaTime));
+
+    if (e.isKeyPressed(.key_space)) {
+        try dashing.start(
+            &Player,
+            std.math.radiansToDegrees(
+                std.math.atan2(
+                    move_vector.y,
+                    move_vector.x,
+                ),
+            ),
+        );
+    }
+
+    if (Player.entity_stats.?.can_move) {
+        Player.transform.position.x += norm_vector.x * 350 * @as(f32, @floatCast(e.time.deltaTime));
+        Player.transform.position.y += norm_vector.y * 350 * @as(f32, @floatCast(e.time.deltaTime));
+    }
 
     Animator: {
         player_animator.update();

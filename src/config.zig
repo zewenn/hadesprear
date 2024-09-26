@@ -12,7 +12,10 @@ pub const entities = entities_module.make(struct {
     cached_display: ?entities_module.CachedDisplay = null,
     shooting_stats: ?ShootingStats = null,
 
+    facing: enum { left, right } = .left,
     projectile_data: ?ProjectileData = null,
+
+    entity_stats: ?EntityStats = null,
 
     pub fn freeRaylibStructs(self: *Self) void {
         if (self.cached_display) |cached| {
@@ -45,4 +48,16 @@ pub const ShootingStats = struct {
     damage: f32 = 20,
     timeout: f64 = 0.1,
     timeout_end: f64 = 0,
+};
+
+pub const EntityStats = struct {
+    movement_speed: f32 = 335,
+
+    health: f32 = 100,
+    damage: f32 = 20,
+
+    crit_rate: f32 = 0,
+    crit_damage_multiplier: f32 = 2,
+
+    is_enemy: bool = false,
 };

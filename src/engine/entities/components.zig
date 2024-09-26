@@ -7,9 +7,9 @@ const z = Import(.z);
 pub const Transform = struct {
     const Self = @This();
 
-    position: rl.Vector2,
-    rotation: rl.Vector3,
-    scale: rl.Vector2,
+    position: rl.Vector2 = rl.Vector2.init(0, 0),
+    rotation: rl.Vector3 = rl.Vector3.init(0, 0, 0),
+    scale: rl.Vector2 = rl.Vector2.init(64, 64),
     anchor: ?rl.Vector2 = null,
 
     /// Creates a new transform with 64x64 `scale` and everything else set to 0.

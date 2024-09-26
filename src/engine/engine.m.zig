@@ -92,6 +92,7 @@ pub fn deinit() !void {
 
 pub fn update() !void {
     try time.tick();
+    // std.log.debug("FPS: {d:.3}", .{1 / time.deltaTime});
 
     input.update();
 

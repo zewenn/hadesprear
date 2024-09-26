@@ -70,8 +70,6 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     }
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
-    std.log.debug("ArrItems: {any}", .{keys_clone.items});
-
     switch (self.mode) {
         .forwards => std.sort.insertion(
             u8,

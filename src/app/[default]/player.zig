@@ -4,6 +4,7 @@ const std = @import("std");
 const e = Import(.engine);
 
 const projectiles = @import("projectiles.zig");
+const enemies = @import("enemies.zig");
 
 var Player = e.entities.Entity{
     .id = "Player",
@@ -24,7 +25,6 @@ var Player = e.entities.Entity{
 };
 
 var player_animator: e.Animator = undefined;
-var player_facing: enum { left, right } = .left;
 
 // ===================== [Entity] =====================
 
@@ -131,6 +131,9 @@ pub fn update() !void {
     if (e.isKeyDown(.key_d)) {
         move_vector.x += 1;
     }
+    if (e.isKeyPressed(.key_f)) {
+        try enemies.spawn();
+    }
 
     const norm_vector = move_vector.normalize();
     Player.transform.position.x += norm_vector.x * 350 * @as(f32, @floatCast(e.time.deltaTime));
@@ -143,13 +146,13 @@ pub fn update() !void {
             player_animator.stop("walk_right");
             try player_animator.play("walk_left");
 
-            player_facing = .left;
+            Player.facing = .left;
         }
         if (move_vector.x > 0 and !player_animator.isPlaying("walk_right")) {
             player_animator.stop("walk_left");
             try player_animator.play("walk_right");
 
-            player_facing = .right;
+            Player.facing = .right;
         }
 
         if (move_vector.y == 0) break :Animator;
@@ -157,7 +160,7 @@ pub fn update() !void {
         if (player_animator.isPlaying("walk_left") or player_animator.isPlaying("walk_right")) break :Animator;
 
         try player_animator.play(
-            switch (player_facing) {
+            switch (Player.facing) {
                 .left => "walk_left",
                 .right => "walk_right",
             },

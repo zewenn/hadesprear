@@ -14,6 +14,11 @@ pub fn register() !void {
 		.eUpdate = @import("../app/[default]/projectiles.zig").update,
 		.eDeinit = @import("../app/[default]/projectiles.zig").deinit,
 	});	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/enemies.zig").awake,
+		.eInit = @import("../app/[default]/enemies.zig").init,
+		.eUpdate = @import("../app/[default]/enemies.zig").update,
+		.eDeinit = @import("../app/[default]/enemies.zig").deinit,
+	});	try sc.register("default", sc.Script{
 		.eAwake = @import("../app/[default]/box.zig").awake,
 		.eInit = @import("../app/[default]/box.zig").init,
 		.eUpdate = @import("../app/[default]/box.zig").update,

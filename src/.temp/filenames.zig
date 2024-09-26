@@ -7,6 +7,7 @@ pub const Filenames = [_][]const u8{
 	"empty_icon.png",
 	"wpn_gloves_left.png",
 	"menu.mp3",
+	"enemy_melee_left_0.png",
 	"projectile_player_light.png",
 	"player_right_1.png",
 	"projectile_enemy_light.png",

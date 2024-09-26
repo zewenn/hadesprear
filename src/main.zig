@@ -1,7 +1,5 @@
 const std = @import("std");
 
-// const Import = @import(".temp/imports.zig").Import;
-
 const os = @import("std").os;
 const fs = @import("std").fs;
 
@@ -15,8 +13,6 @@ pub fn main() !void {
 
     e.setTraceLogLevel(.log_error);
 
-    // Initialization
-    // --------------------------------------------------------------------------------------
     e.window.init(
         "HadeSpear",
         e.Vec2(
@@ -30,11 +26,9 @@ pub fn main() !void {
     try e.init(&allocator);
     defer e.deinit() catch {};
 
-    e.setTargetFPS(144); // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
+    e.setTargetFPS(256);
 
-    // Main game loop
-    while (!e.windowShouldClose()) { // Detect window close button or ESC key
+    while (!e.windowShouldClose()) {
         e.update() catch {};
     }
 }

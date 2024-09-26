@@ -8,7 +8,7 @@ const StyleSheet = @import("StyleSheet.zig");
 const ButtonInterface = @import("ButtonInterface.zig");
 
 const rl = @import("raylib");
-const ecs = Import(.ecs);
+const entities = Import(.entities);
 
 const Self = @This();
 
@@ -23,15 +23,15 @@ children: ?std.ArrayList(*Self) = null,
 contents: ?[*:0]const u8 = null,
 parent: ?*Self = null,
 options: Options,
-transform: ?ecs.cTransform = null,
+transform: ?entities.Transform = null,
 is_button: bool = false,
 button_interface_ptr: ?*ButtonInterface = null,
 is_hovered: bool = false,
 
 /// Sets the elements transform and returns the value.
 /// Might calculate the parent elements value.
-pub fn calculateTransform(self: *Self) ecs.cTransform {
-    var parent_transform: ecs.cTransform = ecs.cTransform{
+pub fn calculateTransform(self: *Self) entities.Transform {
+    var parent_transform: entities.Transform = entities.Transform{
         .position = rl.Vector2.init(0, 0),
         .rotation = rl.Vector3.init(0, 0, 0),
         .scale = rl.Vector2.init(window.size.x, window.size.y),
@@ -60,7 +60,7 @@ pub fn calculateTransform(self: *Self) ecs.cTransform {
     const width = style.width.calculate(0, parent_transform.scale.x);
     const height = style.height.calculate(0, parent_transform.scale.y);
 
-    self.transform = ecs.cTransform{
+    self.transform = entities.Transform{
         .position = rl.Vector2.init(x, y),
         .rotation = rl.Vector3.init(0, 0, style.rotation),
         .scale = rl.Vector2.init(width, height),

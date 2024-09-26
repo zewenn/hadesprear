@@ -1,11 +1,9 @@
 const std = @import("std");
 
-const Import = @import(".temp/imports.zig").Import;
-
 const os = @import("std").os;
 const fs = @import("std").fs;
 
-const e = Import(.engine);
+const e = @import("./engine/engine.m.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -13,8 +11,8 @@ pub fn main() !void {
 
     var allocator = gpa.allocator();
 
-    // Initialization
-    //--------------------------------------------------------------------------------------
+    e.setTraceLogLevel(.log_error);
+
     e.window.init(
         "HadeSpear",
         e.Vec2(
@@ -28,16 +26,9 @@ pub fn main() !void {
     try e.init(&allocator);
     defer e.deinit() catch {};
 
-    e.setTargetFPS(144); // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
+    e.setTargetFPS(256);
 
-    // Main game loop
-    while (!e.windowShouldClose()) { // Detect window close button or ESC key
-        e.update(&allocator) catch {};
+    while (!e.windowShouldClose()) {
+        e.update() catch {};
     }
-
-    const str = try e.z.arrays.NumberToString(allocator, 123);
-    defer allocator.free(str);
-
-    std.log.debug("123 to string: {s}", .{str});
 }

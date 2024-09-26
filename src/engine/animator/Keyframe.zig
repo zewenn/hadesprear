@@ -4,7 +4,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
 
-const ecs = Import(.ecs);
+const entities = @import("../engine.m.zig").entities;
 
 const Self = @This();
 
@@ -24,5 +24,5 @@ height: ?f32 = null,
 // === Display ===
 
 sprite: ?[]const u8 = null,
-scaling: ?ecs.cDisplay.scalings = null,
+scaling: ?entities.Display.scalings = null,
 tint: ?rl.Color = null,

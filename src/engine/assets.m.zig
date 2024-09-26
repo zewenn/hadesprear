@@ -81,12 +81,16 @@ pub fn init(allocator: *Allocator) !void {
 /// Caller owns the returned memory!
 pub fn get(T: type, id: []const u8) ?T {
     if (T == rl.Image) {
+        if (!image_map.contains(id)) @panic("Image doen't exist");
+
         if (image_map.getPtr(id)) |img| {
             return rl.imageCopy(img.*);
         }
         return null;
     }
     if (T == rl.Sound) {
+        if (!wave_map.contains(id)) @panic("Wave doen't exist");
+
         if (wave_map.get(id)) |wav| {
             const sound = rl.loadSoundFromWave(wav);
             return sound;
@@ -94,6 +98,7 @@ pub fn get(T: type, id: []const u8) ?T {
         return null;
     }
     if (T == rl.Font) {
+        if (!font_map.contains(id)) @panic("Font doen't exist");
         return font_map.get(id);
     }
     z.dprint("ASSETS: File type not supported", .{});

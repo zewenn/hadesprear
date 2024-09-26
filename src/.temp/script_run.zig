@@ -3,27 +3,30 @@ const Import = @import("./imports.zig").Import;
 const sc = Import(.scenes);
 
 pub fn register() !void {
-	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/background.zig").awake,
-	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/projectiles.zig").awake,
-		.eUpdate = @import("../app/[game]/projectiles.zig").update,
-		.eDeinit = @import("../app/[game]/projectiles.zig").deinit,
-	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/box2.zig").awake,
-	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/enemy.zig").awake,
-		.eUpdate = @import("../app/[game]/enemy.zig").update,
-		.eDeinit = @import("../app/[game]/enemy.zig").deinit,
-	});	try sc.register("game", sc.Script{
-		.eAwake = @import("../app/[game]/player.zig").awake,
-		.eInit = @import("../app/[game]/player.zig").init,
-		.eUpdate = @import("../app/[game]/player.zig").update,
-		.eDeinit = @import("../app/[game]/player.zig").deinit,
+	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/background.zig").awake,
+		.eInit = @import("../app/[default]/background.zig").init,
+		.eUpdate = @import("../app/[default]/background.zig").update,
+		.eDeinit = @import("../app/[default]/background.zig").deinit,
 	});	try sc.register("default", sc.Script{
-		.eAwake = @import("../app/[default]/main.zig").awake,
-		.eInit = @import("../app/[default]/main.zig").init,
-		.eUpdate = @import("../app/[default]/main.zig").update,
-		.eDeinit = @import("../app/[default]/main.zig").deinit,
+		.eAwake = @import("../app/[default]/projectiles.zig").awake,
+		.eInit = @import("../app/[default]/projectiles.zig").init,
+		.eUpdate = @import("../app/[default]/projectiles.zig").update,
+		.eDeinit = @import("../app/[default]/projectiles.zig").deinit,
+	});	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/enemies.zig").awake,
+		.eInit = @import("../app/[default]/enemies.zig").init,
+		.eUpdate = @import("../app/[default]/enemies.zig").update,
+		.eDeinit = @import("../app/[default]/enemies.zig").deinit,
+	});	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/box.zig").awake,
+		.eInit = @import("../app/[default]/box.zig").init,
+		.eUpdate = @import("../app/[default]/box.zig").update,
+		.eDeinit = @import("../app/[default]/box.zig").deinit,
+	});	try sc.register("default", sc.Script{
+		.eAwake = @import("../app/[default]/player.zig").awake,
+		.eInit = @import("../app/[default]/player.zig").init,
+		.eUpdate = @import("../app/[default]/player.zig").update,
+		.eDeinit = @import("../app/[default]/player.zig").deinit,
 	});
 }

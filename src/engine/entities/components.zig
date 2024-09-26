@@ -7,9 +7,9 @@ const z = Import(.z);
 pub const Transform = struct {
     const Self = @This();
 
-    position: rl.Vector2,
-    rotation: rl.Vector3,
-    scale: rl.Vector2,
+    position: rl.Vector2 = rl.Vector2.init(0, 0),
+    rotation: rl.Vector3 = rl.Vector3.init(0, 0, 0),
+    scale: rl.Vector2 = rl.Vector2.init(64, 64),
     anchor: ?rl.Vector2 = null,
 
     /// Creates a new transform with 64x64 `scale` and everything else set to 0.
@@ -72,4 +72,22 @@ pub const Collider = struct {
     rect: rl.Rectangle,
     weight: f32,
     dynamic: bool,
+};
+
+pub const CachedDisplay = struct {
+    const Self = @This();
+
+    display: Display,
+    transform: Transform,
+    img: ?rl.Image,
+    texture: ?rl.Texture,
+
+    pub fn init(display: Display, transform: Transform, img: rl.Image, texture: rl.Texture) Self {
+        return Self{
+            .display = display,
+            .transform = transform,
+            .img = img,
+            .texture = texture,
+        };
+    }
 };

@@ -41,7 +41,6 @@ pub fn update() !void {
         const projectile_data = item.projectile_data.?;
 
         if (projectile_data.lifetime_end < e.time.currentTime) {
-            e.ALLOCATOR.free(item.id);
             ProjectileManager.free(index);
             continue;
         }
@@ -64,11 +63,6 @@ pub fn update() !void {
 
 pub fn deinit() !void {
     for (0..ProjectileManager.array.len) |index| {
-        const item = &ProjectileManager.array[index];
-        if (item.*) |value| {
-            e.ALLOCATOR.free(value.id);
-        }
-
         ProjectileManager.free(index);
     }
 }

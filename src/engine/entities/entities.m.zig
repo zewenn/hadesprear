@@ -131,6 +131,9 @@ pub fn make(comptime T: type) type {
             entities.clearAndFree();
         }
 
+        /// **IMPORTANT**: 
+        /// You **need** to use this with heap allocated ids, 
+        /// since `.free()` will try to free the id of the object!
         pub fn Manager(comptime options: struct {
             max_size: usize = 8_000_000,
             max_entities: ?usize = null,
@@ -187,6 +190,7 @@ pub fn make(comptime T: type) type {
                     if (exists(value.?.id)) {
                         _ = delete(value.?.id);
                     }
+                    alloc.free(value.?.id);
 
                     array[index] = null;
                 }

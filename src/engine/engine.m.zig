@@ -17,7 +17,7 @@ pub const collision = @import("./collision.m.zig");
 pub const display = @import("./display/display.m.zig");
 
 pub const GUI = @import("./gui/gui.m.zig");
-pub const Animator = @import("./animator/animator.m.zig");
+pub const Animator = @import("./animator/Animator.zig");
 
 pub const time = @import("./time.m.zig");
 pub const setTimeout = time.setTimeout;
@@ -92,7 +92,7 @@ pub fn deinit() !void {
 
 pub fn update() !void {
     try time.tick();
-    // std.log.debug("FPS: {d:.3}", .{1 / time.deltaTime});
+    std.debug.print("FPS: {d:.3}\r", .{1 / time.deltaTime});
 
     input.update();
 

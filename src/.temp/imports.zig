@@ -1,7 +1,6 @@
 const InternalLibrarires = enum {
 	collision,
 	z,
-	animator,
 	events,
 	input,
 	time,
@@ -17,7 +16,6 @@ pub inline fn Import(comptime lib: InternalLibrarires) type {
 	return switch (lib) {
 		.collision => @import("../../src/engine/collision.m.zig"),
 		.z => @import("../../src/engine/z/z.m.zig"),
-		.animator => @import("../../src/engine/animator/animator.m.zig"),
 		.events => @import("../../src/engine/events.m.zig"),
 		.input => @import("../../src/engine/input.m.zig"),
 		.time => @import("../../src/engine/time.m.zig"),

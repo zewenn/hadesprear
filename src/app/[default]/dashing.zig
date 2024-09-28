@@ -55,7 +55,7 @@ pub fn update() !void {
 
 pub fn deinit() !void {}
 
-pub fn start(entity: *e.entities.Entity, towards: f32) !void {
+pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
     if (entity.entity_stats == null) return;
     if (entity.dash_modifiers == null) return;
 

@@ -3,8 +3,12 @@ const Import = @import("../../.temp/imports.zig").Import;
 const std = @import("std");
 const e = Import(.engine);
 
+var Player: ?*e.entities.Entity = null;
+
 const Manager = e.entities.Manager(.{ .max_entities = 1024 });
 var Animators: [Manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** Manager.ArraySize;
+
+const dashing = @import("dashing.zig");
 
 const MELEE_WALK_LEFT_SPRITE_0 = "enemy_melee_left_0.png";
 const MELEE_WALK_LEFT_SPRITE_1 = "enemy_melee_left_1.png";
@@ -21,7 +25,9 @@ const MELEE_WALK_RIGHT_SPRITE_1 = "enemy_melee_right_1.png";
 
 pub fn awake() !void {}
 
-pub fn init() !void {}
+pub fn init() !void {
+    Player = e.entities.get("Player").?;
+}
 
 pub fn update() !void {
     for (Manager.array, 0..) |item, index| {
@@ -140,8 +146,44 @@ pub fn update() !void {
         if (!animator.isPlaying("walk_right"))
             try animator.play("walk_right");
 
-        entity_ptr.transform.position.x += 0.25;
-        entity_ptr.entity_stats.?.health -= 0.1;
+        const action = std.crypto.random.intRangeLessThanBiased(
+            u32,
+            0,
+            @intFromFloat(200_000 * e.time.deltaTime),
+        );
+
+        const move_vec = Player.?.transform.position
+            .subtract(entity_ptr.transform.position)
+            .normalize();
+
+        const angle = move_vec.angle(e.Vec2(1, 0));
+
+        switch (action) {
+            // Apply dash
+            1 => {
+                const direction: f32 = angle + @as(
+                    f32,
+                    @floatFromInt(
+                        std.crypto.random.intRangeLessThanBiased(
+                            i32,
+                            -90,
+                            90,
+                        ),
+                    ),
+                );
+                try dashing.applyDash(
+                    entity_ptr,
+                    (direction),
+                );
+            },
+            else => {},
+        }
+
+        if (entity_ptr.entity_stats.?.can_move) {
+            entity_ptr.transform.position.x += move_vec.x;
+            entity_ptr.transform.position.y += move_vec.y;
+        }
+        // entity_ptr.entity_stats.?.health -= 0.1;
     }
 }
 
@@ -182,6 +224,21 @@ pub fn spawn() !void {
         },
         .entity_stats = .{
             .is_enemy = true,
+            .can_move = true,
+        },
+        .dash_modifiers = .{
+            .dash_time = 0.25,
+        },
+
+        .collider = .{
+            .dynamic = true,
+            .rect = e.Rectangle.init(
+                0,
+                0,
+                64,
+                64,
+            ),
+            .weight = 0.95,
         },
     };
 

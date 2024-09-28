@@ -7,7 +7,7 @@ const projectiles = @import("projectiles.zig");
 const enemies = @import("enemies.zig");
 const dashing = @import("dashing.zig");
 
-var Player = e.entities.Entity{
+pub var Player = e.entities.Entity{
     .id = "Player",
     .tags = "player",
     .transform = e.entities.Transform.new(),
@@ -24,7 +24,9 @@ var Player = e.entities.Entity{
         .weight = 1,
     },
 
-    .entity_stats = .{},
+    .entity_stats = .{
+        .can_move = true,
+    },
     .dash_modifiers = .{
         .dash_time = 0.25,
     },
@@ -144,7 +146,7 @@ pub fn update() !void {
     const norm_vector = move_vector.normalize();
 
     if (e.isKeyPressed(.key_space)) {
-        try dashing.start(
+        try dashing.applyDash(
             &Player,
             std.math.radiansToDegrees(
                 std.math.atan2(

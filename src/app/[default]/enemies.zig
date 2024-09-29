@@ -9,6 +9,7 @@ const Manager = e.entities.Manager(.{ .max_entities = 1024 });
 var Animators: [Manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** Manager.ArraySize;
 
 const dashing = @import("dashing.zig");
+const projectiles = @import("projectiles.zig");
 
 const MELEE_WALK_LEFT_SPRITE_0 = "sprites/entity/enemies/melee/left_0.png";
 const MELEE_WALK_LEFT_SPRITE_1 = "sprites/entity/enemies/melee/left_1.png";
@@ -152,11 +153,20 @@ pub fn update() !void {
             @intFromFloat(200_000 * e.time.deltaTime),
         );
 
-        const move_vec = Player.?.transform.position
-            .subtract(entity_ptr.transform.position)
+        const distance_vec = Player.?.transform.position
+            .subtract(entity_ptr.transform.position);
+
+        const distance: f32 = distance_vec.length();
+
+        const move_vec = distance_vec
             .normalize();
 
-        const angle = move_vec.angle(e.Vec2(1, 0));
+        const angle = std.math.radiansToDegrees(
+            std.math.atan2(
+                move_vec.y,
+                move_vec.x,
+            ),
+        );
 
         switch (action) {
             // Apply dash
@@ -182,6 +192,22 @@ pub fn update() !void {
         if (entity_ptr.entity_stats.?.can_move) {
             entity_ptr.transform.position.x += move_vec.x;
             entity_ptr.transform.position.y += move_vec.y;
+        }
+
+        if (entity_ptr.shooting_stats.?.timeout_end >= e.time.currentTime) continue;
+
+        if (distance < entity_ptr.entity_stats.?.range) {
+            try projectiles.new(entity_ptr.transform.position, .{
+                .direction = angle,
+                .lifetime_end = e.time.currentTime + entity_ptr.shooting_stats.?.projectile_lifetime,
+                .scale = e.Vec2(64, 64),
+                .side = .enemy,
+                .weight = .light,
+                .speed = 350,
+                .damage = entity_ptr.entity_stats.?.damage,
+            });
+
+            entity_ptr.shooting_stats.?.timeout_end = e.time.currentTime + entity_ptr.shooting_stats.?.timeout;
         }
         // entity_ptr.entity_stats.?.health -= 0.1;
     }
@@ -229,7 +255,6 @@ pub fn spawn() !void {
         .dash_modifiers = .{
             .dash_time = 0.25,
         },
-
         .collider = .{
             .dynamic = true,
             .rect = e.Rectangle.init(
@@ -239,6 +264,10 @@ pub fn spawn() !void {
                 64,
             ),
             .weight = 0.95,
+        },
+        .shooting_stats = .{
+            .damage = 10,
+            .timeout = 0.55,
         },
     };
 

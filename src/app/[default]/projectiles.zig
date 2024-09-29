@@ -68,6 +68,14 @@ pub fn update() !void {
             if (projectile_data.side == .player and std.mem.eql(u8, other.id, "Player"))
                 continue;
 
+            if (projectile_data.side == .enemy and std.mem.containsAtLeast(
+                u8,
+                other.tags,
+                1,
+                "enemy",
+            ))
+                continue;
+
             if (!e.collision.collides(entity_ptr, other)) {
                 continue;
             }

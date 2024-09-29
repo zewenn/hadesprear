@@ -50,6 +50,7 @@ pub const ShootingStats = struct {
     damage: f32 = 20,
     timeout: f64 = 0.1,
     timeout_end: f64 = 0,
+    projectile_lifetime: f64 = 2,
 };
 
 pub const EntityStats = struct {
@@ -62,6 +63,7 @@ pub const EntityStats = struct {
     crit_damage_multiplier: f32 = 2,
 
     is_enemy: bool = false,
+    range: f32 = 500,
 
     can_move: bool = false,
     is_dashing: bool = false,

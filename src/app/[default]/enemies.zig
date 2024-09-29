@@ -10,10 +10,10 @@ var Animators: [Manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** Manager.
 
 const dashing = @import("dashing.zig");
 
-const MELEE_WALK_LEFT_SPRITE_0 = "enemy_melee_left_0.png";
-const MELEE_WALK_LEFT_SPRITE_1 = "enemy_melee_left_1.png";
-const MELEE_WALK_RIGHT_SPRITE_0 = "enemy_melee_right_0.png";
-const MELEE_WALK_RIGHT_SPRITE_1 = "enemy_melee_right_1.png";
+const MELEE_WALK_LEFT_SPRITE_0 = "sprites/entity/enemies/melee/left_0.png";
+const MELEE_WALK_LEFT_SPRITE_1 = "sprites/entity/enemies/melee/left_1.png";
+const MELEE_WALK_RIGHT_SPRITE_0 = "sprites/entity/enemies/melee/right_0.png";
+const MELEE_WALK_RIGHT_SPRITE_1 = "sprites/entity/enemies/melee/right_1.png";
 
 // ===================== [Entity] =====================
 
@@ -220,7 +220,7 @@ pub fn spawn() !void {
         },
         .display = .{
             .scaling = .pixelate,
-            .sprite = "enemy_melee_left_0.png",
+            .sprite = MELEE_WALK_LEFT_SPRITE_0,
         },
         .entity_stats = .{
             .is_enemy = true,

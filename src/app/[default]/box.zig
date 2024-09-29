@@ -20,7 +20,7 @@ var Box = e.entities.Entity{
         .scale = e.Vec2(64, 64),
     },
     .display = .{
-        .sprite = "empty_icon.png",
+        .sprite = "sprites/icons/empty.png",
         .scaling = .pixelate,
     },
     .collider = .{

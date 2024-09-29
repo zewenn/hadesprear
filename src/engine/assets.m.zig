@@ -81,7 +81,10 @@ pub fn init(allocator: *Allocator) !void {
 /// Caller owns the returned memory!
 pub fn get(T: type, id: []const u8) ?T {
     if (T == rl.Image) {
-        if (!image_map.contains(id)) @panic("Image doen't exist");
+        if (!image_map.contains(id)) {
+            std.log.err("Image does not exist: {s}", .{id});
+            @panic("Image doen't exist");
+        }
 
         if (image_map.getPtr(id)) |img| {
             return rl.imageCopy(img.*);

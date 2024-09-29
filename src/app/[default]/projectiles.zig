@@ -13,10 +13,10 @@ const e = Import(.engine);
 // ===================== [Events] =====================
 
 const ProjectileManager = e.entities.Manager(.{ .max_entities = 2048 });
-const PLAYER_PROJECTILE_LIGHT_SPRITE = "projectile_player_light.png";
-const PLAYER_PROJECTILE_HEAVY_SPRITE = "projectile_player_heavy.png";
-const ENEMY_PROJECTILE_LIGHT_SPRITE = "projectile_enemy_light.png";
-const ENEMY_PROJECTILE_HEAVY_SPRITE = "projectile_enemy_heavy.png";
+const PLAYER_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_player_light.png";
+const PLAYER_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_player_heavy.png";
+const ENEMY_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_enemy_light.png";
+const ENEMY_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_enemy_heavy.png";
 
 pub fn awake() !void {
     std.log.info("Maximum projectile count: {d}", .{ProjectileManager.ArraySize});

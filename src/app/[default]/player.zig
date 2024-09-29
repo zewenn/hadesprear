@@ -12,13 +12,18 @@ const HIT_GLOVE_DISTANCE: f32 = 45;
 const HIT_PLATES_ROTATION: f32 = 42.5;
 const PROJECTILE_LIFETIME: comptime_float = 2;
 
+const WALK_LEFT_0 = "sprites/entity/player/left_0.png";
+const WALK_LEFT_1 = "sprites/entity/player/left_1.png";
+const WALK_RIGHT_0 = "sprites/entity/player/right_0.png";
+const WALK_RIGHT_1 = "sprites/entity/player/right_1.png";
+
 pub var Player = e.entities.Entity{
     .id = "Player",
     .tags = "player",
     .transform = e.entities.Transform.new(),
     .display = .{
         .scaling = .pixelate,
-        .sprite = "player_left_0.png",
+        .sprite = WALK_LEFT_0,
     },
     .shooting_stats = .{
         .timeout = 0.2,
@@ -45,7 +50,7 @@ pub var Hand0 = e.entities.Entity{
     },
     .display = .{
         .scaling = .pixelate,
-        .sprite = "wpn_gloves_left.png",
+        .sprite = "sprites/icons/empty.png",
     },
 };
 pub var Hand1 = e.entities.Entity{
@@ -57,7 +62,7 @@ pub var Hand1 = e.entities.Entity{
     },
     .display = .{
         .scaling = .pixelate,
-        .sprite = "wpn_gloves_right.png",
+        .sprite = "sprites/icons/empty.png",
     },
 };
 
@@ -127,7 +132,6 @@ const weapons = struct {
     };
 
     fn getSideSpecificSprite(
-        prefix: []const u8,
         middle: []const u8,
         side: enum { left, right },
         ext: []const u8,
@@ -135,10 +139,9 @@ const weapons = struct {
         var final_zS = e.zString.init(e.ALLOCATOR);
         defer final_zS.deinit();
 
-        try final_zS.concat(prefix);
-        try final_zS.concat("_");
+        try final_zS.concat("sprites/entity/player/weapons/");
         try final_zS.concat(middle);
-        try final_zS.concat("_");
+        try final_zS.concat("/");
         try final_zS.concat(switch (side) {
             .left => "left",
             .right => "right",
@@ -156,19 +159,15 @@ const weapons = struct {
             .gloves => "gloves",
             .plates => "plates",
         };
-
-        const prefix = "wpn";
         const fileext = ".png";
 
         return Sprites{
             .left = try getSideSpecificSprite(
-                prefix,
                 middle_string,
                 .left,
                 fileext,
             ),
             .right = try getSideSpecificSprite(
-                prefix,
                 middle_string,
                 .right,
                 fileext,
@@ -228,21 +227,21 @@ pub fn awake() !void {
                 0,
                 .{
                     .rotation = 0,
-                    .sprite = "player_left_0.png",
+                    .sprite = WALK_LEFT_0,
                 },
             );
             walk_left_anim.chain(
                 50,
                 .{
                     .rotation = -5,
-                    .sprite = "player_left_1.png",
+                    .sprite = WALK_LEFT_1,
                 },
             );
             walk_left_anim.chain(
                 100,
                 .{
                     .rotation = 0,
-                    .sprite = "player_left_0.png",
+                    .sprite = WALK_LEFT_0,
                 },
             );
 
@@ -260,21 +259,21 @@ pub fn awake() !void {
                 0,
                 .{
                     .rotation = 0,
-                    .sprite = "player_right_0.png",
+                    .sprite = WALK_RIGHT_0,
                 },
             );
             walk_right_anim.chain(
                 50,
                 .{
                     .rotation = 5,
-                    .sprite = "player_right_1.png",
+                    .sprite = WALK_RIGHT_1,
                 },
             );
             walk_right_anim.chain(
                 100,
                 .{
                     .rotation = 0,
-                    .sprite = "player_right_0.png",
+                    .sprite = WALK_RIGHT_0,
                 },
             );
 
@@ -551,7 +550,9 @@ pub fn update() !void {
                 .side = .player,
                 .weight = .heavy,
                 .speed = cw.speed,
-                .damage = Player.entity_stats.?.damage + cw.damage,
+                .damage = Player.entity_stats.?.damage +
+                    cw.damage *
+                    cw.heavy_damage_multiplier,
             });
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
@@ -563,9 +564,7 @@ pub fn update() !void {
                 .side = .player,
                 .weight = .light,
                 .speed = cw.speed,
-                .damage = Player.entity_stats.?.damage +
-                    cw.damage *
-                    cw.heavy_damage_multiplier,
+                .damage = Player.entity_stats.?.damage + cw.damage,
             });
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + Player.shooting_stats.?.timeout;

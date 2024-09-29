@@ -18,39 +18,69 @@ pub fn build(b: *std.Build) !void {
     }
 
     Filenames: {
-        const files_dir = "./src/assets/";
+        // const files_dir = "./src/assets/";
         const output_file = std.fs.cwd().createFile(
             "src/.temp/filenames.zig",
             .{
                 .truncate = true,
                 .exclusive = false,
             },
-        ) catch unreachable;
+        ) catch @panic("Couldn't open outfile!");
+        defer output_file.close();
 
-        const seg = generateFileNames(files_dir, &allocator);
+        const res = try getAssetsEntries(&allocator);
         defer {
-            for (seg.list.items) |item| {
-                seg.alloc.free(item);
+            for (res) |*item| {
+                item.destory();
             }
-            seg.list.deinit();
+            allocator.free(res);
         }
 
         var writer = output_file.writer();
         writer.writeAll("") catch unreachable;
         _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
-        for (seg.list.items, 0..seg.list.items.len) |item, i| {
+
+        for (res, 0..) |item, i| {
             if (i == 0) {
                 _ = writer.write("\t\"") catch unreachable;
             } else {
                 _ = writer.write("\",\n\t\"") catch unreachable;
             }
-            writer.print("{s}", .{item}) catch unreachable;
-            if (i == seg.list.items.len - 1) {
+
+            writer.print("{s}", .{item.name}) catch unreachable;
+
+            if (i == res.len - 1) {
                 _ = writer.write("\"") catch unreachable;
             }
         }
         _ = writer.write("\n};") catch unreachable;
+
         break :Filenames;
+
+        // const seg = getAssetsEntries(files_dir, &allocator);
+        // defer {
+        //     for (seg.list.items) |item| {
+        //         seg.alloc.free(item);
+        //     }
+        //     seg.list.deinit();
+        // }
+
+        // var writer = output_file.writer();
+        // writer.writeAll("") catch unreachable;
+        // _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
+        // for (seg.list.items, 0..seg.list.items.len) |item, i| {
+        //     if (i == 0) {
+        //         _ = writer.write("\t\"") catch unreachable;
+        //     } else {
+        //         _ = writer.write("\",\n\t\"") catch unreachable;
+        //     }
+        //     writer.print("{s}", .{item}) catch unreachable;
+        //     if (i == seg.list.items.len - 1) {
+        //         _ = writer.write("\"") catch unreachable;
+        //     }
+        // }
+        // _ = writer.write("\n};") catch unreachable;
+        // break :Filenames;
     }
 
     // Handling Scenes & Scripts
@@ -317,29 +347,61 @@ const Segment = struct {
     list: std.ArrayListAligned([]const u8, null),
 };
 
-fn generateFileNames(files_dir: []const u8, alloc: *Allocator) Segment {
-    var dir = std.fs.cwd().openDir(files_dir, .{ .iterate = true }) catch unreachable;
-    defer dir.close();
+fn getAssetsEntries(allocator: *Allocator) ![]ModuleEntry {
+    var assets_dir = try std.fs.cwd().openDir("./src/assets/", .{ .iterate = true });
+    defer assets_dir.close();
 
-    var result = std.ArrayList([]const u8).init(alloc.*);
+    const p_cwd = try std.process.getCwdAlloc(allocator.*);
+    defer allocator.free(p_cwd);
 
-    var it = dir.iterate();
-    while (it.next() catch unreachable) |*entry| {
-        const copied = alloc.*.alloc(u8, entry.name.len) catch unreachable;
+    var walker = try assets_dir.walk(allocator.*);
+    defer walker.deinit();
 
-        for (copied, entry.name) |*l, l2| {
-            l.* = l2;
+    var List = std.ArrayList(ModuleEntry).init(allocator.*);
+    defer List.deinit();
+
+    while (try walker.next()) |entry| {
+        if (entry.kind != .file) continue;
+
+        // var abs_pth = try String.init_with_contents(allocator.*, p_cwd);
+        var abs_pth = try String.init_with_contents(allocator.*, "../../");
+        // try abs_pth.concat("/");
+        try abs_pth.concat(entry.path);
+
+        defer abs_pth.deinit();
+
+        const path = try abs_pth.toOwned();
+        if (path == null) continue;
+
+        defer allocator.free(path.?);
+
+        // const extension: []const u8 = ".m.zig";
+        // if (!std.mem.endsWith(u8, entry.path, extension))
+        //     continue;
+
+        if (std.mem.endsWith(u8, entry.basename, ".DS_Store"))
+            continue;
+
+        if (!std.mem.endsWith(u8, entry.basename, ".mp3") and
+            !std.mem.endsWith(u8, entry.basename, ".png") and
+            !std.mem.endsWith(u8, entry.basename, ".ttf"))
+        {
+            std.log.err("Filetype not supported: {s}", .{entry.basename});
+            continue;
         }
 
-        if (entry.*.kind == .file) {
-            result.append(copied) catch unreachable;
-        }
+        std.debug.print("Including asset: {s}\r", .{entry.basename});
+
+        try List.append(
+            try ModuleEntry.init(
+                allocator,
+                entry.path,
+                path.?,
+            ),
+        );
     }
 
-    return Segment{
-        .alloc = alloc.*,
-        .list = result,
-    };
+    return try List.toOwnedSlice();
 }
 
 /// Caller owns the returned memory.

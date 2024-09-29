@@ -15,7 +15,7 @@ var Background = e.entities.Entity{
     },
     .display = .{
         .scaling = .pixelate,
-        .sprite = "background4.png",
+        .sprite = "sprites/backgrounds/background4.png",
     },
 };
 

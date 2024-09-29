@@ -33,7 +33,7 @@ background: struct {
 } = .{},
 
 font: struct {
-    family: []const u8 = "press_play.ttf",
+    family: []const u8 = "fonts/press_play.ttf",
     size: f32 = 12,
     spacing: f32 = 0,
 } = .{},

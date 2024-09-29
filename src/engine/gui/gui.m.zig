@@ -217,6 +217,8 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
         .callback_fn = callback,
     };
 
+    const len = std.mem.indexOfSentinel(u8, 0, text);
+
     var O = options;
     if (z.eql(O.hover, StyleSheet{})) {
         O.hover = StyleSheet{
@@ -225,6 +227,14 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
             },
         };
     }
+    O.hover.width = .{
+        .value = (@as(f32, @floatFromInt(len)) * (O.hover.font.size)),
+        .unit = .px,
+    };
+    O.hover.height = .{
+        .value = O.hover.font.size,
+        .unit = .px,
+    };
 
     var element = try Text(O, text);
     element.is_button = true;

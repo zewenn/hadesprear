@@ -73,7 +73,6 @@ pub fn update() !void {
             }
 
             other.entity_stats.?.health -= projectile_data.damage;
-            std.log.debug("HP: {d}", .{other.entity_stats.?.health});
 
             ProjectileManager.free(projectile_array_index);
             continue :projectile_loop;

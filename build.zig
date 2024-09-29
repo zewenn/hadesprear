@@ -11,6 +11,12 @@ pub fn build(b: *std.Build) !void {
 
     var allocator = gpa.allocator();
 
+    TempDir: {
+        std.fs.cwd().makeDir("./src/.temp/") catch {};
+
+        break :TempDir;
+    }
+
     Filenames: {
         const files_dir = "./src/assets/";
         const output_file = std.fs.cwd().createFile(

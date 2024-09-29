@@ -43,6 +43,7 @@ pub const ProjectileData = struct {
     speed: f32,
     direction: f32,
     scale: rl.Vector2,
+    damage: f32 = 10,
 };
 
 pub const ShootingStats = struct {

@@ -93,6 +93,7 @@ const weapons = struct {
         type: types,
         sprites: Sprites,
         damage: f32,
+        heavy_damage_multiplier: f32 = 1.5,
         speed: f32 = 100,
         scale: e.Vector2,
 
@@ -550,6 +551,7 @@ pub fn update() !void {
                 .side = .player,
                 .weight = .heavy,
                 .speed = cw.speed,
+                .damage = Player.entity_stats.?.damage + cw.damage,
             });
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
@@ -561,6 +563,9 @@ pub fn update() !void {
                 .side = .player,
                 .weight = .light,
                 .speed = cw.speed,
+                .damage = Player.entity_stats.?.damage +
+                    cw.damage *
+                    cw.heavy_damage_multiplier,
             });
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + Player.shooting_stats.?.timeout;

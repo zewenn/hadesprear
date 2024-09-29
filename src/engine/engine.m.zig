@@ -56,6 +56,15 @@ pub fn Vec3(x: anytype, y: anytype, z: anytype) rl.Vector3 {
     return rl.Vector3.init(loadf32(x), loadf32(y), loadf32(z));
 }
 
+pub fn Rect(x: anytype, y: anytype, w: anytype, h: anytype) rl.Rectangle {
+    return rl.Rectangle.init(
+        loadf32(x),
+        loadf32(y),
+        loadf32(w),
+        loadf32(h),
+    );
+}
+
 pub fn init(allocator: *Allocator) !void {
     ALLOCATOR = allocator.*;
     time.init(allocator);

@@ -7,6 +7,7 @@ pub const z = Import(.z);
 pub const entities = @import("./engine.m.zig").entities;
 
 pub const rl = @import("raylib");
+const Rect = @import("engine.m.zig").Rect;
 
 pub const Distances = struct {
     const Self = @This();
@@ -101,12 +102,38 @@ fn moveBack(
     }
 }
 
+/// If both entities have a collider it returns the `.collidionChech()`
+/// result, if not it returns false.
+pub fn collides(entity1: *entities.Entity, entity2: *entities.Entity) bool {
+    if (entity1.collider) |e1_collider| {
+        if (entity2.collider) |e2_collider| {
+            const e1_rect = Rect(
+                entity1.transform.position.x + e1_collider.rect.x,
+                entity1.transform.position.y + e1_collider.rect.y,
+                e1_collider.rect.width,
+                e1_collider.rect.height,
+            );
+            const e2_rect = Rect(
+                entity2.transform.position.x + e2_collider.rect.x,
+                entity2.transform.position.y + e2_collider.rect.y,
+                e2_collider.rect.width,
+                e2_collider.rect.height,
+            );
+
+            return e1_rect.checkCollision(e2_rect);
+        }
+    }
+
+    return false;
+}
+
 pub fn update(alloc: *Allocator) !void {
     const entities_slice = try entities.all();
     defer alloc.free(entities_slice);
 
     dynamic: for (entities_slice) |e| {
         if (e.collider == null) continue;
+        if (e.collider.?.trigger) continue;
 
         const e_transform = &e.transform;
 
@@ -123,6 +150,7 @@ pub fn update(alloc: *Allocator) !void {
 
         other: for (entities_slice) |other| {
             if (other.collider == null) continue;
+            if (other.collider.?.trigger) continue;
 
             if (std.mem.eql(u8, e.id, other.id)) continue :other;
 

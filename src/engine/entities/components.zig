@@ -69,6 +69,7 @@ pub const Display = struct {
 };
 
 pub const Collider = struct {
+    trigger: bool = false,
     rect: rl.Rectangle,
     weight: f32,
     dynamic: bool,

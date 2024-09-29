@@ -85,13 +85,31 @@ pub fn make(comptime T: type) type {
             return null;
         }
 
-        /// Caller owns the returned memory
-        pub fn getAll(tag: []const u8) ![]*Entity {
+        /// Caller owns the returned memory.
+        /// Returns all entities with the given tag.
+        pub fn search(tag: []const u8) ![]*Entity {
             var list = EntityArrayType.init(alloc);
             defer list.deinit();
 
             for (entities.items) |item| {
                 if (std.mem.containsAtLeast(
+                    u8,
+                    item.id,
+                    1,
+                    tag,
+                )) try list.append(item);
+            }
+            return try list.toOwnedSlice();
+        }
+
+        /// Caller owns the returned memory.
+        /// Returns all entities without the given tag.
+        pub fn searchExclude(tag: []const u8) ![]*Entity {
+            var list = EntityArrayType.init(alloc);
+            defer list.deinit();
+
+            for (entities.items) |item| {
+                if (!std.mem.containsAtLeast(
                     u8,
                     item.id,
                     1,
@@ -131,8 +149,8 @@ pub fn make(comptime T: type) type {
             entities.clearAndFree();
         }
 
-        /// **IMPORTANT**: 
-        /// You **need** to use this with heap allocated ids, 
+        /// **IMPORTANT**:
+        /// You **need** to use this with heap allocated ids,
         /// since `.free()` will try to free the id of the object!
         pub fn Manager(comptime options: struct {
             max_size: usize = 8_000_000,

@@ -25,39 +25,59 @@ pub fn awake() !void {
 pub fn init() !void {}
 
 pub fn update() !void {
-    for (ProjectileManager.array, 0..) |value, index| {
+    const others = try e.entities.searchExclude("projectile");
+    defer e.ALLOCATOR.free(others);
+
+    projectile_loop: for (ProjectileManager.array, 0..) |value, projectile_array_index| {
         if (value == null) continue;
 
-        const item = &ProjectileManager.array[index].?;
+        const entity_ptr = &ProjectileManager.array[projectile_array_index].?;
 
-        if (item.projectile_data == null) {
+        if (entity_ptr.projectile_data == null) {
             std.log.err("Projectile without projectile data!", .{});
             std.log.err("Removing...", .{});
 
-            ProjectileManager.free(index);
+            ProjectileManager.free(projectile_array_index);
             continue;
         }
 
-        const projectile_data = item.projectile_data.?;
+        const projectile_data = entity_ptr.projectile_data.?;
 
         if (projectile_data.lifetime_end < e.time.currentTime) {
-            ProjectileManager.free(index);
+            ProjectileManager.free(projectile_array_index);
             continue;
         }
 
-        if (!e.entities.exists(item.id)) {
-            try e.entities.register(item);
+        if (!e.entities.exists(entity_ptr.id)) {
+            try e.entities.register(entity_ptr);
         }
 
         const direction_vector = e.Vec2(1, 0)
             .rotate(std.math.degreesToRadians(projectile_data.direction))
             .normalize();
 
-        item.transform.rotation.z = projectile_data.direction - 90;
+        entity_ptr.transform.rotation.z = projectile_data.direction - 90;
 
-        item.transform.position.x += direction_vector.x * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
-        item.transform.position.y += direction_vector.y * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
+        entity_ptr.transform.position.x += direction_vector.x * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
+        entity_ptr.transform.position.y += direction_vector.y * projectile_data.speed * @as(f32, @floatCast(e.time.deltaTime));
         // std.log.debug("index: {d} - {s}", .{ index, item.id });
+
+        for (others) |other| {
+            if (other.entity_stats == null) continue;
+
+            if (projectile_data.side == .player and std.mem.eql(u8, other.id, "Player"))
+                continue;
+
+            if (!e.collision.collides(entity_ptr, other)) {
+                continue;
+            }
+
+            other.entity_stats.?.health -= projectile_data.damage;
+            std.log.debug("HP: {d}", .{other.entity_stats.?.health});
+
+            ProjectileManager.free(projectile_array_index);
+            continue :projectile_loop;
+        }
     }
 }
 
@@ -96,6 +116,17 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
             },
         },
         .projectile_data = data,
+        .collider = .{
+            .trigger = true,
+            .dynamic = false,
+            .weight = 0,
+            .rect = e.Rect(
+                0,
+                0,
+                64,
+                64,
+            ),
+        },
     };
 
     ProjectileManager.malloc(New);

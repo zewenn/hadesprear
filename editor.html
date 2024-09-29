@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor</title>
+
+    <script defer>
+        function size() {
+
+            const editor = document.querySelector("iframe");
+
+            if (!editor) return;
+
+            editor.width = window.innerWidth;
+            editor.height = window.innerHeight;
+        }
+
+        window.addEventListener("load", size);
+        window.addEventListener("resize", size);
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe src="https://pixilart.com" frameborder="0"></iframe>
+</body>
+
+</html>

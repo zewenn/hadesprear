@@ -53,6 +53,7 @@ pub var Hand0 = e.entities.Entity{
         .sprite = "sprites/icons/empty.png",
     },
 };
+
 pub var Hand1 = e.entities.Entity{
     .id = "Hand1",
     .tags = "hand",

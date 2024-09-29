@@ -9,14 +9,6 @@ const toUnit = GUI.toUnit;
 
 var menu_music: e.Sound = undefined;
 
-// ===================== [Entity] =====================
-
-// =================== [Components] ===================
-
-// ===================== [Others] =====================
-
-// ===================== [Events] =====================
-
 pub fn awake() !void {
     e.input.ui_mode = true;
     menu_music = e.assets.get(e.Sound, "audio/music/main_menu.mp3").?;

@@ -12,6 +12,7 @@ var menu_music: e.Sound = undefined;
 pub fn awake() !void {
     e.input.ui_mode = true;
     menu_music = e.assets.get(e.Sound, "audio/music/main_menu.mp3").?;
+    e.setSoundVolume(menu_music, 0.1);
 
     try GUI.Body(
         .{
@@ -81,6 +82,7 @@ pub fn awake() !void {
 
 pub fn init() !void {
     e.playSound(menu_music);
+    try e.scenes.load("game");
 }
 
 pub fn update() !void {}

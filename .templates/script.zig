@@ -1,7 +1,7 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
-const e = Import(.engine);
+const conf = @import("../../config.zig");
+
+const e = @import("../../engine/engine.m.zig");
 
 pub fn awake() !void {}
 

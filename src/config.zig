@@ -79,3 +79,27 @@ pub const DashModifiers = struct {
 
     dash_end: f64 = 0,
 };
+
+pub const Item = struct {
+    T: enum {
+        weapon,
+        head,
+        body,
+        legs,
+    } = .weapon,
+
+    health: f32 = 0,
+
+    damage: f32 = 0,
+    crit_rate: f32 = 0,
+    crit_damage_multiplier: f32 = 0,
+
+    movement_speed: f32 = 0,
+    dash_charges: f32 = 0,
+
+    weapon_projectile_scale: rl.Vector2,
+
+    icon: []const u8,
+    weapon_sprite_left: []const u8,
+    weapon_sprite_right: []const u8,
+};

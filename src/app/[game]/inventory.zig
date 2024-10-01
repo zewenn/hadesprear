@@ -11,6 +11,7 @@ const bag_pages: comptime_int = 3;
 const bag_page_rows: comptime_int = 4;
 const bag_page_cols: comptime_int = 9;
 const bag_size: comptime_int = bag_pages * bag_page_rows * bag_page_cols;
+const bag_page_size: comptime_int = bag_page_cols * bag_page_rows;
 
 pub const Item = conf.Item;
 
@@ -37,6 +38,21 @@ const equipped = struct {
 var INVENTORY_GUI: *GUI.GUIElement = undefined;
 var bag_element: *GUI.GUIElement = undefined;
 var slots: []*GUI.GUIElement = undefined;
+
+const current_page = struct {
+    var value: usize = 0;
+
+    pub fn set(to: usize) void {
+        if (to >= bag_pages) return;
+        if (to < 0) return;
+
+        value = to;
+    }
+
+    pub fn get() usize {
+        return value;
+    }
+};
 
 const SLOT_SIZE: f32 = 6;
 
@@ -91,6 +107,75 @@ pub fn pickUpSort(item: conf.Item) bool {
     return res;
 }
 
+pub fn updateGUI() !void {
+    for (0..bag_page_rows) |row| {
+        for (0..bag_page_cols) |col| {
+            const index = current_page.get() *
+                bag_page_size +
+                row *
+                bag_page_cols +
+                col;
+
+            std.log.debug("index: {d}", .{index});
+
+            const element_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#slot-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(element_selector);
+
+            const button_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#slot-btn-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(button_selector);
+
+            const shower_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#slot-btn-shower-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(shower_selector);
+
+            const element: *GUI.GUIElement = if (GUI.select(element_selector)) |el| el else continue;
+            const button: *GUI.GUIElement = if (GUI.select(button_selector)) |el| el else continue;
+            const shower: *GUI.GUIElement = if (GUI.select(shower_selector)) |el| el else continue;
+
+            _ = button;
+
+            const item = sorted_bag[index].*;
+
+            if (item) |it| {
+                std.log.debug("item: {s}", .{item.?.icon});
+                shower.options.style.background.image = it.icon;
+                std.log.debug("shower: {s}", .{shower.options.style.background.image.?});
+
+                element.options.style.background.image = switch (it.rarity) {
+                    .common => "sprites/gui/item_slot.png",
+                    .epic => "sprites/gui/item_slot_epic.png",
+                    .legendary => "sprites/gui/item_slot_legendary.png",
+                };
+
+                continue;
+            }
+
+            shower.options.style.background.image = null;
+            element.options.style.background.image = "sprites/gui/item_slot_empty.png";
+        }
+    }
+}
+
 inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8, col: usize, row: usize) !*GUI.GUIElement {
     return try GUI.Container(.{
         .id = id,
@@ -113,7 +198,6 @@ inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8,
             },
             .background = .{
                 .image = "sprites/gui/item_slot.png",
-                .color = e.Color.red,
             },
         },
     }, @constCast(&[_]*GUI.GUIElement{
@@ -128,8 +212,7 @@ inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8,
                 },
                 .hover = .{
                     .background = .{
-                        // .image = "sprites/gui/slot_highlight.png",
-                        .color = e.Color.blue,
+                        .image = "sprites/gui/slot_highlight.png",
                     },
                 },
             },
@@ -138,6 +221,9 @@ inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8,
             (struct {
                 pub fn callback() anyerror!void {
                     std.log.debug("At: {d}-{d}", .{ col, row });
+                    sorted_bag[row * bag_page_cols + col].* = null;
+                    sortBag();
+                    try updateGUI();
                 }
             }).callback,
         ),
@@ -147,7 +233,7 @@ inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8,
                 .width = u("100%"),
                 .height = u("100%"),
                 .background = .{
-                    // .image = "sprites/entity/player/weapons/gloves/left.png",
+                    .image = "sprites/entity/player/weapons/gloves/left.png",
                 },
             },
         }),
@@ -288,6 +374,7 @@ pub fn awake() !void {
 pub fn init() !void {
     _ = pickUpSort(conf.Item{
         .T = .weapon,
+        .rarity = .legendary,
         .damage = 10,
         .weapon_projectile_scale = e.Vec2(64, 64),
 
@@ -297,6 +384,7 @@ pub fn init() !void {
     });
     _ = pickUpSort(conf.Item{
         .T = .weapon,
+        .rarity = .epic,
         .damage = 10,
         .weapon_projectile_scale = e.Vec2(64, 64),
 
@@ -305,7 +393,7 @@ pub fn init() !void {
         .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
     });
 
-    bag[0] = null;
+    // bag[0] = null;
 
     std.log.debug("Sorted bag: ", .{});
 
@@ -320,6 +408,8 @@ pub fn init() !void {
     for (sorted_bag, 0..) |it, index| {
         std.log.debug("[{d}] Value: {any}", .{ index, it.* });
     }
+
+    try updateGUI();
 }
 
 pub fn update() !void {}

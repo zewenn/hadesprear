@@ -191,8 +191,6 @@ pub fn update() !void {
             rl.Vector2.init(camera.zoom, camera.zoom),
         );
 
-        // std.log.debug("Display Before Background", .{});
-
         BackgroundColorRendering: {
             var background_color: rl.Color = undefined;
             if (style.background.color) |c| {
@@ -227,26 +225,21 @@ pub fn update() !void {
 
             const use_previous: bool = Decide: {
                 if (element.cached_display == null) {
-                    std.log.err("cache fail", .{});
                     break :Decide false;
                 }
 
                 const cached = element.cached_display.?;
 
                 if (cached.transform.scale.equals(transform.scale) == 0) {
-                    std.log.err("scale fail", .{});
                     break :Decide false;
                 }
                 if (cached.transform.rotation.equals(transform.rotation) == 0) {
-                    std.log.err("rotation fail", .{});
                     break :Decide false;
                 }
                 if (!std.mem.eql(u8, cached.display.sprite, display.sprite)) {
-                    std.log.err("sprite fail", .{});
                     break :Decide false;
                 }
                 if (cached.display.scaling != display.scaling) {
-                    std.log.err("scaling fail", .{});
                     break :Decide false;
                 }
 
@@ -280,12 +273,10 @@ pub fn update() !void {
                     ),
                 }
                 if (element.cached_display) |cached| {
-                    std.log.debug("Has cached display: {s}", .{element.options.id});
                     if (cached.img) |chached_image| {
                         rl.unloadImage(chached_image);
                     }
                     if (cached.texture) |cached_texture| {
-                        std.log.debug("Unloaded texture of \"{s}\"", .{element.options.id});
                         rl.unloadTexture(cached_texture);
                     }
                 }
@@ -296,10 +287,6 @@ pub fn update() !void {
                     .img = rl.imageCopy(img),
                     .texture = rl.loadTextureFromImage(img),
                 };
-                std.log.debug("Cache added to {s}: {any}", .{
-                    element.options.id,
-                    element.cached_display,
-                });
 
                 texture = element.cached_display.?.texture.?;
             }

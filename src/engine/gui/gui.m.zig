@@ -206,9 +206,11 @@ pub fn deinit() void {
 
 pub fn select(selector: []const u8) ?*GUIElement {
     for (0..elements.array.len) |entry| {
-        const value = elements.array[entry];
+        const v = elements.array[entry];
 
-        if (value == null) continue;
+        if (v == null) continue;
+
+        const value = &elements.array[entry].?;
 
         switch (selector[0]) {
             '.' => {

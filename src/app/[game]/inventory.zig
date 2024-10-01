@@ -155,7 +155,7 @@ inline fn generateBtn(id: []const u8, btn_id: []const u8, shower_id: []const u8,
 }
 
 pub fn awake() !void {
-    // e.input.ui_mode = true;
+    e.input.ui_mode = true;
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
 

@@ -143,10 +143,9 @@ pub fn update() !void {
     var GUIElements = std.ArrayList(*GUI.GUIElement).init(std.heap.page_allocator);
     defer GUIElements.deinit();
 
-    var GUIIt = GUI.elements.array;
-    for (GUIIt, 0..) |entry, index| {
+    for (GUI.elements.array, 0..) |entry, index| {
         if (entry == null) continue;
-        try GUIElements.insert(0, &(GUIIt[index].?));
+        try GUIElements.insert(0, &(GUI.elements.array[index].?));
         // try GUIElements.append(entry.value_ptr);
     }
 
@@ -214,36 +213,99 @@ pub fn update() !void {
         }
 
         BacgroundImageRendering: {
-            // background_image
-            var background_image: []const u8 = undefined;
-            if (style.background.image) |bc_img| {
-                background_image = bc_img;
-            } else break :BacgroundImageRendering;
+            if (style.background.image == null) break :BacgroundImageRendering;
+
+            const display: entities.Display = .{
+                .sprite = style.background.image.?,
+                .scaling = .pixelate,
+            };
 
             var img: rl.Image = undefined;
             defer rl.unloadImage(img);
 
-            var texture: ?rl.Texture = if (element.cached_background_image) |bgimg| bgimg else null;
+            var texture: rl.Texture = undefined;
 
-            if (assets.get(rl.Image, background_image)) |_img| {
-                img = _img;
+            const use_previous: bool = Decide: {
+                if (element.cached_display == null) {
+                    std.log.err("cache fail", .{});
+                    break :Decide false;
+                }
+
+                const cached = element.cached_display.?;
+
+                if (cached.transform.scale.equals(transform.scale) == 0) {
+                    std.log.err("scale fail", .{});
+                    break :Decide false;
+                }
+                if (cached.transform.rotation.equals(transform.rotation) == 0) {
+                    std.log.err("rotation fail", .{});
+                    break :Decide false;
+                }
+                if (!std.mem.eql(u8, cached.display.sprite, display.sprite)) {
+                    std.log.err("sprite fail", .{});
+                    break :Decide false;
+                }
+                if (cached.display.scaling != display.scaling) {
+                    std.log.err("scaling fail", .{});
+                    break :Decide false;
+                }
+
+                if (cached.img == null) break :Decide false;
+                if (cached.texture == null) break :Decide false;
+
+                break :Decide true;
+            };
+
+            if (use_previous and element.cached_display != null) {
+                img = rl.imageCopy(element.cached_display.?.img.?);
+                texture = element.cached_display.?.texture.?;
             } else {
-                std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{background_image});
-                break :BacgroundImageRendering;
+                if (assets.get(rl.Image, display.sprite)) |_img| {
+                    img = _img;
+                } else {
+                    std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
+                    continue;
+                }
+
+                switch (display.scaling) {
+                    .normal => rl.imageResize(
+                        &img,
+                        @intFromFloat(transform.scale.x * camera.zoom),
+                        @intFromFloat(transform.scale.y * camera.zoom),
+                    ),
+                    .pixelate => rl.imageResizeNN(
+                        &img,
+                        @intFromFloat(transform.scale.x * camera.zoom),
+                        @intFromFloat(transform.scale.y * camera.zoom),
+                    ),
+                }
+                if (element.cached_display) |cached| {
+                    std.log.debug("Has cached display: {s}", .{element.options.id});
+                    if (cached.img) |chached_image| {
+                        rl.unloadImage(chached_image);
+                    }
+                    if (cached.texture) |cached_texture| {
+                        std.log.debug("Unloaded texture of \"{s}\"", .{element.options.id});
+                        rl.unloadTexture(cached_texture);
+                    }
+                }
+
+                element.cached_display = .{
+                    .transform = transform,
+                    .display = display,
+                    .img = rl.imageCopy(img),
+                    .texture = rl.loadTextureFromImage(img),
+                };
+                std.log.debug("Cache added to {s}: {any}", .{
+                    element.options.id,
+                    element.cached_display,
+                });
+
+                texture = element.cached_display.?.texture.?;
             }
-
-            rl.imageResizeNN(
-                &img,
-                @intFromFloat(transform.scale.x * camera.zoom),
-                @intFromFloat(transform.scale.y * camera.zoom),
-            );
-
-            texture = rl.loadTextureFromImage(img);
-            defer rl.unloadTexture(texture.?);
-
             // defer rl.unloadTexture(texture);
             rl.drawTexturePro(
-                texture.?,
+                texture,
                 rl.Rectangle.init(
                     0,
                     0,

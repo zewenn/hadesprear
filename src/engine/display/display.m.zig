@@ -164,6 +164,8 @@ pub fn update() !void {
             break :GetStyle element.options.style;
         };
 
+        if (!style.display) continue;
+
         var transform: entities.Transform = undefined;
 
         if (element.transform) |t| {

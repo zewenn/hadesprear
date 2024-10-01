@@ -19,6 +19,7 @@ pub const Options = struct {
     hover: StyleSheet = StyleSheet{},
 };
 
+heap_id: bool = false,
 children: ?std.ArrayList(*Self) = null,
 contents: ?[*:0]const u8 = null,
 parent: ?*Self = null,
@@ -85,8 +86,13 @@ pub fn calculateTransform(self: *Self) entities.Transform {
 }
 
 pub fn addChild(self: *Self, child: *Self) !void {
+    std.log.debug("h1", .{});
+    std.log.debug("self: {any}", .{self});
     if (self.children) |*children| {
+        std.log.debug("h2", .{});
         child.parent = self;
+        std.log.debug("h3", .{});
         try children.append(child);
+        std.log.debug("h4", .{});
     }
 }

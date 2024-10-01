@@ -87,6 +87,11 @@ pub const Item = struct {
         body,
         legs,
     } = .weapon,
+    rarity: enum {
+        common,
+        epic,
+        legendary,
+    } = .common,
 
     health: f32 = 0,
 

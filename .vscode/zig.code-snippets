@@ -31,5 +31,14 @@
 	"import raylib": {
 		"prefix": "irl",
 		"body": "const rl = @import(\"raylib\");",
+	},
+	"GUI Children Array": {
+		"prefix": "children",
+		"body": [
+			"@constCast(&[_]*GUI.GUIElement{",
+			"//",
+			"\t$1",
+			"})",
+		]
 	}
 }

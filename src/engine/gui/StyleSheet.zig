@@ -12,6 +12,8 @@ const Unit = @import("Unit.zig");
 const Self = @This();
 const Translate = enum { min, center, max };
 
+display: bool = true,
+
 top: Unit = Unit.init(0, .px),
 left: Unit = Unit.init(0, .px),
 

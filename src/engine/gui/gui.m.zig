@@ -23,6 +23,9 @@ pub fn init(allocator: *Allocator) void {
     alloc = allocator;
 
     Elements = std.StringHashMap(GUIElement).init(allocator.*);
+    Elements.ensureTotalCapacity(1024) catch {
+        std.log.warn("failed to ensure capacity", .{});
+    };
 
     ButtonMatrix = [_][16]?ButtonInterface{
         [_]?ButtonInterface{null} ** 16,
@@ -123,6 +126,9 @@ pub fn deinit() void {
         if (entry.value_ptr.children) |children| {
             children.deinit();
         }
+        if (entry.value_ptr.heap_id) {
+            alloc.free(entry.value_ptr.options.id);
+        }
     }
 
     Elements.deinit();
@@ -152,9 +158,10 @@ pub fn select(selector: []const u8) ?*GUIElement {
                     return value;
                 }
             },
+            else => return null,
         }
-        return null;
     }
+    return null;
 }
 
 pub fn clear() void {
@@ -182,6 +189,10 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
     var Parent = GUIElement{ .options = options };
     Parent.children = childrn;
     Parent.contents = content;
+
+    if (Elements.get(options.id) != null) {
+        std.log.warn("Data clobbering", .{});
+    }
 
     try Elements.put(options.id, Parent);
 

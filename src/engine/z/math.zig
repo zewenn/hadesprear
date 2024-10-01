@@ -75,3 +75,15 @@ pub fn avg(value1: anytype, value2: anytype) ?f128 {
 
     return (v1 + v2) / 2;
 }
+
+pub fn getPointDistance(x1: anytype, y1: anytype, x2: anytype, y2: anytype) f128 {
+    const x_1 = to_f128(x1).?;
+    const y_1 = to_f128(y1).?;
+    const x_2 = to_f128(x2).?;
+    const y_2 = to_f128(y2).?;
+
+    const a = x_2 - x_1;
+    const b = y_2 - y_1;
+
+    return std.math.hypot(a, b);
+}

@@ -111,6 +111,11 @@ pub fn awake() !void {
                 "slot-{d}-{d}",
                 .{ row, col },
             );
+            const button_id = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "slot-btn-{d}-{d}",
+                .{ row, col },
+            );
 
             slots[row * bag_page_cols + col] = try GUI.Container(.{
                 .id = id,
@@ -124,20 +129,45 @@ pub fn awake() !void {
                         .unit = .vw,
                     },
                     .left = .{
-                        .value = -1 * (WIDTH_VW / 2) + @as(f32, @floatFromInt(col)) * 7,
+                        .value = -1 * (WIDTH_VW / 2) + @as(f32, @floatFromInt(col)) * (SLOT_SIZE + 1),
                         .unit = .vw,
                     },
                     .top = .{
-                        .value = -1 * (HEIGHT_VW / 2) + @as(f32, @floatFromInt(row)) * 7,
+                        .value = -1 * (HEIGHT_VW / 2) + @as(f32, @floatFromInt(row)) * (SLOT_SIZE + 1),
                         .unit = .vw,
                     },
                     .background = .{
-                        .color = e.Color.blue,
+                        .image = "sprites/gui/item_slot.png",
                     },
                 },
-            }, @constCast(&[_]*GUI.GUIElement{}));
+            }, @constCast(&[_]*GUI.GUIElement{
+                try GUI.Button(
+                    .{
+                        .id = button_id,
+                        .style = .{
+                            .width = u("100%"),
+                            .height = u("100%"),
+                            .top = u("0%"),
+                            .left = u("0%"),
+                        },
+                        .hover = .{
+                            .background = .{
+                                .color = e.Color.red,
+                            },
+                        },
+                    },
+                    "",
+                    e.Vec2(3 + col, 4 + row),
+                    (struct {
+                        pub fn callback() anyerror!void {
+                            std.log.debug("At: {d}-{d}", .{ col, row });
+                        }
+                    }).callback,
+                ),
+            }));
 
             slots[row * bag_page_cols + col].heap_id = true;
+            slots[row * bag_page_cols + col].children.?.items[0].heap_id = true;
         }
     }
 
@@ -146,7 +176,7 @@ pub fn awake() !void {
             .id = "InventoryParentBackground",
             .style = .{
                 .background = .{
-                    .color = e.Color.init(0, 0, 0, 20),
+                    .color = e.Color.init(0, 0, 0, 128),
                 },
                 .width = u("100w"),
                 .height = u("100h"),
@@ -171,7 +201,7 @@ pub fn awake() !void {
                         .y = .center,
                     },
                     .background = .{
-                        .color = e.Color.red,
+                        // .color = e.Color.red,
                     },
                 },
             }, slots),

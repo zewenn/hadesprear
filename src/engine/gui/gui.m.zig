@@ -292,8 +292,10 @@ pub fn Text(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {
 
     const len = std.mem.indexOfSentinel(u8, 0, text);
 
-    el.options.style.width = .{ .value = (@as(f32, @floatFromInt(len)) * el.options.style.font.size), .unit = .px };
-    el.options.style.height = .{ .value = el.options.style.font.size, .unit = .px };
+    if (options.style.width.value == 64 and options.style.height.value == 64) {
+        el.options.style.width = .{ .value = (@as(f32, @floatFromInt(len)) * el.options.style.font.size), .unit = .px };
+        el.options.style.height = .{ .value = el.options.style.font.size, .unit = .px };
+    }
 
     return el;
 }
@@ -308,20 +310,24 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
 
     var O = options;
     if (z.eql(O.hover, StyleSheet{})) {
+        std.log.debug("lol", .{});
         O.hover = StyleSheet{
             .font = .{
                 .size = O.style.font.size + 1,
             },
         };
     }
-    O.hover.width = .{
-        .value = (@as(f32, @floatFromInt(len)) * (O.hover.font.size)),
-        .unit = .px,
-    };
-    O.hover.height = .{
-        .value = O.hover.font.size,
-        .unit = .px,
-    };
+
+    if (O.style.width.value == 64 and O.style.height.value == 64) {
+        O.hover.width = .{
+            .value = (@as(f32, @floatFromInt(len)) * (O.hover.font.size)),
+            .unit = .px,
+        };
+        O.hover.height = .{
+            .value = O.hover.font.size,
+            .unit = .px,
+        };
+    }
 
     var element = try Text(O, text);
     element.is_button = true;

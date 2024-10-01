@@ -125,6 +125,9 @@ pub fn SearchMatrixForNext(
         },
     }
 
+    var closest: [2]usize = undefined;
+    var closest_distance: f128 = 0;
+
     // how many directional matrix slices to look through
     // 0 is the starting middle slice
     // each increment increases the look scope by 1 towards both ends
@@ -152,10 +155,18 @@ pub fn SearchMatrixForNext(
                     continue;
                 }
 
-                if (matrix[y_range_index][x_range_index] != null) return [2]usize{ x_range_index, y_range_index };
+                if (matrix[y_range_index][x_range_index] != null) {
+                    const dist = math.getPointDistance(x, y, x_range_index, y_range_index);
+                    if (closest_distance == 0 or dist < closest_distance) {
+                        closest = [2]usize{ x_range_index, y_range_index };
+                        closest_distance = math.getPointDistance(x, y, x_range_index, y_range_index);
+                        continue;
+                    }
+                }
             }
         }
     }
 
+    if (closest_distance != 0) return closest;
     return [2]usize{ x, y };
 }

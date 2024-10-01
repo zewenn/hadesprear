@@ -432,6 +432,8 @@ pub fn init() !void {
 }
 
 pub fn update() !void {
+    if (e.input.ui_mode) return;
+
     const mouse_pos = e.input.mouse_position;
     const mouse_relative_pos = e.Vec2(
         mouse_pos.x - e.window.size.x / 2,

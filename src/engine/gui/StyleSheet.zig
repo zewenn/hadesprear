@@ -110,6 +110,9 @@ pub fn merge(self: *Self, other: Self) Self {
     if (!z.eql(base.color, other.color))
         result.color = other.color;
 
+    if (!z.eql(base.background, other.background))
+        result.background = other.background;
+
     return result;
 }
 

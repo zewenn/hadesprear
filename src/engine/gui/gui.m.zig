@@ -13,7 +13,81 @@ pub const ButtonInterface = @import("ButtonInterface.zig");
 pub const u = @import("Unit.zig").u;
 pub const toUnit = @import("Unit.zig").toUnit;
 
-pub var Elements: std.StringHashMap(GUIElement) = undefined;
+pub const elements = struct {
+    const T = GUIElement;
+    const options: struct {
+        max_size: usize = 8_000_000,
+        max_entities: ?usize = null,
+    } = .{
+        .max_size = 8_000_000,
+        .max_entities = 1024,
+    };
+
+    pub const TSize: comptime_int = @sizeOf(T);
+    pub const MaxArraySize: comptime_int = @divTrunc(options.max_size, TSize);
+    pub const ArraySize: comptime_int = if (options.max_entities) |max| @min(max, MaxArraySize) else MaxArraySize;
+    pub var array: [ArraySize]?T = [_]?T{null} ** ArraySize;
+
+    /// This will search for the next free *(value == null)*
+    /// index in the array and return it.
+    /// If there are no available indexes in the array and override is:
+    /// - **false**: it will override the 0th address.
+    /// - **true**: it will randomly return an address.
+    pub fn searchNextIndex(override: bool) usize {
+        for (array, 0..) |value, index| {
+            if (index == 0) continue;
+            if (value == null) return index;
+        }
+
+        // No null, everything is used...
+
+        // This saves your ass 1 time
+        if (!override) {
+            array[0] = null;
+            return 0;
+        }
+
+        const rIndex = std.crypto.random.uintLessThan(usize, ArraySize);
+
+        if (array[rIndex]) |_| {
+            free(rIndex);
+        }
+
+        array[rIndex] = null;
+        return rIndex;
+    }
+
+    /// Uses the `searchNextIndex()` function to get an index
+    /// and puts the value into it
+    pub fn malloc(value: T) void {
+        const index = searchNextIndex(true);
+        array[index] = value;
+    }
+
+    /// Sets the value of the index to `null`
+    pub fn free(index: usize) void {
+        array[index] = null;
+    }
+
+    pub fn get(id: []const u8) ?*GUIElement {
+        for (array, 0..) |item, index| {
+            if (item == null) continue;
+            if (std.mem.eql(u8, id, item.?.options.id)) return &(array[index].?);
+        }
+        return null;
+    }
+
+    pub fn freeWithFreeId(index: usize) void {
+        const value = array[index];
+
+        if (value == null) return;
+
+        alloc.free(value.?.options.id);
+
+        array[index] = null;
+    }
+};
+
 pub var ButtonMatrix: [9][16]?ButtonInterface = undefined;
 pub var keyboard_cursor_position = rl.Vector2.init(0, 0);
 
@@ -21,11 +95,6 @@ var alloc: *Allocator = undefined;
 
 pub fn init(allocator: *Allocator) void {
     alloc = allocator;
-
-    Elements = std.StringHashMap(GUIElement).init(allocator.*);
-    Elements.ensureTotalCapacity(1024) catch {
-        std.log.warn("failed to ensure capacity", .{});
-    };
 
     ButtonMatrix = [_][16]?ButtonInterface{
         [_]?ButtonInterface{null} ** 16,
@@ -121,24 +190,26 @@ pub fn update() void {
 }
 
 pub fn deinit() void {
-    var elIt = Elements.iterator();
-    while (elIt.next()) |entry| {
-        if (entry.value_ptr.children) |children| {
+    for (elements.array, 0..) |element, index| {
+        if (element == null) continue;
+
+        if (element.?.children) |children| {
             children.deinit();
         }
-        if (entry.value_ptr.heap_id) {
-            alloc.free(entry.value_ptr.options.id);
+        if (element.?.heap_id) {
+            elements.freeWithFreeId(index);
+            continue;
         }
-    }
 
-    Elements.deinit();
+        elements.free(index);
+    }
 }
 
 pub fn select(selector: []const u8) ?*GUIElement {
-    var it = Elements.iterator();
+    for (0..elements.array.len) |entry| {
+        const value = elements.array[entry];
 
-    while (it.next()) |entry| {
-        const value = entry.value_ptr;
+        if (value == null) continue;
 
         switch (selector[0]) {
             '.' => {
@@ -165,18 +236,23 @@ pub fn select(selector: []const u8) ?*GUIElement {
 }
 
 pub fn clear() void {
-    var elIt = Elements.iterator();
-    while (elIt.next()) |entry| {
-        if (entry.value_ptr.children) |children| {
+    for (elements.array, 0..) |element, index| {
+        if (element == null) continue;
+
+        if (element.?.children) |children| {
             children.deinit();
         }
+        if (element.?.heap_id) {
+            elements.freeWithFreeId(index);
+            continue;
+        }
+
+        elements.free(index);
     }
 
     ButtonMatrix = [_][16]?ButtonInterface{
         [_]?ButtonInterface{null} ** 16,
     } ** 9;
-
-    Elements.clearAndFree();
 }
 
 pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !*GUIElement {
@@ -190,13 +266,13 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
     Parent.children = childrn;
     Parent.contents = content;
 
-    if (Elements.get(options.id) != null) {
+    if (elements.get(options.id) != null) {
         std.log.warn("Data clobbering", .{});
     }
 
-    try Elements.put(options.id, Parent);
+    elements.malloc(Parent);
 
-    const el_ptr = Elements.getPtr(Parent.options.id).?;
+    const el_ptr = elements.get(Parent.options.id).?;
 
     for (childrn.items) |child| {
         if (child.options.style.z_index == 0)

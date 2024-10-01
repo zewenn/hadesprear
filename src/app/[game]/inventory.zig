@@ -86,46 +86,6 @@ pub fn pickUpSort(item: conf.Item) bool {
     return res;
 }
 
-fn generateSlots() !void {
-    slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, bag_page_rows * bag_page_cols);
-    std.log.debug("slots.len: {d}", .{slots.len});
-
-    inline for (0..bag_page_rows) |row| {
-        inline for (0..bag_page_cols) |col| {
-            const id = try std.fmt.allocPrint(
-                e.ALLOCATOR,
-                "slot-{d}-{d}",
-                .{ row, col },
-            );
-            std.log.debug("id created", .{});
-
-            slots[row * bag_page_cols + col] = try GUI.Container(.{
-                .id = id,
-                .style = .{
-                    .width = u("9%"),
-                    .height = u("27%"),
-                    .left = .{
-                        .value = @as(f32, @floatFromInt(col)) * 10,
-                        .unit = .percent,
-                    },
-                    .top = .{
-                        .value = @as(f32, @floatFromInt(row)) * 30,
-                        .unit = .percent,
-                    },
-                    .background = .{
-                        .color = e.Color.blue,
-                    },
-                },
-            }, @constCast(&[_]*GUI.GUIElement{}));
-            std.log.debug("x created", .{});
-
-            slots[row * bag_page_cols + col].heap_id = true;
-            std.log.debug("slot added", .{});
-            std.log.info("done: {d}", .{row * bag_page_cols + col});
-        }
-    }
-}
-
 pub fn awake() !void {
     e.input.ui_mode = true;
 
@@ -137,10 +97,12 @@ pub fn awake() !void {
 
     sortBag();
 
-    std.log.debug("asdasdassssssssd", .{});
-
     slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, bag_page_rows * bag_page_cols);
-    std.log.debug("slots.len: {d}", .{slots.len});
+
+    const SLOT_SIZE: f32 = 6;
+
+    const WIDTH_VW: f32 = (SLOT_SIZE + 1) * 9 - 1;
+    const HEIGHT_VW: f32 = (SLOT_SIZE + 1) * 4 - 1;
 
     inline for (0..bag_page_rows) |row| {
         inline for (0..bag_page_cols) |col| {
@@ -149,44 +111,34 @@ pub fn awake() !void {
                 "slot-{d}-{d}",
                 .{ row, col },
             );
-            std.log.debug("id created: {s}", .{id});
 
             slots[row * bag_page_cols + col] = try GUI.Container(.{
                 .id = id,
                 .style = .{
-                    .width = u("9%"),
-                    .height = u("27%"),
+                    .width = .{
+                        .value = SLOT_SIZE,
+                        .unit = .vw,
+                    },
+                    .height = .{
+                        .value = SLOT_SIZE,
+                        .unit = .vw,
+                    },
                     .left = .{
-                        .value = @as(f32, @floatFromInt(col)) * 10,
-                        .unit = .percent,
+                        .value = -1 * (WIDTH_VW / 2) + @as(f32, @floatFromInt(col)) * 7,
+                        .unit = .vw,
                     },
                     .top = .{
-                        .value = @as(f32, @floatFromInt(row)) * 30,
-                        .unit = .percent,
+                        .value = -1 * (HEIGHT_VW / 2) + @as(f32, @floatFromInt(row)) * 7,
+                        .unit = .vw,
                     },
                     .background = .{
                         .color = e.Color.blue,
                     },
                 },
             }, @constCast(&[_]*GUI.GUIElement{}));
-            std.log.debug("x created", .{});
 
             slots[row * bag_page_cols + col].heap_id = true;
-            std.log.debug("slot added", .{});
-            std.log.info("done: {d}", .{row * bag_page_cols + col});
-
-            if (row * bag_page_cols + col == 6) {
-                std.log.info("so far: {any}", .{slots[2]});
-            }
-
-            std.log.info("so far: {any}", .{slots[0 .. row * bag_page_cols + col]});
         }
-    }
-
-    std.log.debug("slots: {any}", .{slots});
-
-    for (slots) |slot| {
-        std.log.debug("id: {any}", .{slot.options.style});
     }
 
     INVENTORY_GUI = try GUI.Container(
@@ -204,8 +156,14 @@ pub fn awake() !void {
             try GUI.Container(.{
                 .id = "Bag",
                 .style = .{
-                    .width = u("70w"),
-                    .height = u("23w"),
+                    .width = .{
+                        .value = WIDTH_VW,
+                        .unit = .vw,
+                    },
+                    .height = .{
+                        .value = HEIGHT_VW,
+                        .unit = .vw,
+                    },
                     .top = u("50%"),
                     .left = u("50%"),
                     .translate = .{
@@ -219,8 +177,6 @@ pub fn awake() !void {
             }, slots),
         }),
     );
-
-    std.log.debug("asdasdasd", .{});
 
     // try GUI.Body(
     //     .{

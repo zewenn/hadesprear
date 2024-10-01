@@ -179,8 +179,6 @@ pub fn update() void {
                 btn.element_ptr.?.is_hovered = true;
 
                 if (rl.isKeyPressed(.key_space) or rl.isKeyPressed(.key_enter)) {
-                    std.log.debug("kcp: {any}", .{keyboard_cursor_position});
-
                     btn.callback_fn() catch {};
                 }
             }

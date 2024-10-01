@@ -138,7 +138,6 @@ pub fn update() void {
             }
         },
 
-        // TODO: Jump to next button automatically
         .Keyboard => {
             for (ButtonMatrix) |row| {
                 for (row) |btn| {
@@ -285,6 +284,10 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
 
 pub fn Container(options: GUIElement.Options, children: []*GUIElement) !*GUIElement {
     return try Element(options, children, "");
+}
+
+pub fn Empty(options: GUIElement.Options) !*GUIElement {
+    return try Element(options, &[_]*GUIElement{}, "");
 }
 
 pub fn Text(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {

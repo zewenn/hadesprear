@@ -82,6 +82,7 @@ pub fn awake() !void {
 
 pub fn init() !void {
     e.playSound(menu_music);
+    e.input.ui_mode = false;
     try e.scenes.load("game");
 }
 

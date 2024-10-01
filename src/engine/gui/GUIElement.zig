@@ -28,6 +28,7 @@ transform: ?entities.Transform = null,
 is_button: bool = false,
 button_interface_ptr: ?*ButtonInterface = null,
 is_hovered: bool = false,
+cached_background_image: ?rl.Texture = null,
 
 /// Sets the elements transform and returns the value.
 /// Might calculate the parent elements value.

@@ -223,7 +223,7 @@ pub fn update() !void {
             var img: rl.Image = undefined;
             defer rl.unloadImage(img);
 
-            var texture: rl.Texture = undefined;
+            var texture: ?rl.Texture = if (element.cached_background_image) |bgimg| bgimg else null;
 
             if (assets.get(rl.Image, background_image)) |_img| {
                 img = _img;
@@ -238,12 +238,12 @@ pub fn update() !void {
                 @intFromFloat(transform.scale.y * camera.zoom),
             );
 
-            rl.unloadTexture(texture);
             texture = rl.loadTextureFromImage(img);
+            defer rl.unloadTexture(texture.?);
 
             // defer rl.unloadTexture(texture);
             rl.drawTexturePro(
-                texture,
+                texture.?,
                 rl.Rectangle.init(
                     0,
                     0,

@@ -322,11 +322,16 @@ pub fn update() !void {
                 font = _font;
             } else break :FontRendering;
 
+            const len = std.mem.indexOfSentinel(u8, 0, content);
+            const ox: f32 = style.font.size * @as(f32, @floatFromInt(len)) / 2;
+            const oy: f32 = style.font.size / 2;
+
             rl.drawTextPro(
                 font,
                 content,
                 transform.position,
-                origin,
+                // origin,
+                rl.Vector2.init(ox, oy),
                 transform.rotation.z,
                 style.font.size,
                 style.font.spacing,

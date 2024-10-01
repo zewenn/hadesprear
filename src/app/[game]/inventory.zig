@@ -15,8 +15,8 @@ const bag_page_size: comptime_int = bag_page_cols * bag_page_rows;
 
 pub const Item = conf.Item;
 
-pub var delete_mode: bool = true;
-pub var delete_mode_last_frame: bool = true;
+pub var delete_mode: bool = false;
+pub var delete_mode_last_frame: bool = false;
 
 pub var Hands = conf.Item{
     .T = .weapon,
@@ -215,11 +215,11 @@ inline fn generateBtn(
                 .unit = .vw,
             },
             .left = .{
-                .value = -1 * (WIDTH_VW / 2) + @as(f32, @floatFromInt(col)) * (SLOT_SIZE + 1),
+                .value = -1 * (WIDTH_VW / 2) + (@as(f32, @floatFromInt(col)) - 1) * (SLOT_SIZE + 1),
                 .unit = .vw,
             },
             .top = .{
-                .value = -1 * (HEIGHT_VW / 2) + @as(f32, @floatFromInt(row)) * (SLOT_SIZE + 1),
+                .value = -1 * (HEIGHT_VW / 2) + (@as(f32, @floatFromInt(row)) - 1) * (SLOT_SIZE + 1),
                 .unit = .vw,
             },
             .background = .{
@@ -243,11 +243,13 @@ inline fn generateBtn(
                 },
             },
             "",
-            e.Vec2(3 + col, 4 + row),
+            e.Vec2(0 + col, 0 + row),
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
                     if (!delete_mode) return;
-                    sorted_bag[row * bag_page_cols + col].* = null;
+                    if (row != 0 and col != 0) {
+                        sorted_bag[(row - 1) * bag_page_cols + (col - 1)].* = null;
+                    }
                     sortBag();
                     try updateGUI();
                 }
@@ -263,6 +265,91 @@ inline fn generateBtn(
                 },
             },
         }),
+    }));
+}
+
+/// Generates the button/slot interface
+inline fn generatePageBtn(
+    id: []const u8,
+    btn_id: []const u8,
+    text: [*:0]const u8,
+    page: usize,
+    col: usize,
+    row: usize,
+    func: ?*const fn () anyerror!void,
+) !*GUI.GUIElement {
+    return try GUI.Container(.{
+        .id = id,
+        .style = .{
+            .width = .{
+                .value = SLOT_SIZE * 2 + 1,
+                .unit = .vw,
+            },
+            .height = .{
+                .value = SLOT_SIZE,
+                .unit = .vw,
+            },
+            .left = .{
+                .value = -1 * (WIDTH_VW / 2) + (@as(f32, @floatFromInt(col)) - 1) * (SLOT_SIZE + 1),
+                .unit = .vw,
+            },
+            .top = .{
+                .value = -1 * (HEIGHT_VW / 2) + (@as(f32, @floatFromInt(row)) - 1) * (SLOT_SIZE + 1),
+                .unit = .vw,
+            },
+            .background = .{
+                .image = "sprites/gui/page_btn_inactive.png",
+            },
+        },
+    }, @constCast(&[_]*GUI.GUIElement{
+        try GUI.Button(
+            .{
+                .id = btn_id,
+                .style = .{
+                    .top = u("50%"),
+                    .left = u("50%"),
+                    .width = u("100%"),
+                    .height = u("100%"),
+                    .translate = .{
+                        .x = .center,
+                        .y = .center,
+                    },
+                    .font = .{
+                        .size = 18,
+                    },
+                    .color = e.Color.black,
+                },
+                .hover = .{
+                    .color = e.Color.black,
+                    .background = .{
+                        .image = "sprites/gui/page_btn.png",
+                    },
+                },
+            },
+            text,
+            e.Vec2(0 + col, 0 + row),
+            if (func) |fun| fun else (struct {
+                pub fn callback() anyerror!void {
+                    current_page.set(page);
+                    //
+                    sortBag();
+                    try updateGUI();
+                    //
+                    const p0: *GUI.GUIElement = if (GUI.select("#page1")) |el| el else return;
+                    const p1: *GUI.GUIElement = if (GUI.select("#page2")) |el| el else return;
+                    const p2: *GUI.GUIElement = if (GUI.select("#page3")) |el| el else return;
+                    //
+                    p0.options.style.background.image = "sprites/gui/page_btn_inactive.png";
+                    p1.options.style.background.image = "sprites/gui/page_btn_inactive.png";
+                    p2.options.style.background.image = "sprites/gui/page_btn_inactive.png";
+                    //
+                    const selector = try std.fmt.allocPrint(e.ALLOCATOR, "#page{d}", .{page + 1});
+                    defer e.ALLOCATOR.free(selector);
+                    const self: *GUI.GUIElement = if (GUI.select(selector)) |el| el else return;
+                    self.options.style.background.image = "sprites/gui/page_btn.png";
+                }
+            }).callback,
+        ),
     }));
 }
 
@@ -301,8 +388,8 @@ pub fn awake() !void {
                 id,
                 button_id,
                 button_shower_id,
-                col,
-                row,
+                col + 1,
+                row + 1,
                 null,
             );
 
@@ -324,93 +411,141 @@ pub fn awake() !void {
             },
         },
         @constCast(&[_]*GUI.GUIElement{
-            try GUI.Container(.{
-                .id = "Bag",
-                .style = .{
-                    .width = .{
-                        .value = WIDTH_VW,
-                        .unit = .vw,
-                    },
-                    .height = .{
-                        .value = HEIGHT_VW,
-                        .unit = .vw,
-                    },
-                    .top = u("40%"),
-                    .left = u("45%"),
-                    .translate = .{
-                        .x = .center,
-                        .y = .center,
-                    },
-                    .background = .{
-                        // .color = e.Color.red,
-                    },
-                },
-            }, slots),
-            try GUI.Container(.{
-                .id = "equippedShower",
-                .style = .{
-                    .width = .{
-                        .value = SLOT_SIZE,
-                        .unit = .vw,
-                    },
-                    .height = .{
-                        .value = HEIGHT_VW + 1,
-                        .unit = .vw,
-                    },
-                    .top = u("40%"),
-                    .left = u("40%"),
-                    .translate = .{
-                        .x = .center,
-                        .y = .center,
+            try GUI.Container(
+                .{
+                    .id = "Bag",
+                    .style = .{
+                        .width = .{
+                            .value = WIDTH_VW,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = HEIGHT_VW,
+                            .unit = .vw,
+                        },
+                        .top = .{
+                            .value = HEIGHT_VW,
+                            .unit = .vw,
+                        },
+                        .left = .{
+                            .value = 7 * (SLOT_SIZE + 1),
+                            .unit = .vw,
+                        },
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .background = .{
+                            // .color = e.Color.red,
+                        },
                     },
                 },
-            }, @constCast(&[_]*GUI.GUIElement{
-                try generateBtn(
-                    "equipped_weapon",
-                    "equipped_weapon_btn",
-                    "equipped_weapon_shower",
-                    10,
-                    0,
-                    null,
-                ),
-                try generateBtn(
-                    "equipped_amethyst",
-                    "equipped_amethyst_btn",
-                    "equipped_amethyst_shower",
-                    10,
-                    1,
-                    null,
-                ),
-                try generateBtn(
-                    "equipped_ring",
-                    "equipped_ring_btn",
-                    "equipped_ring_shower",
-                    10,
-                    2,
-                    null,
-                ),
-                try generateBtn(
-                    "equipped_brace",
-                    "equipped_brace_btn",
-                    "equipped_brace_shower",
-                    10,
-                    3,
-                    null,
-                ),
-                try generateBtn(
-                    "delete_mode",
-                    "delete_mode_btn",
-                    "delete_mode_shower",
-                    10,
-                    4,
-                    (struct {
-                        pub fn callback() anyerror!void {
-                            delete_mode = !delete_mode;
-                            try updateGUI();
-                        }
-                    }).callback,
-                ),
-            })),
+                slots,
+            ),
+            try GUI.Container(
+                .{
+                    .id = "equippedShower",
+                    .style = .{
+                        .width = .{
+                            .value = WIDTH_VW,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = HEIGHT_VW,
+                            .unit = .vw,
+                        },
+                        .top = .{
+                            .value = HEIGHT_VW,
+                            .unit = .vw,
+                        },
+                        .left = .{
+                            .value = 6.5 * (SLOT_SIZE + 1),
+                            .unit = .vw,
+                        },
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .background = .{
+                            // .color = e.Color.green,
+                        },
+                    },
+                },
+                @constCast(&[_]*GUI.GUIElement{
+                    try generateBtn(
+                        "equipped_weapon",
+                        "equipped_weapon_btn",
+                        "equipped_weapon_shower",
+                        0,
+                        1,
+                        null,
+                    ),
+                    try generateBtn(
+                        "equipped_amethyst",
+                        "equipped_amethyst_btn",
+                        "equipped_amethyst_shower",
+                        0,
+                        2,
+                        null,
+                    ),
+                    try generateBtn(
+                        "equipped_ring",
+                        "equipped_ring_btn",
+                        "equipped_ring_shower",
+                        0,
+                        3,
+                        null,
+                    ),
+                    try generateBtn(
+                        "equipped_brace",
+                        "equipped_brace_btn",
+                        "equipped_brace_shower",
+                        0,
+                        4,
+                        null,
+                    ),
+                    try generateBtn(
+                        "delete_mode",
+                        "delete_mode_btn",
+                        "delete_mode_shower",
+                        0,
+                        5,
+                        (struct {
+                            pub fn callback() anyerror!void {
+                                delete_mode = !delete_mode;
+                                try updateGUI();
+                            }
+                        }).callback,
+                    ),
+                    try generatePageBtn(
+                        "page1",
+                        "page_1_btn",
+                        "Page 1",
+                        0,
+                        2,
+                        5,
+                        null,
+                    ),
+                    try generatePageBtn(
+                        "page2",
+                        "page_2_btn",
+                        "Page 2",
+                        1,
+                        4,
+                        5,
+                        null,
+                    ),
+                    try generatePageBtn(
+                        "page3",
+                        "page_3_btn",
+                        "Page 3",
+                        2,
+                        6,
+                        5,
+                        null,
+                    ),
+                }),
+            ),
         }),
     );
 

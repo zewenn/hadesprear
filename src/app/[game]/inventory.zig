@@ -264,8 +264,12 @@ inline fn generateBtn(
                 pub fn callback() anyerror!void {
                     if (!delete_mode) return;
                     if (col_start != 0)
-                        sorted_bag[row * bag_page_cols + col].* = null;
-                    std.log.debug("Deleting {d}-{d} -> {d}", .{ col, row, row * bag_page_cols + col });
+                        sorted_bag[
+                            bag_page_size *
+                                current_page.get() +
+                                row * bag_page_cols +
+                                col
+                        ].* = null;
                     sortBag();
                     try updateGUI();
                 }
@@ -623,7 +627,147 @@ pub fn awake() !void {
                     },
                 },
                 @constCast(&[_]*GUI.GUIElement{
-                    //
+                    try GUI.Container(
+                        .{
+                            .id = "preview-display",
+                            .style = .{
+                                .width = .{
+                                    .value = 2 * SLOT_SIZE + 1,
+                                    .unit = .vw,
+                                },
+                                .height = .{
+                                    .value = 2 * SLOT_SIZE + 1,
+                                    .unit = .vw,
+                                },
+                                .top = u("-50%"),
+                                .left = .{
+                                    .value = -1 * (SLOT_SIZE * 2 + 1) - 0.5,
+                                    .unit = .vw,
+                                },
+                                .background = .{
+                                    .color = e.Color.blue,
+                                    .image = "sprites/gui/item_slot_legendary.png",
+                                },
+                            },
+                        },
+                        @constCast(&[_]*GUI.GUIElement{
+                            try GUI.Empty(
+                                .{
+                                    .id = "preview-display-item",
+                                    .style = .{
+                                        .width = u("75%"),
+                                        .height = u("75%"),
+                                        .top = u("50%"),
+                                        .left = u("50%"),
+                                        .background = .{
+                                            .image = "sprites/entity/player/weapons/gloves/left.png",
+                                        },
+                                        .rotation = 135,
+                                        .translate = .{
+                                            .x = .center,
+                                            .y = .center,
+                                        },
+                                    },
+                                },
+                            ),
+                        }),
+                    ),
+                    try GUI.Container(
+                        .{
+                            .id = "preview-level-container",
+                            .style = .{
+                                .width = .{
+                                    .value = 2 * SLOT_SIZE + 1,
+                                    .unit = .vw,
+                                },
+                                .height = .{
+                                    .value = 2 * SLOT_SIZE + 1,
+                                    .unit = .vw,
+                                },
+                                .top = .{
+                                    .value = -1 * SLOT_SIZE * 3.5 + 2.5,
+                                    .unit = .vw,
+                                },
+                                .left = .{
+                                    .value = SLOT_SIZE * 1 + 1,
+                                    .unit = .vw,
+                                },
+                                .translate = .{
+                                    .x = .center,
+                                    .y = .center,
+                                },
+                                .background = .{
+                                    .color = e.Color.blue,
+                                    .image = "sprites/gui/item_slot.png",
+                                },
+                            },
+                        },
+                        @constCast(&[_]*GUI.GUIElement{
+                            try GUI.Text(
+                                .{
+                                    .id = "preview-level-text",
+                                    .style = .{
+                                        .top = u("-28x"),
+                                        .font = .{
+                                            .size = 16,
+                                        },
+                                        .translate = .{
+                                            .x = .center,
+                                            .y = .center,
+                                        },
+                                    },
+                                },
+                                "Level",
+                            ),
+                            try GUI.Text(
+                                .{
+                                    .id = "preview-level-number",
+                                    .style = .{
+                                        .top = u("12x"),
+                                        .font = .{
+                                            .size = 48,
+                                        },
+                                        .translate = .{
+                                            .x = .center,
+                                            .y = .center,
+                                        },
+                                    },
+                                },
+                                "90",
+                            ),
+                        }),
+                    ),
+                    try GUI.Text(
+                        .{
+                            .id = "preview-item-name",
+                            .style = .{
+                                .width = .{
+                                    .value = 100,
+                                    .unit = .percent,
+                                },
+                                .height = .{
+                                    .value = SLOT_SIZE,
+                                    .unit = .vw,
+                                },
+                                .top = .{
+                                    .value = -1 * SLOT_SIZE * 1 - 1,
+                                    .unit = .vw,
+                                },
+                                // .left = .{
+                                //     .value = SLOT_SIZE * 1 + 1,
+                                //     .unit = .vw,
+                                // },
+                                .translate = .{
+                                    .x = .center,
+                                    .y = .center,
+                                },
+                                .background = .{
+                                    .image = "sprites/missingno.png",
+                                },
+                            },
+                        },
+                        "Item Name",
+                    ),
                 }),
             ),
         }),

@@ -195,6 +195,18 @@ pub fn updateGUI() !void {
     }
 }
 
+pub fn logSortedBag() void {
+    std.log.debug("Sorted bag: ", .{});
+    for (sorted_bag, 0..) |it, i| {
+        std.debug.print("{d}: ", .{i});
+        if (it.*) |item| {
+            std.debug.print("{s}\n", .{item.icon});
+            continue;
+        }
+        std.debug.print("null\n", .{});
+    }
+}
+
 /// Generates the button/slot interface
 inline fn generateBtn(
     id: []const u8,
@@ -251,9 +263,9 @@ inline fn generateBtn(
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
                     if (!delete_mode) return;
-                    if (row != 0 and col != 0) {
-                        sorted_bag[(row - 1) * bag_page_cols + (col - 1)].* = null;
-                    }
+                    if (col_start != 0)
+                        sorted_bag[row * bag_page_cols + col].* = null;
+                    std.log.debug("Deleting {d}-{d} -> {d}", .{ col, row, row * bag_page_cols + col });
                     sortBag();
                     try updateGUI();
                 }
@@ -414,7 +426,7 @@ pub fn awake() !void {
                 col,
                 row,
                 WIDTH_VW,
-                HEIGHT_VW,
+                HEIGHT_VW + SLOT_SIZE + 1,
                 null,
             );
 
@@ -437,6 +449,7 @@ pub fn awake() !void {
             },
         },
         @constCast(&[_]*GUI.GUIElement{
+            // Main inventory
             try GUI.Container(
                 .{
                     .id = "Bag",
@@ -449,45 +462,40 @@ pub fn awake() !void {
                             .value = HEIGHT_VW,
                             .unit = .vw,
                         },
-                        .top = .{
-                            .value = HEIGHT_VW,
-                            .unit = .vw,
-                        },
+                        .top = u("50%"),
                         .left = u("41w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.blue,
+                            // .color = e.Color.blue,
                         },
                     },
                 },
                 slots,
             ),
+            // Equipped - Delete - Pages
             try GUI.Container(
                 .{
                     .id = "equippedShower",
                     .style = .{
                         .width = .{
-                            .value = SLOT_SIZE * 2,
+                            .value = SLOT_SIZE,
                             .unit = .vw,
                         },
                         .height = .{
-                            .value = HEIGHT_VW,
+                            .value = HEIGHT_VW + SLOT_SIZE + 1,
                             .unit = .vw,
                         },
-                        .top = .{
-                            .value = HEIGHT_VW,
-                            .unit = .vw,
-                        },
-                        .left = u("15.5w"),
+                        .top = u("50%"),
+                        .left = u("13w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.green,
+                            // .color = e.Color.green,
                         },
                     },
                 },
@@ -499,8 +507,8 @@ pub fn awake() !void {
                         0,
                         0,
                         0,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generateBtn(
@@ -510,8 +518,8 @@ pub fn awake() !void {
                         0,
                         0,
                         1,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generateBtn(
@@ -521,8 +529,8 @@ pub fn awake() !void {
                         0,
                         0,
                         2,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generateBtn(
@@ -532,8 +540,8 @@ pub fn awake() !void {
                         0,
                         0,
                         3,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generateBtn(
@@ -543,8 +551,8 @@ pub fn awake() !void {
                         0,
                         0,
                         4,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         (struct {
                             pub fn callback() anyerror!void {
                                 delete_mode = !delete_mode;
@@ -559,8 +567,8 @@ pub fn awake() !void {
                         0,
                         2,
                         4,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generatePageBtn(
@@ -570,8 +578,8 @@ pub fn awake() !void {
                         1,
                         4,
                         4,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                     try generatePageBtn(
@@ -581,22 +589,23 @@ pub fn awake() !void {
                         2,
                         6,
                         4,
-                        SLOT_SIZE * 2,
-                        HEIGHT_VW,
+                        SLOT_SIZE,
+                        HEIGHT_VW + SLOT_SIZE + 1,
                         null,
                     ),
                 }),
             ),
+            // Preview
             try GUI.Container(
                 .{
                     .id = "item-preview",
                     .style = .{
                         .width = .{
-                            .value = SLOT_SIZE * 5 + 3,
+                            .value = SLOT_SIZE * 4 + 3,
                             .unit = .vw,
                         },
                         .height = .{
-                            .value = SLOT_SIZE * 6 + 5,
+                            .value = SLOT_SIZE * 7 + 6,
                             .unit = .vw,
                         },
                         .background = .{
@@ -604,7 +613,7 @@ pub fn awake() !void {
                         },
                         .top = u("50%"),
                         .left = .{
-                            .value = 75.5,
+                            .value = 78,
                             .unit = .vw,
                         },
                         .translate = .{

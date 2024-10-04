@@ -39,6 +39,7 @@ const equipped = struct {
 };
 
 var INVENTORY_GUI: *GUI.GUIElement = undefined;
+var shown: bool = false;
 var bag_element: *GUI.GUIElement = undefined;
 var slots: []*GUI.GUIElement = undefined;
 
@@ -57,10 +58,10 @@ const current_page = struct {
     }
 };
 
-const SLOT_SIZE: f32 = 6;
+const SLOT_SIZE: f32 = 5;
 
-const WIDTH_VW: f32 = (SLOT_SIZE + 1) * 9 - 1;
-const HEIGHT_VW: f32 = (SLOT_SIZE + 1) * 4 - 1;
+const WIDTH_VW: f32 = SLOT_SIZE * 7 + 6;
+const HEIGHT_VW: f32 = SLOT_SIZE * 4 + 3;
 
 /// The sorting function `sortBag()` uses.
 fn sort(_: void, a: *?conf.Item, b: *?conf.Item) bool {
@@ -199,8 +200,11 @@ inline fn generateBtn(
     id: []const u8,
     btn_id: []const u8,
     shower_id: []const u8,
+    col_start: f32,
     col: usize,
     row: usize,
+    container_width: f32,
+    container_height: f32,
     func: ?*const fn () anyerror!void,
 ) !*GUI.GUIElement {
     return try GUI.Container(.{
@@ -215,11 +219,11 @@ inline fn generateBtn(
                 .unit = .vw,
             },
             .left = .{
-                .value = -1 * (WIDTH_VW / 2) + (@as(f32, @floatFromInt(col)) - 1) * (SLOT_SIZE + 1),
+                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1),
                 .unit = .vw,
             },
             .top = .{
-                .value = -1 * (HEIGHT_VW / 2) + (@as(f32, @floatFromInt(row)) - 1) * (SLOT_SIZE + 1),
+                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
                 .unit = .vw,
             },
             .background = .{
@@ -243,7 +247,7 @@ inline fn generateBtn(
                 },
             },
             "",
-            e.Vec2(0 + col, 0 + row),
+            e.Vec2(0 + col + col_start, 0 + row),
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
                     if (!delete_mode) return;
@@ -276,6 +280,8 @@ inline fn generatePageBtn(
     page: usize,
     col: usize,
     row: usize,
+    container_width: f32,
+    container_height: f32,
     func: ?*const fn () anyerror!void,
 ) !*GUI.GUIElement {
     return try GUI.Container(.{
@@ -290,11 +296,11 @@ inline fn generatePageBtn(
                 .unit = .vw,
             },
             .left = .{
-                .value = -1 * (WIDTH_VW / 2) + (@as(f32, @floatFromInt(col)) - 1) * (SLOT_SIZE + 1),
+                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1) - 1.5 + SLOT_SIZE / 2,
                 .unit = .vw,
             },
             .top = .{
-                .value = -1 * (HEIGHT_VW / 2) + (@as(f32, @floatFromInt(row)) - 1) * (SLOT_SIZE + 1),
+                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
                 .unit = .vw,
             },
             .background = .{
@@ -353,8 +359,24 @@ inline fn generatePageBtn(
     }));
 }
 
-pub fn awake() !void {
+pub fn show() void {
+    INVENTORY_GUI.options.style.top = u("0%");
     e.input.ui_mode = true;
+    shown = true;
+}
+
+pub fn hide() void {
+    INVENTORY_GUI.options.style.top = u("-100%");
+    e.input.ui_mode = false;
+    shown = false;
+}
+
+pub fn toggle() void {
+    if (shown) hide() else show();
+}
+
+pub fn awake() !void {
+    // e.input.ui_mode = true;
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
 
@@ -388,8 +410,11 @@ pub fn awake() !void {
                 id,
                 button_id,
                 button_shower_id,
-                col + 1,
-                row + 1,
+                1,
+                col,
+                row,
+                WIDTH_VW,
+                HEIGHT_VW,
                 null,
             );
 
@@ -406,6 +431,7 @@ pub fn awake() !void {
                 .background = .{
                     .color = e.Color.init(0, 0, 0, 128),
                 },
+                .top = u("-100%"),
                 .width = u("100w"),
                 .height = u("100h"),
             },
@@ -427,16 +453,13 @@ pub fn awake() !void {
                             .value = HEIGHT_VW,
                             .unit = .vw,
                         },
-                        .left = .{
-                            .value = 7 * (SLOT_SIZE + 1),
-                            .unit = .vw,
-                        },
+                        .left = u("41w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            // .color = e.Color.red,
+                            .color = e.Color.blue,
                         },
                     },
                 },
@@ -447,7 +470,7 @@ pub fn awake() !void {
                     .id = "equippedShower",
                     .style = .{
                         .width = .{
-                            .value = WIDTH_VW,
+                            .value = SLOT_SIZE * 2,
                             .unit = .vw,
                         },
                         .height = .{
@@ -458,16 +481,13 @@ pub fn awake() !void {
                             .value = HEIGHT_VW,
                             .unit = .vw,
                         },
-                        .left = .{
-                            .value = 6.5 * (SLOT_SIZE + 1),
-                            .unit = .vw,
-                        },
+                        .left = u("15.5w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            // .color = e.Color.green,
+                            .color = e.Color.green,
                         },
                     },
                 },
@@ -477,7 +497,10 @@ pub fn awake() !void {
                         "equipped_weapon_btn",
                         "equipped_weapon_shower",
                         0,
-                        1,
+                        0,
+                        0,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generateBtn(
@@ -485,7 +508,10 @@ pub fn awake() !void {
                         "equipped_amethyst_btn",
                         "equipped_amethyst_shower",
                         0,
-                        2,
+                        0,
+                        1,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generateBtn(
@@ -493,7 +519,10 @@ pub fn awake() !void {
                         "equipped_ring_btn",
                         "equipped_ring_shower",
                         0,
-                        3,
+                        0,
+                        2,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generateBtn(
@@ -501,7 +530,10 @@ pub fn awake() !void {
                         "equipped_brace_btn",
                         "equipped_brace_shower",
                         0,
-                        4,
+                        0,
+                        3,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generateBtn(
@@ -509,7 +541,10 @@ pub fn awake() !void {
                         "delete_mode_btn",
                         "delete_mode_shower",
                         0,
-                        5,
+                        0,
+                        4,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         (struct {
                             pub fn callback() anyerror!void {
                                 delete_mode = !delete_mode;
@@ -523,7 +558,9 @@ pub fn awake() !void {
                         "Page 1",
                         0,
                         2,
-                        5,
+                        4,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generatePageBtn(
@@ -532,7 +569,9 @@ pub fn awake() !void {
                         "Page 2",
                         1,
                         4,
-                        5,
+                        4,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
                     try generatePageBtn(
@@ -541,9 +580,41 @@ pub fn awake() !void {
                         "Page 3",
                         2,
                         6,
-                        5,
+                        4,
+                        SLOT_SIZE * 2,
+                        HEIGHT_VW,
                         null,
                     ),
+                }),
+            ),
+            try GUI.Container(
+                .{
+                    .id = "item-preview",
+                    .style = .{
+                        .width = .{
+                            .value = SLOT_SIZE * 5 + 3,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = SLOT_SIZE * 6 + 5,
+                            .unit = .vw,
+                        },
+                        .background = .{
+                            .color = e.Color.red,
+                        },
+                        .top = u("50%"),
+                        .left = .{
+                            .value = 75.5,
+                            .unit = .vw,
+                        },
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                    },
+                },
+                @constCast(&[_]*GUI.GUIElement{
+                    //
                 }),
             ),
         }),
@@ -584,17 +655,25 @@ pub fn init() !void {
 
     sortBag();
     try updateGUI();
+    show();
 }
 
 pub fn update() !void {
+    if (e.isKeyPressed(.key_i)) toggle();
     if (!e.input.ui_mode) return;
 
     if ((e.isMouseButtonPressed(.mouse_button_left) or
         e.isKeyPressed(.key_enter) or
+        e.isKeyPressed(.key_backspace) or
         e.isKeyPressed(.key_space)) and
         delete_mode_last_frame)
     {
         delete_mode = false;
+        try updateGUI();
+    }
+
+    if (e.isKeyPressed(.key_backspace) and !delete_mode_last_frame) {
+        delete_mode = true;
         try updateGUI();
     }
 

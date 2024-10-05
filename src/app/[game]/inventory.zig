@@ -24,6 +24,8 @@ pub var Hands = conf.Item{
     .weapon_projectile_scale = e.Vec2(64, 64),
 
     .name = "Hands",
+    .equipped = true,
+    .unequippable = false,
 
     .icon = "sprites/entity/player/weapons/gloves/left.png",
     .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
@@ -65,7 +67,10 @@ const equippedbar = struct {
     pub fn unequip(item: *Item) void {
         item.equipped = false;
         switch (item.T) {
-            .weapon => current_weapon = &Hands,
+            .weapon => {
+                current_weapon = &Hands;
+                Hands.equipped = true;
+            },
             .ring => ring = null,
             .amethyst => amethyst = null,
             .wayfinder => wayfinder = null,
@@ -225,6 +230,10 @@ const preview = struct {
         equip.contents = switch (item.equipped) {
             true => "UNEQUIP",
             false => "EQUIP",
+        };
+        equip.options.style.color = switch (item.unequippable) {
+            true => PREVIEW_FONT_COLOR,
+            false => e.Color.gray,
         };
 
         showElement();
@@ -407,7 +416,7 @@ pub fn updateGUI() !void {
         }
     }
 
-    const delete_button = if (GUI.select("#delete_mode_shower")) |el| el else @panic("Delete button couldn't be found");
+    const delete_button = GUI.assertSelect("#delete_mode_shower");
     switch (delete_mode) {
         true => {
             delete_button.options.style.rotation = 15;
@@ -415,6 +424,80 @@ pub fn updateGUI() !void {
         false => {
             delete_button.options.style.rotation = 0;
         },
+    }
+
+    const base_tags = [_][]const u8{
+        "weapon",
+        "ring",
+        "amethyst",
+        "wayfinder",
+    };
+    const enum_tags = [_]conf.ItemTypes{
+        .weapon,
+        .ring,
+        .amethyst,
+        .wayfinder,
+    };
+
+    for (base_tags, enum_tags) |tag, etag| {
+        const element_selector = try std.fmt.allocPrint(
+            e.ALLOCATOR,
+            "#equipped_{s}",
+            .{tag},
+        );
+        defer e.ALLOCATOR.free(element_selector);
+
+        const button_selector = try std.fmt.allocPrint(
+            e.ALLOCATOR,
+            "#equipped_{s}_btn",
+            .{tag},
+        );
+        defer e.ALLOCATOR.free(button_selector);
+
+        const shower_selector = try std.fmt.allocPrint(
+            e.ALLOCATOR,
+            "#equipped_{s}_shower",
+            .{tag},
+        );
+        defer e.ALLOCATOR.free(shower_selector);
+
+        const element: *GUI.GUIElement = if (GUI.select(element_selector)) |el| el else continue;
+        const button: *GUI.GUIElement = if (GUI.select(button_selector)) |el| el else continue;
+        const shower: *GUI.GUIElement = if (GUI.select(shower_selector)) |el| el else continue;
+
+        const item: ?*Item = switch (etag) {
+            .weapon => equippedbar.current_weapon,
+            .ring => equippedbar.ring,
+            .amethyst => equippedbar.amethyst,
+            .wayfinder => equippedbar.wayfinder,
+        };
+
+        if (item == null) {
+            button.options.hover.background.image = switch (delete_mode) {
+                false => "sprites/gui/slot_highlight.png",
+                true => "sprites/gui/slot_highlight_delete.png",
+            };
+
+            shower.options.style.background.image = null;
+            element.options.style.background.image = "sprites/gui/item_slot_empty.png";
+            continue;
+        }
+
+        const it = item.?;
+
+        shower.options.style.background.image = it.icon;
+
+        element.options.style.background.image = switch (it.rarity) {
+            .common => "sprites/gui/item_slot.png",
+            .epic => "sprites/gui/item_slot_epic.png",
+            .legendary => "sprites/gui/item_slot_legendary.png",
+        };
+
+        if (delete_mode) {
+            button.options.hover.background.image = "sprites/gui/delete_slot.png";
+            continue;
+        }
+        button.options.hover.background.image = "sprites/gui/slot_highlight.png";
     }
 }
 
@@ -507,6 +590,106 @@ inline fn MainSlotButton(
                     try preview.show(
                         try e.zlib.nullAssertOptionalPointer(Item, item),
                     );
+                }
+            }).callback,
+        ),
+        try GUI.Empty(.{
+            .id = shower_id,
+            .style = .{
+                .width = u("100%"),
+                .height = u("100%"),
+                .top = u("50%"),
+                .left = u("50%"),
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
+                .background = .{
+                    .image = "sprites/entity/player/weapons/gloves/left.png",
+                },
+            },
+        }),
+    }));
+}
+
+/// Generates the button/slot interface
+inline fn EquippedSlotButton(
+    id: []const u8,
+    btn_id: []const u8,
+    shower_id: []const u8,
+    col_start: f32,
+    col: usize,
+    row: usize,
+    container_width: f32,
+    container_height: f32,
+    item_type: conf.ItemTypes,
+    func: ?*const fn () anyerror!void,
+) !*GUI.GUIElement {
+    return try GUI.Container(.{
+        .id = id,
+        .style = .{
+            .width = .{
+                .value = SLOT_SIZE,
+                .unit = .vw,
+            },
+            .height = .{
+                .value = SLOT_SIZE,
+                .unit = .vw,
+            },
+            .left = .{
+                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1),
+                .unit = .vw,
+            },
+            .top = .{
+                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
+                .unit = .vw,
+            },
+            .background = .{
+                .image = "sprites/gui/item_slot.png",
+            },
+        },
+    }, @constCast(&[_]*GUI.GUIElement{
+        try GUI.Button(
+            .{
+                .id = btn_id,
+                .style = .{
+                    .width = u("100%"),
+                    .height = u("100%"),
+                    .top = u("0%"),
+                    .left = u("0%"),
+                },
+                .hover = .{
+                    .background = .{
+                        .image = "sprites/gui/slot_highlight.png",
+                    },
+                },
+            },
+            "",
+            e.Vec2(0 + col + col_start, 0 + row),
+            if (func) |fun| fun else (struct {
+                pub fn callback() anyerror!void {
+                    const item: ?*Item = switch (item_type) {
+                        .weapon => equippedbar.current_weapon,
+                        .ring => equippedbar.ring,
+                        .amethyst => equippedbar.amethyst,
+                        .wayfinder => equippedbar.wayfinder,
+                    };
+                    if (item == null) {
+                        preview.hideElement();
+                        return;
+                    }
+                    const it = item.?;
+                    if (delete_mode) {
+                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(Hands.name))) {
+                            equippedbar.unequip(it);
+                            const x = @as(*?Item, @ptrCast(it));
+                            x.* = null;
+                        }
+                        sortBag();
+                        try updateGUI();
+                        preview.hideElement();
+                    }
+                    try preview.show(it);
                 }
             }).callback,
         ),
@@ -742,7 +925,7 @@ pub fn awake() !void {
                     },
                 },
                 @constCast(&[_]*GUI.GUIElement{
-                    try MainSlotButton(
+                    try EquippedSlotButton(
                         "equipped_weapon",
                         "equipped_weapon_btn",
                         "equipped_weapon_shower",
@@ -751,9 +934,10 @@ pub fn awake() !void {
                         0,
                         SLOT_SIZE,
                         HEIGHT_VW + SLOT_SIZE + 1,
+                        .weapon,
                         null,
                     ),
-                    try MainSlotButton(
+                    try EquippedSlotButton(
                         "equipped_ring",
                         "equipped_ring_btn",
                         "equipped_ring_shower",
@@ -762,9 +946,10 @@ pub fn awake() !void {
                         1,
                         SLOT_SIZE,
                         HEIGHT_VW + SLOT_SIZE + 1,
+                        .ring,
                         null,
                     ),
-                    try MainSlotButton(
+                    try EquippedSlotButton(
                         "equipped_amethyst",
                         "equipped_amethyst_btn",
                         "equipped_amethyst_shower",
@@ -773,9 +958,10 @@ pub fn awake() !void {
                         2,
                         SLOT_SIZE,
                         HEIGHT_VW + SLOT_SIZE + 1,
+                        .amethyst,
                         null,
                     ),
-                    try MainSlotButton(
+                    try EquippedSlotButton(
                         "equipped_wayfinder",
                         "equipped_wayfinder_btn",
                         "equipped_wayfinder_shower",
@@ -784,6 +970,7 @@ pub fn awake() !void {
                         3,
                         SLOT_SIZE,
                         HEIGHT_VW + SLOT_SIZE + 1,
+                        .wayfinder,
                         null,
                     ),
                     try MainSlotButton(
@@ -1416,6 +1603,8 @@ pub fn awake() !void {
                             pub fn callback() anyerror!void {
                                 const it = preview.selected_item;
                                 const item: *Item = if (it) |i| i else return;
+                                //
+                                if (!item.unequippable) return;
                                 //
                                 switch (item.equipped) {
                                     true => equippedbar.unequip(item),

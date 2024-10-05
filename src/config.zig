@@ -95,6 +95,7 @@ pub const Item = struct {
         legendary,
     } = .common,
     equipped: bool = false,
+    unequippable: bool = true,
 
     level: usize = 0,
     cost_per_level: usize = 16,

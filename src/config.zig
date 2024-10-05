@@ -80,20 +80,28 @@ pub const DashModifiers = struct {
     dash_end: f64 = 0,
 };
 
+pub const ItemTypes = enum {
+    weapon,
+    ring,
+    amethyst,
+    wayfinder,
+};
+
 pub const Item = struct {
-    T: enum {
-        weapon,
-        head,
-        body,
-        legs,
-    } = .weapon,
+    T: ItemTypes = .weapon,
     rarity: enum {
         common,
         epic,
         legendary,
     } = .common,
+    equipped: bool = false,
+
+    level: usize = 0,
+    cost_per_level: usize = 16,
+    base_upgrade_cost: usize = 16,
 
     health: f32 = 0,
+    tenacity: f32 = 0,
 
     damage: f32 = 0,
     crit_rate: f32 = 0,
@@ -103,6 +111,8 @@ pub const Item = struct {
     dash_charges: f32 = 0,
 
     weapon_projectile_scale: rl.Vector2,
+
+    name: [*:0]const u8,
 
     icon: []const u8,
     weapon_sprite_left: []const u8,

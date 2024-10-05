@@ -11,10 +11,23 @@ pub fn panic(msg: anytype) noreturn {
     unreachable;
 }
 
+pub fn panicWithArgs(comptime fmt: []const u8, msg: anytype) noreturn {
+    std.log.err(fmt, msg);
+    unreachable;
+}
+
 pub fn eql(a: anytype, b: anytype) bool {
     if (@TypeOf(a) != @TypeOf(b)) return false;
 
     return std.meta.eql(a, b);
+}
+
+const NullAssertError = error{
+    CouldntAssertNullValue,
+};
+pub fn nullAssertOptionalPointer(comptime T: type, ptr: *?T) !*T {
+    if (ptr.* != null) return &(ptr.*.?);
+    return NullAssertError.CouldntAssertNullValue;
 }
 
 pub const math = @import("math.zig");

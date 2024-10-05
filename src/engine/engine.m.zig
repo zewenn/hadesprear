@@ -39,6 +39,8 @@ pub inline fn compile() !void {
 pub const window = display.window;
 pub const camera = display.camera;
 
+pub const MISSINGNO = "sprites/missingno.png";
+
 pub fn loadf32(v: anytype) f32 {
     return switch (@typeInfo(@TypeOf(v))) {
         .Int, .ComptimeInt => @floatFromInt(v),
@@ -63,6 +65,14 @@ pub fn Rect(x: anytype, y: anytype, w: anytype, h: anytype) rl.Rectangle {
         loadf32(w),
         loadf32(h),
     );
+}
+
+pub fn UUIDV7() ![38]u8 {
+    const id_o = uuid.urn.serialize(uuid.v7.new());
+    // std.log.debug("id: {s}", .{id});
+
+    const id = try ALLOCATOR.alloc(u8, 36);
+    std.mem.copyForwards(u8, id, &id_o);
 }
 
 pub fn init(allocator: *Allocator) !void {

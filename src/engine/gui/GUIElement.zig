@@ -22,6 +22,7 @@ pub const Options = struct {
 heap_id: bool = false,
 children: ?std.ArrayList(*Self) = null,
 contents: ?[*:0]const u8 = null,
+is_content_heap: bool = false,
 parent: ?*Self = null,
 options: Options,
 transform: ?entities.Transform = null,

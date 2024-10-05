@@ -234,6 +234,13 @@ pub fn select(selector: []const u8) ?*GUIElement {
     return null;
 }
 
+pub fn assertSelect(selector: []const u8) *GUIElement {
+    return if (select(selector)) |el| el else z.panicWithArgs(
+        "FATAL Element couldn't be found: {s}",
+        .{selector},
+    );
+}
+
 pub fn clear() void {
     for (elements.array, 0..) |element, index| {
         if (element == null) continue;

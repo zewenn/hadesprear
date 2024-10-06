@@ -16,7 +16,7 @@ pub fn main() !void {
     e.window.init(
         "HadeSpear",
         e.Vec2(
-            1280,
+            1440,
             720,
         ),
     );

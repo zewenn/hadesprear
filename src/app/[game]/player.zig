@@ -59,7 +59,7 @@ pub var Hand1 = e.entities.Entity{
     .tags = "hand",
     .transform = e.entities.Transform{
         .position = e.Vec2(0, 64),
-        .scale = e.Vec2(48, 48),
+        .scale = e.Vec2(96, 256),
     },
     .display = .{
         .scaling = .pixelate,
@@ -650,7 +650,7 @@ pub fn update() !void {
     Hand1.transform.rotation.z = GetRotation: {
         var rot = rotation;
         if (weapons.current) |cw| {
-            if (cw.type == .plates) rot -= 20;
+            if (cw.type == .plates) rot -= 10;
         }
 
         if (!hand1_animator.isPlaying("hit_plates")) break :GetRotation rot;

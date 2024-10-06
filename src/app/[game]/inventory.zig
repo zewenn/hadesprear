@@ -1827,7 +1827,6 @@ pub fn init() !void {
 
     sortBag();
     try updateGUI();
-    show();
 }
 
 pub fn update() !void {

@@ -18,7 +18,8 @@ pub const Item = conf.Item;
 pub var delete_mode: bool = false;
 pub var delete_mode_last_frame: bool = false;
 
-pub var Hands = conf.Item{
+pub var HandsWeapon = conf.Item{
+    .id = 0,
     .T = .weapon,
     .damage = 10,
     .weapon_projectile_scale = e.Vec2(64, 64),
@@ -35,8 +36,8 @@ pub var Hands = conf.Item{
 pub var bag: [bag_size]?conf.Item = [_]?conf.Item{null} ** bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
 
-const equippedbar = struct {
-    pub var current_weapon: *Item = &Hands;
+pub const equippedbar = struct {
+    pub var current_weapon: *Item = &HandsWeapon;
     pub var ring: ?*Item = null;
     pub var amethyst: ?*Item = null;
     pub var wayfinder: ?*Item = null;
@@ -68,8 +69,8 @@ const equippedbar = struct {
         item.equipped = false;
         switch (item.T) {
             .weapon => {
-                current_weapon = &Hands;
-                Hands.equipped = true;
+                current_weapon = &HandsWeapon;
+                HandsWeapon.equipped = true;
             },
             .ring => ring = null,
             .amethyst => amethyst = null,
@@ -734,7 +735,7 @@ inline fn EquippedSlotButton(
                     }
                     const it = item.?;
                     if (delete_mode) {
-                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(Hands.name))) {
+                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(HandsWeapon.name))) {
                             equippedbar.unequip(it);
                             // const x = @as(*?Item, @ptrCast(it));
                             // x.* = null;
@@ -1787,6 +1788,7 @@ pub fn init() !void {
     preview.hideElement();
 
     _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
         .T = .weapon,
         .rarity = .legendary,
         .damage = 10,
@@ -1795,12 +1797,14 @@ pub fn init() !void {
         .level = 999,
 
         .name = "Legendary Gloves",
+        .weapon_projectile_array = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
+        .weapon_sprite_left = e.MISSINGNO,
+        .weapon_sprite_right = e.MISSINGNO,
     });
     _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
         .T = .weapon,
         .rarity = .epic,
         .damage = 10,
@@ -1813,6 +1817,7 @@ pub fn init() !void {
         .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
     });
     _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
         .T = .amethyst,
         .rarity = .epic,
         .damage = 10,

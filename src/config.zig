@@ -1,7 +1,8 @@
 const entities_module = @import("./engine/entities/entities.m.zig");
 const rl = @import("raylib");
+const uuid = @import("uuid");
 
-pub const entities = entities_module.make(struct {
+pub const Entity = struct {
     const Self = @This();
 
     id: []const u8,
@@ -28,7 +29,9 @@ pub const entities = entities_module.make(struct {
             }
         }
     }
-});
+};
+
+pub const entities = entities_module.make(Entity);
 
 pub const ProjectileData = struct {
     lifetime_end: f64,
@@ -88,12 +91,24 @@ pub const ItemTypes = enum {
 };
 
 pub const Item = struct {
+    id: u128,
+
     T: ItemTypes = .weapon,
     rarity: enum {
         common,
         epic,
         legendary,
     } = .common,
+
+    // This is obviously not applicable to any non-weapons
+    weapon_type: enum {
+        sword,
+        polearm,
+        daggers,
+        claymore,
+        special,
+    } = .sword,
+
     equipped: bool = false,
     unequippable: bool = true,
 
@@ -112,6 +127,8 @@ pub const Item = struct {
     dash_charges: f32 = 0,
 
     weapon_projectile_scale: rl.Vector2,
+    weapon_projectile_speed: f32 = 0,
+    weapon_projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
 
     name: [*:0]const u8,
 

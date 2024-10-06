@@ -381,18 +381,6 @@ fn drawTetxure(
             transform.scale.y * camera.zoom / 2,
         );
 
-    rl.drawRectanglePro(
-        rl.Rectangle.init(
-            X,
-            Y,
-            (transform.scale.x),
-            (transform.scale.y),
-        ),
-        origin,
-        transform.rotation.z,
-        rl.Color.red,
-    );
-
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(0, 0, transform.scale.x, transform.scale.y),

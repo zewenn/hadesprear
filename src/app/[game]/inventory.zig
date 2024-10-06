@@ -22,7 +22,7 @@ pub var HandsWeapon = conf.Item{
     .id = 0,
     .T = .weapon,
     .damage = 10,
-    .weapon_projectile_scale = e.Vec2(64, 64),
+    .weapon_projectile_scale_light = e.Vec2(64, 64),
 
     .name = "Hands",
     .equipped = true,
@@ -76,6 +76,16 @@ pub const equippedbar = struct {
             .amethyst => amethyst = null,
             .wayfinder => wayfinder = null,
         }
+    }
+
+    pub fn get(T: conf.ItemStats) f32 {
+        return switch (T) {
+            .damage => current_weapon.damage +
+                if (ring) |r| r.damage else 0 +
+                if (amethyst) |r| r.damage else 0 +
+                if (wayfinder) |r| r.damage else 0,
+            else => 0,
+        };
     }
 };
 
@@ -1792,12 +1802,13 @@ pub fn init() !void {
         .T = .weapon,
         .rarity = .legendary,
         .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
+        .weapon_projectile_scale_light = e.Vec2(64, 64),
 
         .level = 999,
 
         .name = "Legendary Gloves",
-        .weapon_projectile_array = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
+        .weapon_projectile_array_light = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
+        .weapon_projectile_array_heavy = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = e.MISSINGNO,
@@ -1808,7 +1819,7 @@ pub fn init() !void {
         .T = .weapon,
         .rarity = .epic,
         .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
+        .weapon_projectile_scale_light = e.Vec2(64, 64),
 
         .name = "Epic Gloves",
 
@@ -1821,7 +1832,7 @@ pub fn init() !void {
         .T = .amethyst,
         .rarity = .epic,
         .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
+        .weapon_projectile_scale_light = e.Vec2(64, 64),
 
         .name = "Epic Amethyst",
 
@@ -1836,6 +1847,7 @@ pub fn init() !void {
 
 pub fn update() !void {
     if (e.isKeyPressed(.key_i)) toggle();
+    if (e.isKeyPressed(.key_escape) and shown) hide();
     if (!e.input.ui_mode) return;
 
     if ((e.isMouseButtonPressed(.mouse_button_left) or

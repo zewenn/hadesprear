@@ -272,36 +272,36 @@ pub fn update() !void {
         if (Player.shooting_stats.?.timeout_end >= e.time.currentTime) break :Input;
 
         if (shoot_heavy) {
-            for (inventory.equippedbar.current_weapon.weapon_projectile_array) |pa| {
+            for (inventory.equippedbar.current_weapon.weapon_projectile_array_heavy) |pa| {
                 const plus_angle: f32 = if (pa) |p| p else continue;
 
                 try projectiles.new(Player.transform.position, .{
                     .direction = shoot_angle + plus_angle,
                     .lifetime_end = e.time.currentTime + PROJECTILE_LIFETIME,
-                    .scale = e.Vec2(64, 64),
+                    .scale = inventory.equippedbar.current_weapon.weapon_projectile_scale_heavy,
                     .side = .player,
                     .weight = .heavy,
                     .speed = 350,
                     .damage = Player.entity_stats.?.damage +
-                        10 *
-                        2,
+                        inventory.equippedbar.get(.damage) *
+                        inventory.equippedbar.current_weapon.weapon_heavy_damage_multilier,
                 });
             }
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
         } else if (shoot) {
-            for (inventory.equippedbar.current_weapon.weapon_projectile_array) |pa| {
+            for (inventory.equippedbar.current_weapon.weapon_projectile_array_light) |pa| {
                 const plus_angle: f32 = if (pa) |p| p else continue;
 
                 try projectiles.new(Player.transform.position, .{
                     .direction = shoot_angle + plus_angle,
                     .lifetime_end = e.time.currentTime + PROJECTILE_LIFETIME,
-                    .scale = e.Vec2(64, 64),
+                    .scale = inventory.equippedbar.current_weapon.weapon_projectile_scale_light,
                     .side = .player,
                     .weight = .light,
                     .speed = 350,
                     .damage = Player.entity_stats.?.damage +
-                        10,
+                        inventory.equippedbar.get(.damage),
                 });
             }
 

@@ -27,6 +27,7 @@ pub fn main() !void {
     defer e.deinit() catch {};
 
     e.setTargetFPS(256);
+    e.setExitKey(.key_kp_7);
 
     while (!e.windowShouldClose()) {
         e.update() catch {};

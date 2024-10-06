@@ -105,6 +105,12 @@ const PREVIEW_FONT_COLOR = e.Color.white;
 const WIDTH_VW: f32 = SLOT_SIZE * 7 + 6;
 const HEIGHT_VW: f32 = SLOT_SIZE * 4 + 3;
 
+const PREVIEW_2x1 = "sprites/gui/preview_2x1.png";
+const PREVIEW_4x1 = "sprites/gui/preview_4x1.png";
+const PREVIEW_2x2 = "sprites/gui/preview_2x2.png";
+const PREVIEW_EPIC_2x2 = "sprites/gui/preview_epic_2x2.png";
+const PREVIEW_LEGENDARY_2x2 = "sprites/gui/preview_legendary_2x2.png";
+
 const preview = struct {
     var selected = false;
     var selected_item: ?*Item = null;
@@ -156,9 +162,9 @@ const preview = struct {
         free();
 
         display.options.style.background.image = switch (item.rarity) {
-            .common => "sprites/gui/item_slot.png",
-            .epic => "sprites/gui/item_slot_epic.png",
-            .legendary => "sprites/gui/item_slot_legendary.png",
+            .common => PREVIEW_2x2,
+            .epic => PREVIEW_EPIC_2x2,
+            .legendary => PREVIEW_LEGENDARY_2x2,
         };
 
         display_item.options.style.background.image = item.icon;
@@ -281,9 +287,20 @@ const preview = struct {
             select();
         }
 
+        selected_item = null;
         element.options.style.top = u("-100%");
     }
 };
+
+/// Turns the Item.T value into a usize.
+fn getValurFromItemType(T: conf.ItemTypes) usize {
+    return switch (T) {
+        .weapon => 0,
+        .ring => 1,
+        .amethyst => 2,
+        .wayfinder => 3,
+    };
+}
 
 /// The sorting function `sortBag()` uses.
 fn sort(_: void, a: *?conf.Item, b: *?conf.Item) bool {
@@ -296,7 +313,9 @@ fn sort(_: void, a: *?conf.Item, b: *?conf.Item) bool {
     if (b.*.?.rarity == .common and a.*.?.rarity != .common) return true;
     if (b.*.?.rarity == .epic and a.*.?.rarity == .legendary) return true;
 
-    if (b.*.?.rarity == a.*.?.rarity) return true;
+    const a_val = getValurFromItemType(a.*.?.T);
+    const b_val = getValurFromItemType(b.*.?.T);
+    if (b.*.?.rarity == a.*.?.rarity) return a_val <= b_val;
 
     if (a.*.?.rarity == .common and b.*.?.rarity != .common) return false;
     if (a.*.?.rarity == .epic and b.*.?.rarity == .legendary) return false;
@@ -682,12 +701,13 @@ inline fn EquippedSlotButton(
                     if (delete_mode) {
                         if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(Hands.name))) {
                             equippedbar.unequip(it);
-                            const x = @as(*?Item, @ptrCast(it));
-                            x.* = null;
+                            // const x = @as(*?Item, @ptrCast(it));
+                            // x.* = null;
                         }
+                        preview.hideElement();
                         sortBag();
                         try updateGUI();
-                        preview.hideElement();
+                        return;
                     }
                     try preview.show(it);
                 }
@@ -1068,7 +1088,6 @@ pub fn awake() !void {
                                     .unit = .vw,
                                 },
                                 .background = .{
-                                    .color = e.Color.blue,
                                     .image = "sprites/gui/item_slot_legendary.png",
                                 },
                             },
@@ -1121,8 +1140,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .color = e.Color.blue,
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x2,
                                 },
                             },
                         },
@@ -1190,7 +1208,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_4x1,
                                 },
                             },
                         },
@@ -1218,7 +1236,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1277,7 +1295,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1340,7 +1358,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1403,7 +1421,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1466,7 +1484,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1529,7 +1547,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1593,7 +1611,7 @@ pub fn awake() !void {
                                 },
                                 .color = PREVIEW_FONT_COLOR,
                                 .background = .{
-                                    .image = e.MISSINGNO,
+                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1767,6 +1785,18 @@ pub fn init() !void {
         .weapon_projectile_scale = e.Vec2(64, 64),
 
         .name = "Epic Gloves",
+
+        .icon = "sprites/entity/player/weapons/gloves/left.png",
+        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
+        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
+    });
+    _ = pickUpSort(conf.Item{
+        .T = .amethyst,
+        .rarity = .epic,
+        .damage = 10,
+        .weapon_projectile_scale = e.Vec2(64, 64),
+
+        .name = "Epic Amethyst",
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",

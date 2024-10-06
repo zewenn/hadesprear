@@ -40,5 +40,9 @@
 			"\t$1",
 			"})",
 		]
+	},
+	"Case Expression": {
+		"prefix": "caseexpression",
+		"body": "$1 => $2,\n"
 	}
 }

@@ -112,6 +112,7 @@ const PREVIEW_EPIC_2x2 = "sprites/gui/preview_epic_2x2.png";
 const PREVIEW_LEGENDARY_2x2 = "sprites/gui/preview_legendary_2x2.png";
 
 const preview = struct {
+    var is_shown = false;
     var selected = false;
     var selected_item: ?*Item = null;
 
@@ -127,7 +128,8 @@ const preview = struct {
     pub var crit_damage: *GUI.GUIElement = undefined;
     pub var move_speed: *GUI.GUIElement = undefined;
     pub var tenacity: *GUI.GUIElement = undefined;
-    pub var upgrade_text: *GUI.GUIElement = undefined;
+    pub var upgrade_title_text: *GUI.GUIElement = undefined;
+    pub var upgrade_cost_text: *GUI.GUIElement = undefined;
     pub var upgrade_currency_shower: *GUI.GUIElement = undefined;
     pub var equip: *GUI.GUIElement = undefined;
 
@@ -144,7 +146,8 @@ const preview = struct {
         crit_damage = GUI.assertSelect("#preview-crit-damage-number");
         move_speed = GUI.assertSelect("#preview-move-speed-number");
         tenacity = GUI.assertSelect("#preview-tenacity-number");
-        upgrade_text = GUI.assertSelect("#preview-upgrade-text");
+        upgrade_title_text = GUI.assertSelect("#preview-upgrade-title");
+        upgrade_cost_text = GUI.assertSelect("#preview-upgrade-text");
         upgrade_currency_shower = GUI.assertSelect("#preview-upgrade-currency");
         equip = GUI.assertSelect("#preview-equip-button");
 
@@ -213,29 +216,43 @@ const preview = struct {
         tenacity.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, tenacity_string);
         tenacity.is_content_heap = true;
 
-        const upgrade_text_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.level);
+        const upgrade_text_string = try e.zlib.arrays.NumberToString(
+            e.ALLOCATOR,
+            item.base_upgrade_cost + item.cost_per_level * item.level,
+        );
         defer e.ALLOCATOR.free(upgrade_text_string);
 
-        upgrade_text.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, upgrade_text_string);
-        upgrade_text.is_content_heap = true;
+        upgrade_cost_text.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, upgrade_text_string);
+        upgrade_cost_text.is_content_heap = true;
 
-        upgrade_text.options.style.width = .{
-            .value = e.loadf32(upgrade_text_string.len) * upgrade_text.options.style.font.size,
+        upgrade_cost_text.options.style.width = .{
+            .value = e.loadf32(upgrade_text_string.len) * upgrade_cost_text.options.style.font.size,
             .unit = .px,
         };
 
-        upgrade_text.options.style.left = .{
-            .value = -1 * (upgrade_text.options.style.font.size) / 2,
+        upgrade_cost_text.options.style.left = .{
+            .value = -1 * (upgrade_cost_text.options.style.font.size) / 2,
             .unit = .px,
         };
 
         upgrade_currency_shower.options.style.left = toUnit(
-            e.loadf32(upgrade_text_string.len - 1) / 2 * upgrade_text.options.style.font.size,
+            e.loadf32(upgrade_text_string.len - 1) / 2 * upgrade_cost_text.options.style.font.size,
         );
 
-        equip.contents = switch (item.equipped) {
-            true => "UNEQUIP",
-            false => "EQUIP",
+        upgrade_title_text.contents = switch (e.input.input_mode) {
+            .Keyboard => "UPGRADE (U)",
+            .KeyboardAndMouse => "UPGRADE",
+        };
+
+        equip.contents = switch (e.input.input_mode) {
+            .KeyboardAndMouse => switch (item.equipped) {
+                true => "UNEQUIP",
+                false => "EQUIP",
+            },
+            .Keyboard => switch (item.equipped) {
+                true => "UNEQUIP (E)",
+                false => "EQUIP (E)",
+            },
         };
         equip.options.style.color = switch (item.unequippable) {
             true => PREVIEW_FONT_COLOR,
@@ -267,8 +284,8 @@ const preview = struct {
         if (tenacity.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, tenacity.contents.?);
         }
-        if (upgrade_text.is_content_heap) {
-            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, upgrade_text.contents.?);
+        if (upgrade_cost_text.is_content_heap) {
+            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, upgrade_cost_text.contents.?);
         }
     }
 
@@ -279,6 +296,7 @@ const preview = struct {
         }
 
         element.options.style.top = u("50%");
+        is_shown = true;
     }
 
     pub fn hideElement() void {
@@ -289,6 +307,23 @@ const preview = struct {
 
         selected_item = null;
         element.options.style.top = u("-100%");
+        is_shown = false;
+    }
+
+    pub fn equippButtonCallback() !void {
+        const it = preview.selected_item;
+        const item: *Item = if (it) |i| i else return;
+        //
+        if (!item.unequippable) return;
+        //
+        switch (item.equipped) {
+            true => equippedbar.unequip(item),
+            false => equippedbar.equip(item),
+        }
+        //
+        sortBag();
+        try updateGUI();
+        try preview.show(preview.selected_item.?);
     }
 };
 
@@ -1617,133 +1652,120 @@ pub fn awake() !void {
                         },
                         "EQUIP",
                         e.Vec2(9, 5),
-                        (struct {
-                            pub fn callback() anyerror!void {
-                                const it = preview.selected_item;
-                                const item: *Item = if (it) |i| i else return;
-                                //
-                                if (!item.unequippable) return;
-                                //
-                                switch (item.equipped) {
-                                    true => equippedbar.unequip(item),
-                                    false => equippedbar.equip(item),
-                                }
-                                //
-                                sortBag();
-                                try updateGUI();
-                                try preview.show(preview.selected_item.?);
-                            }
-                        }).callback,
+                        preview.equippButtonCallback,
                     ),
                     // Upgrade
-                    try GUI.Container(.{
-                        .id = "preview-level-up",
-                        .style = .{
-                            .width = .{
-                                .value = SLOT_SIZE * 2 + 1,
-                                .unit = .vw,
-                            },
-                            .height = .{
-                                .value = SLOT_SIZE,
-                                .unit = .vw,
-                            },
-                            .left = .{
-                                .value = SLOT_SIZE + 1,
-                                .unit = .vw,
-                            },
-                            .top = .{
-                                .value = SLOT_SIZE * 3 + 3,
-                                .unit = .vw,
-                            },
-                            .background = .{
-                                .image = "sprites/gui/page_btn_inactive.png",
-                            },
-                            .translate = .{
-                                .x = .center,
-                                .y = .center,
+                    try GUI.Container(
+                        .{
+                            .id = "preview-level-up",
+                            .style = .{
+                                .width = .{
+                                    .value = SLOT_SIZE * 2 + 1,
+                                    .unit = .vw,
+                                },
+                                .height = .{
+                                    .value = SLOT_SIZE,
+                                    .unit = .vw,
+                                },
+                                .left = .{
+                                    .value = SLOT_SIZE + 1,
+                                    .unit = .vw,
+                                },
+                                .top = .{
+                                    .value = SLOT_SIZE * 3 + 3,
+                                    .unit = .vw,
+                                },
+                                .background = .{
+                                    .image = "sprites/gui/page_btn_inactive.png",
+                                },
+                                .translate = .{
+                                    .x = .center,
+                                    .y = .center,
+                                },
                             },
                         },
-                    }, @constCast(&[_]*GUI.GUIElement{
-                        try GUI.Button(
-                            .{
-                                .id = "preview-upgrade-button",
-                                .style = .{
-                                    .top = u("00%"),
-                                    .left = u("00%"),
-                                    .width = u("100%"),
-                                    .height = u("100%"),
-                                    .color = e.Color.black,
-                                    .translate = .{
-                                        .x = .center,
-                                        .y = .center,
+                        @constCast(&[_]*GUI.GUIElement{
+                            try GUI.Button(
+                                .{
+                                    .id = "preview-upgrade-button",
+                                    .style = .{
+                                        .top = u("00%"),
+                                        .left = u("00%"),
+                                        .width = u("100%"),
+                                        .height = u("100%"),
+                                        .color = e.Color.black,
+                                        .translate = .{
+                                            .x = .center,
+                                            .y = .center,
+                                        },
+                                    },
+                                    .hover = .{
+                                        .color = e.Color.black,
+                                        .background = .{
+                                            .image = "sprites/gui/page_btn.png",
+                                        },
                                     },
                                 },
-                                .hover = .{
-                                    .color = e.Color.black,
-                                    .background = .{
-                                        .image = "sprites/gui/page_btn.png",
+                                "",
+                                e.Vec2(10, 0 + 5),
+                                (struct {
+                                    pub fn callback() anyerror!void {
+                                        //
+                                        sortBag();
+                                        try updateGUI();
+                                    }
+                                }).callback,
+                            ),
+                            try GUI.Text(
+                                .{
+                                    .id = "preview-upgrade-title",
+                                    .style = .{
+                                        .font = .{
+                                            .size = 12,
+                                        },
+                                        .top = u("-8x"),
+                                        .z_index = 10,
                                     },
                                 },
-                            },
-                            "",
-                            e.Vec2(10, 0 + 5),
-                            (struct {
-                                pub fn callback() anyerror!void {
-                                    //
-                                    sortBag();
-                                    try updateGUI();
-                                }
-                            }).callback,
-                        ),
-                        try GUI.Text(
-                            .{
-                                .id = "preview-upgrade-title",
-                                .style = .{
-                                    .font = .{
-                                        .size = 12,
-                                    },
-                                    .top = u("-8x"),
-                                    .z_index = 10,
-                                },
-                            },
-                            "UPGRADE",
-                        ),
-                        try GUI.Text(
-                            .{
-                                .id = "preview-upgrade-text",
-                                .style = .{
-                                    .font = .{
-                                        .size = 16,
-                                    },
-                                    .top = u("8x"),
-                                    .left = u("-4x"),
-                                    .z_index = 10,
-                                    .background = .{
-                                        .color = e.Color.blue,
-                                    },
-                                    .translate = .{
-                                        .x = .center,
-                                        .y = .center,
+                                "UPGRADE",
+                            ),
+                            try GUI.Text(
+                                .{
+                                    .id = "preview-upgrade-text",
+                                    .style = .{
+                                        .font = .{
+                                            .size = 16,
+                                        },
+                                        .top = u("8x"),
+                                        .left = u("-4x"),
+                                        .z_index = 10,
+                                        .background = .{
+                                            .color = e.Color.blue,
+                                        },
+                                        .translate = .{
+                                            .x = .center,
+                                            .y = .center,
+                                        },
                                     },
                                 },
-                            },
-                            "1",
-                        ),
-                        try GUI.Empty(
-                            .{
-                                .id = "preview-upgrade-currency",
-                                .style = .{
-                                    .width = u("16x"),
-                                    .height = u("16x"),
-                                    .left = u("4x"),
-                                    .background = .{
-                                        .image = e.MISSINGNO,
+                                "1",
+                            ),
+                            try GUI.Empty(
+                                .{
+                                    .id = "preview-upgrade-currency",
+                                    .style = .{
+                                        .width = u("16x"),
+                                        .height = u("16x"),
+                                        .left = u("4x"),
+                                        .background = .{
+                                            .image = e.MISSINGNO,
+                                        },
+                                        .z_index = 10,
                                     },
-                                    .z_index = 10,
                                 },
-                            },
-                        ),
-                    })),
+                            ),
+                        }),
+                    ),
                 }),
             ),
         }),
@@ -1825,6 +1847,29 @@ pub fn update() !void {
     if (e.isKeyPressed(.key_backspace) and !delete_mode_last_frame) {
         delete_mode = true;
         try updateGUI();
+    }
+
+    if (e.isKeyPressed(.key_e) and preview.is_shown) {
+        try preview.equippButtonCallback();
+    }
+
+    AutoSelect: {
+        if ((e.isKeyPressed(.key_up) or
+            e.isKeyPressed(.key_down) or
+            e.isKeyPressed(.key_left) or
+            e.isKeyPressed(.key_right)) and
+            GUI.hovered_button != null)
+        {
+            const button = GUI.hovered_button.?;
+
+            if (button.button_interface_ptr == null) break :AutoSelect;
+
+            if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
+                std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
+            {
+                try button.button_interface_ptr.?.callback_fn();
+            }
+        }
     }
 
     delete_mode_last_frame = delete_mode;

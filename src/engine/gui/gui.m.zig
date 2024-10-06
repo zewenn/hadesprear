@@ -89,6 +89,7 @@ pub const elements = struct {
 };
 
 pub var ButtonMatrix: [9][16]?ButtonInterface = undefined;
+pub var hovered_button: ?*GUIElement = null;
 pub var keyboard_cursor_position = rl.Vector2.init(0, 0);
 
 var alloc: *Allocator = undefined;
@@ -103,6 +104,7 @@ pub fn init(allocator: *Allocator) void {
 
 pub fn update() void {
     if (!input.ui_mode) return;
+    hovered_button = null;
 
     switch (input.input_mode) {
         .KeyboardAndMouse => {
@@ -123,6 +125,7 @@ pub fn update() void {
 
                     if (!mouse_rect.checkCollision(button_rect)) {
                         button.is_hovered = false;
+                        // hovered_button = null;
                         continue;
                     }
 
@@ -130,6 +133,7 @@ pub fn update() void {
                     keyboard_cursor_position.y = @floatFromInt(y);
 
                     button.is_hovered = true;
+                    hovered_button = button;
 
                     if (rl.isMouseButtonPressed(.mouse_button_left)) {
                         btn.?.callback_fn() catch {};
@@ -177,6 +181,7 @@ pub fn update() void {
 
             if (button) |btn| {
                 btn.element_ptr.?.is_hovered = true;
+                hovered_button = btn.element_ptr.?;
 
                 if (rl.isKeyPressed(.key_space) or rl.isKeyPressed(.key_enter)) {
                     btn.callback_fn() catch {};

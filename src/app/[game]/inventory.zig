@@ -1807,8 +1807,12 @@ pub fn init() !void {
         .level = 999,
 
         .name = "Legendary Gloves",
-        .weapon_projectile_array_light = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
-        .weapon_projectile_array_heavy = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
+        .weapon_light = .{
+            .projectile_array = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
+        },
+        .weapon_heavy = .{
+            .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
+        },
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = e.MISSINGNO,
@@ -1819,7 +1823,6 @@ pub fn init() !void {
         .T = .weapon,
         .rarity = .epic,
         .damage = 10,
-        .weapon_projectile_scale_light = e.Vec2(64, 64),
 
         .name = "Epic Gloves",
 

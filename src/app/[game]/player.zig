@@ -272,16 +272,17 @@ pub fn update() !void {
         if (Player.shooting_stats.?.timeout_end >= e.time.currentTime) break :Input;
 
         if (shoot_heavy) {
-            for (inventory.equippedbar.current_weapon.weapon_projectile_array_heavy) |pa| {
+            for (inventory.equippedbar.current_weapon.weapon_heavy.projectile_array) |pa| {
                 const plus_angle: f32 = if (pa) |p| p else continue;
 
                 try projectiles.new(Player.transform.position, .{
                     .direction = shoot_angle + plus_angle,
-                    .lifetime_end = e.time.currentTime + PROJECTILE_LIFETIME,
-                    .scale = inventory.equippedbar.current_weapon.weapon_projectile_scale_heavy,
+                    .lifetime_end = e.time.currentTime +
+                        inventory.equippedbar.current_weapon.weapon_heavy.projectile_lifetime,
+                    .scale = inventory.equippedbar.current_weapon.weapon_heavy.projectile_scale,
                     .side = .player,
                     .weight = .heavy,
-                    .speed = 350,
+                    .speed = inventory.equippedbar.current_weapon.weapon_heavy.projectile_speed,
                     .damage = Player.entity_stats.?.damage +
                         inventory.equippedbar.get(.damage) *
                         inventory.equippedbar.current_weapon.weapon_heavy_damage_multilier,
@@ -290,16 +291,17 @@ pub fn update() !void {
 
             Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
         } else if (shoot) {
-            for (inventory.equippedbar.current_weapon.weapon_projectile_array_light) |pa| {
+            for (inventory.equippedbar.current_weapon.weapon_light.projectile_array) |pa| {
                 const plus_angle: f32 = if (pa) |p| p else continue;
 
                 try projectiles.new(Player.transform.position, .{
                     .direction = shoot_angle + plus_angle,
-                    .lifetime_end = e.time.currentTime + PROJECTILE_LIFETIME,
-                    .scale = inventory.equippedbar.current_weapon.weapon_projectile_scale_light,
+                    .lifetime_end = e.time.currentTime +
+                        inventory.equippedbar.current_weapon.weapon_light.projectile_lifetime,
+                    .scale = inventory.equippedbar.current_weapon.weapon_light.projectile_scale,
                     .side = .player,
                     .weight = .light,
-                    .speed = 350,
+                    .speed = inventory.equippedbar.current_weapon.weapon_light.projectile_speed,
                     .damage = Player.entity_stats.?.damage +
                         inventory.equippedbar.get(.damage),
                 });

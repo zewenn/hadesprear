@@ -99,6 +99,16 @@ pub const ItemStats = enum {
     tenacity,
 };
 
+pub const WeaponAttackTypeStats = struct {
+    projectile_scale: rl.Vector2 = .{
+        .x = 64,
+        .y = 64,
+    },
+    projectile_speed: f32 = 350,
+    projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
+    projectile_lifetime: f32 = 2,
+};
+
 pub const Item = struct {
     id: u128,
 
@@ -135,17 +145,14 @@ pub const Item = struct {
     movement_speed: f32 = 0,
     dash_charges: f32 = 0,
 
+    weapon_light: WeaponAttackTypeStats = .{},
+    weapon_heavy: WeaponAttackTypeStats = .{},
+    weapon_dash: WeaponAttackTypeStats = .{},
+
     weapon_projectile_scale_light: rl.Vector2 = .{
         .x = 64,
         .y = 64,
     },
-    weapon_projectile_scale_heavy: rl.Vector2 = .{
-        .x = 48,
-        .y = 64,
-    },
-    weapon_projectile_speed: f32 = 0,
-    weapon_projectile_array_light: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
-    weapon_projectile_array_heavy: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
     weapon_heavy_damage_multilier: f32 = 1.5,
 
     name: [*:0]const u8,

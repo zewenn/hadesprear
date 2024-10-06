@@ -80,6 +80,44 @@ var hands: weapons.Hands = undefined;
 
 var mouse_rotation: f32 = 0;
 
+fn summonProjectiles(
+    T: enum {
+        light,
+        heavy,
+        dash,
+    },
+    shoot_angle: f32,
+) !void {
+    const strct = switch (T) {
+        .dash => inventory.equippedbar.current_weapon.weapon_dash,
+        .heavy => inventory.equippedbar.current_weapon.weapon_heavy,
+
+        else => inventory.equippedbar.current_weapon.weapon_light,
+    };
+
+    for (strct.projectile_array) |pa| {
+        const plus_angle: f32 = if (pa) |p| p else continue;
+
+        try projectiles.new(Player.transform.position, .{
+            .direction = shoot_angle + plus_angle,
+            .lifetime_end = e.time.currentTime +
+                strct.projectile_lifetime,
+            .scale = strct.projectile_scale,
+            .side = .player,
+            .weight = .heavy,
+            .speed = strct.projectile_speed,
+            .damage = Player.entity_stats.?.damage +
+                inventory.equippedbar.get(.damage) *
+                strct.multiplier,
+            .health = strct.projectile_health,
+            .bleed_per_second = strct.projectile_bps,
+            .sprite = strct.sprite,
+        });
+    }
+
+    Player.shooting_stats.?.timeout_end = e.time.currentTime + Player.shooting_stats.?.timeout;
+}
+
 // ===================== [Events] =====================
 
 pub fn awake() !void {
@@ -272,49 +310,21 @@ pub fn update() !void {
         if (Player.shooting_stats.?.timeout_end >= e.time.currentTime) break :Input;
 
         if (shoot_heavy) {
-            for (inventory.equippedbar.current_weapon.weapon_heavy.projectile_array) |pa| {
-                const plus_angle: f32 = if (pa) |p| p else continue;
+            try summonProjectiles(.heavy, shoot_angle);
+            try hands.play(.heavy);
 
-                try projectiles.new(Player.transform.position, .{
-                    .direction = shoot_angle + plus_angle,
-                    .lifetime_end = e.time.currentTime +
-                        inventory.equippedbar.current_weapon.weapon_heavy.projectile_lifetime,
-                    .scale = inventory.equippedbar.current_weapon.weapon_heavy.projectile_scale,
-                    .side = .player,
-                    .weight = .heavy,
-                    .speed = inventory.equippedbar.current_weapon.weapon_heavy.projectile_speed,
-                    .damage = Player.entity_stats.?.damage +
-                        inventory.equippedbar.get(.damage) *
-                        inventory.equippedbar.current_weapon.weapon_heavy_damage_multilier,
-                    .health = inventory.equippedbar.current_weapon.weapon_heavy.projectile_health,
-                    .bleed_per_second = inventory.equippedbar.current_weapon.weapon_heavy.projectile_bps,
-                });
-            }
-
-            Player.shooting_stats.?.timeout_end = e.time.currentTime + (Player.shooting_stats.?.timeout * 2);
-        } else if (shoot) {
-            for (inventory.equippedbar.current_weapon.weapon_light.projectile_array) |pa| {
-                const plus_angle: f32 = if (pa) |p| p else continue;
-
-                try projectiles.new(Player.transform.position, .{
-                    .direction = shoot_angle + plus_angle,
-                    .lifetime_end = e.time.currentTime +
-                        inventory.equippedbar.current_weapon.weapon_light.projectile_lifetime,
-                    .scale = inventory.equippedbar.current_weapon.weapon_light.projectile_scale,
-                    .side = .player,
-                    .weight = .light,
-                    .speed = inventory.equippedbar.current_weapon.weapon_light.projectile_speed,
-                    .damage = Player.entity_stats.?.damage +
-                        inventory.equippedbar.get(.damage),
-                    .health = inventory.equippedbar.current_weapon.weapon_light.projectile_health,
-                    .bleed_per_second = inventory.equippedbar.current_weapon.weapon_light.projectile_bps,
-                });
-            }
-
-            Player.shooting_stats.?.timeout_end = e.time.currentTime + Player.shooting_stats.?.timeout;
+            break :Input;
         }
 
-        if (shoot or shoot_heavy) {
+        if (Player.dash_modifiers.?.dash_end + 0.1 >= e.time.currentTime and shoot) {
+            try summonProjectiles(.dash, shoot_angle);
+            try hands.play(.dash);
+
+            break :Input;
+        }
+
+        if (shoot) {
+            try summonProjectiles(.light, shoot_angle);
             try hands.play(.light);
         }
 
@@ -351,10 +361,18 @@ pub fn update() !void {
     }
 
     var rotator_vector0 = e.Vector2.init(HAND_DISTANCE, Hand0.transform.scale.x);
+    if (hands.playing_left) {
+        rotator_vector0.x += Hand0.transform.rotation.y;
+        rotator_vector0.y += Hand0.transform.rotation.x;
+    }
 
     const finished0 = rotator_vector0.rotate(std.math.degreesToRadians(90)).negate();
 
     var rotator_vector1 = e.Vector2.init(HAND_DISTANCE, 0);
+    if (hands.playing_right) {
+        rotator_vector1.x += Hand1.transform.rotation.y;
+        rotator_vector1.y += Hand1.transform.rotation.x;
+    }
 
     const finished1 = rotator_vector1.rotate(std.math.degreesToRadians(90)).negate();
 

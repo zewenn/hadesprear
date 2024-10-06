@@ -43,33 +43,100 @@ pub const Hands = struct {
         // Sword animation
         SwordAnimation: {
             Right: {
-                var right = e.Animator.Animation.init(
+                var light = e.Animator.Animation.init(
                     allocator,
                     "sword_hit_light",
                     e.Animator.interpolation.ease_in_out,
                     0.15,
                 );
 
-                right.chain(
+                light.chain(
                     0,
                     .{
                         .rotation = 0,
                     },
                 );
-                right.chain(
+                light.chain(
                     1,
                     .{
                         .rotation = -105,
                     },
                 );
-                right.chain(
+                light.chain(
                     2,
                     .{
                         .rotation = 0,
                     },
                 );
 
-                try this.right_animator.chain(right);
+                try this.right_animator.chain(light);
+
+                var heavy = e.Animator.Animation.init(
+                    allocator,
+                    "sword_hit_heavy",
+                    e.Animator.interpolation.ease_in_out,
+                    0.25,
+                );
+
+                heavy.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                    },
+                );
+                heavy.chain(
+                    1,
+                    .{
+                        .rotation = -180,
+                    },
+                );
+                heavy.chain(
+                    2,
+                    .{
+                        .rotation = 0,
+                    },
+                );
+
+                try this.right_animator.chain(heavy);
+
+                var dash = e.Animator.Animation.init(
+                    allocator,
+                    "sword_hit_dash",
+                    e.Animator.interpolation.ease_in_out,
+                    0.25,
+                );
+
+                dash.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                    },
+                );
+                dash.chain(
+                    25,
+                    .{
+                        .ry = 24,
+                        .rotation = -60,
+                    },
+                );
+                dash.chain(
+                    50,
+                    .{
+                        .ry = 128,
+                        .rx = -1 * right_hand.transform.scale.x / 2,
+                        .rotation = -60
+                    },
+                );
+                dash.chain(
+                    100,
+                    .{
+                        .ry = 0,
+                        .rotation = 0,
+                    },
+                );
+
+                try this.right_animator.chain(dash);
                 break :Right;
             }
 
@@ -129,6 +196,16 @@ pub const Hands = struct {
                 self.left.transform.scale = e.Vec2(0, 0);
 
                 self.right_base_rotation = 60;
+
+                self.light_hit_anim = "sword_hit_light";
+                self.heavy_hit_anim = switch (item.rarity) {
+                    .common => "sword_hit_light",
+                    else => "sword_hit_heavy",
+                };
+                self.dash_hit_anim = switch (item.rarity) {
+                    .legendary => "sword_hit_dash",
+                    else => "sword_hit_light",
+                };
             },
             .polearm => {},
             .daggers => {},

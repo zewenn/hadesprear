@@ -15,6 +15,8 @@ x: ?f32 = null,
 y: ?f32 = null,
 
 // Rotation
+rx: ?f32 = null,
+ry: ?f32 = null,
 rotation: ?f32 = null,
 
 // Scale

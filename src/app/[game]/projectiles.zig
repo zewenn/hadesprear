@@ -120,16 +120,7 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
         },
         .display = .{
             .scaling = .pixelate,
-            .sprite = switch (data.side) {
-                .player => switch (data.weight) {
-                    .light => PLAYER_PROJECTILE_LIGHT_SPRITE,
-                    .heavy => PLAYER_PROJECTILE_HEAVY_SPRITE,
-                },
-                .enemy => switch (data.weight) {
-                    .light => ENEMY_PROJECTILE_LIGHT_SPRITE,
-                    .heavy => ENEMY_PROJECTILE_HEAVY_SPRITE,
-                },
-            },
+            .sprite = data.sprite,
         },
         .projectile_data = data,
         .collider = .{

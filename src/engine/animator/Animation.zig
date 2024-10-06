@@ -144,6 +144,18 @@ pub fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, percent: 
         }
     }
 
+    if (kf1.rx) |v1| {
+        if (kf2.rx) |v2| {
+            new_kf.rx = self.timing_fn(v1, v2, percent);
+        }
+    }
+
+    if (kf1.ry) |v1| {
+        if (kf2.ry) |v2| {
+            new_kf.ry = self.timing_fn(v1, v2, percent);
+        }
+    }
+
     if (kf1.rotation) |v1| {
         if (kf2.rotation) |v2| {
             new_kf.rotation = self.timing_fn(v1, v2, percent);

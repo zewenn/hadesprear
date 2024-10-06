@@ -94,6 +94,14 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
     }
 
     // Rotation
+    if (kf.rx) |v| {
+        self.transform.rotation.x = v;
+    }
+
+    if (kf.ry) |v| {
+        self.transform.rotation.y = v;
+    }
+
     if (kf.rotation) |v| {
         self.transform.rotation.z = v;
     }

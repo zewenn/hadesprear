@@ -43,6 +43,7 @@ pub const ProjectileData = struct {
         light,
         heavy,
     },
+    sprite: []const u8,
     speed: f32,
     direction: f32,
     scale: rl.Vector2,
@@ -111,6 +112,9 @@ pub const WeaponAttackTypeStats = struct {
     projectile_lifetime: f32 = 2,
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
+
+    multiplier: f32 = 1,
+    sprite: []const u8 = "sprites/projectiles/player/generic/light.png",
 };
 
 pub const Item = struct {
@@ -150,14 +154,21 @@ pub const Item = struct {
     dash_charges: f32 = 0,
 
     weapon_light: WeaponAttackTypeStats = .{},
-    weapon_heavy: WeaponAttackTypeStats = .{},
-    weapon_dash: WeaponAttackTypeStats = .{},
+    weapon_heavy: WeaponAttackTypeStats = .{
+        .multiplier = 1.5,
+    },
+    weapon_dash: WeaponAttackTypeStats = .{
+        .projectile_scale = .{
+            .x = 128,
+            .y = 64,
+        },
+        .multiplier = 1.25,
+    },
 
     weapon_projectile_scale_light: rl.Vector2 = .{
         .x = 64,
         .y = 64,
     },
-    weapon_heavy_damage_multilier: f32 = 1.5,
 
     name: [*:0]const u8,
 

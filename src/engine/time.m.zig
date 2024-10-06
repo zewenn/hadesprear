@@ -17,6 +17,10 @@ pub var currentTime: f64 = 0;
 // The delta time in seconds
 pub var deltaTime: f64 = 0;
 
+pub fn DeltaTime() f32 {
+    return @as(f32, @floatCast(deltaTime));
+}
+
 pub fn init(allocator: *Allocator) void {
     alloc = allocator;
 

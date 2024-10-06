@@ -286,6 +286,8 @@ pub fn update() !void {
                     .damage = Player.entity_stats.?.damage +
                         inventory.equippedbar.get(.damage) *
                         inventory.equippedbar.current_weapon.weapon_heavy_damage_multilier,
+                    .health = inventory.equippedbar.current_weapon.weapon_heavy.projectile_health,
+                    .bleed_per_second = inventory.equippedbar.current_weapon.weapon_heavy.projectile_bps,
                 });
             }
 
@@ -304,6 +306,8 @@ pub fn update() !void {
                     .speed = inventory.equippedbar.current_weapon.weapon_light.projectile_speed,
                     .damage = Player.entity_stats.?.damage +
                         inventory.equippedbar.get(.damage),
+                    .health = inventory.equippedbar.current_weapon.weapon_light.projectile_health,
+                    .bleed_per_second = inventory.equippedbar.current_weapon.weapon_light.projectile_bps,
                 });
             }
 

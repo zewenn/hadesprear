@@ -41,7 +41,7 @@ pub fn update() !void {
             continue;
         }
 
-        const projectile_data = entity_ptr.projectile_data.?;
+        const projectile_data = &(entity_ptr.projectile_data.?);
 
         if (projectile_data.lifetime_end < e.time.currentTime) {
             ProjectileManager.free(projectile_array_index);
@@ -80,10 +80,19 @@ pub fn update() !void {
                 continue;
             }
 
+            projectile_data.health -= projectile_data.bleed_per_second * e.time.DeltaTime();
+
+            if (projectile_data.health > 1) {
+                other.entity_stats.?.health -= projectile_data.damage * 5 * e.time.DeltaTime();
+                continue;
+            }
+
             other.entity_stats.?.health -= projectile_data.damage;
 
-            ProjectileManager.free(projectile_array_index);
-            continue :projectile_loop;
+            if (projectile_data.health <= 0) {
+                ProjectileManager.free(projectile_array_index);
+                continue :projectile_loop;
+            }
         }
     }
 }

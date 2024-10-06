@@ -1824,7 +1824,14 @@ pub fn init() !void {
         .rarity = .epic,
         .damage = 10,
 
-        .name = "Epic Gloves",
+        .name = "Bleeding Wounds",
+
+        .weapon_light = .{
+            .projectile_health = 500,
+        },
+        .weapon_heavy = .{
+            .projectile_health = 1000,
+        },
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",

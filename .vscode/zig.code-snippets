@@ -15,12 +15,6 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-	"imp": {
-		"prefix": "imp",
-		"body": [
-			"const Import = @import(\"$1\").Import;"
-		]
-	},
 	"nm": {
 		"prefix": "nm",
 		"body": [

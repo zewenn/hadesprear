@@ -1,15 +1,13 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-const assets = Import(.assets);
+const assets = @import("../assets.m.zig");
 const entities = @import("../engine.m.zig").entities;
-const GUI = Import(.gui);
-const input = Import(.input);
+const GUI = @import("../gui/gui.m.zig");
+const input = @import("../input.m.zig");
 
 const rl = @import("raylib");
-const z = Import(.z);
+const z = @import("../z/z.m.zig");
 
 // ==================================================
 
@@ -60,7 +58,6 @@ pub fn update() !void {
     std.sort.insertion(*entities.Entity, entity_slice, {}, sortEntities);
 
     for (entity_slice) |entity| {
-
         const transform = entity.transform;
 
         if (transform.scale.x == 0 and transform.scale.y == 0) continue;

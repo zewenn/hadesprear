@@ -1,10 +1,8 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 
-const entities = Import(.ecs);
-const window = Import(.display).window;
-const z = Import(.z);
+const entities = @import("../engine.m.zig").entities;
+const window = @import("../display/display.m.zig").window;
+const z = @import("../z/z.m.zig");
 
 const Self = @This();
 

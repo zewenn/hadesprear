@@ -1,14 +1,12 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
-const window = Import(.display).window;
+const window = @import("../display/display.m.zig").window;
 
 const StyleSheet = @import("StyleSheet.zig");
 const ButtonInterface = @import("ButtonInterface.zig");
 
 const rl = @import("raylib");
-const entities = Import(.entities);
+const entities = @import("../engine.m.zig").entities;
 
 const Self = @This();
 

@@ -122,11 +122,7 @@ pub const Hands = struct {
                 );
                 dash.chain(
                     50,
-                    .{
-                        .ry = 128,
-                        .rx = -1 * right_hand.transform.scale.x / 2,
-                        .rotation = -60
-                    },
+                    .{ .ry = 128, .rx = -1 * right_hand.transform.scale.x / 2, .rotation = -60 },
                 );
                 dash.chain(
                     100,
@@ -141,6 +137,133 @@ pub const Hands = struct {
             }
 
             break :SwordAnimation;
+        }
+        // Polearm animation
+        PolearmAnimation: {
+            Right: {
+                var light = e.Animator.Animation.init(
+                    allocator,
+                    "polearm_hit_light",
+                    e.Animator.interpolation.ease_in_out,
+                    0.15,
+                );
+
+                light.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+                light.chain(
+                    1,
+                    .{
+                        .rotation = -10,
+                        .ry = 48,
+                        .rx = 24,
+                    },
+                );
+                light.chain(
+                    2,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+
+                try this.right_animator.chain(light);
+
+                var heavy = e.Animator.Animation.init(
+                    allocator,
+                    "polearm_hit_heavy",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+
+                heavy.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+                heavy.chain(
+                    1,
+                    .{
+                        .rotation = -10,
+                        .ry = -24,
+                        .rx = -12,
+                    },
+                );
+                heavy.chain(
+                    2,
+                    .{
+                        .rotation = -10,
+                        .ry = 64,
+                        .rx = 24,
+                    },
+                );
+                heavy.chain(
+                    3,
+                    .{
+                        .rotation = -10,
+                        .ry = 64,
+                        .rx = 24,
+                    },
+                );
+                heavy.chain(
+                    4,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+
+                try this.right_animator.chain(heavy);
+
+                var dash = e.Animator.Animation.init(
+                    allocator,
+                    "polearm_hit_dash",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+
+                dash.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+                dash.chain(
+                    25,
+                    .{
+                        .ry = -24,
+                        .rx = 12,
+                        .rotation = -360,
+                    },
+                );
+                dash.chain(
+                    100,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+
+                try this.right_animator.chain(dash);
+                break :Right;
+            }
+
+            break :PolearmAnimation;
         }
         return this;
     }
@@ -207,7 +330,22 @@ pub const Hands = struct {
                     else => "sword_hit_light",
                 };
             },
-            .polearm => {},
+            .polearm => {
+                self.right.transform.scale = e.Vec2(48, 128);
+                self.left.transform.scale = e.Vec2(0, 0);
+
+                self.right_base_rotation = 10;
+
+                self.light_hit_anim = "polearm_hit_light";
+                self.heavy_hit_anim = switch (item.rarity) {
+                    .common => "polearm_hit_light",
+                    else => "polearm_hit_heavy",
+                };
+                self.dash_hit_anim = switch (item.rarity) {
+                    .legendary => "polearm_hit_dash",
+                    else => "polearm_hit_light",
+                };
+            },
             .daggers => {},
             .claymore => {},
             .special => {},

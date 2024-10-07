@@ -1850,6 +1850,28 @@ pub fn init() !void {
         .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
     });
+    _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
+        .T = .weapon,
+        .weapon_type = .polearm,
+        .rarity = .legendary,
+        .damage = 10,
+        .weapon_projectile_scale_light = e.Vec2(64, 64),
+
+        .name = "Wounding Spear",
+
+        .weapon_light = .{
+            .projectile_array = [2]?f32{ -180, 0 } ++ ([_]?f32{null} ** 14),
+            .projectile_health = 500,
+        },
+        .weapon_heavy = .{
+            .projectile_health = 1000,
+        },
+
+        .icon = "sprites/entity/player/weapons/plates/right.png",
+        .weapon_sprite_left = e.MISSINGNO,
+        .weapon_sprite_right = e.MISSINGNO,
+    });
 
     sortBag();
     try updateGUI();

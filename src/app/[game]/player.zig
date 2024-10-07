@@ -88,6 +88,7 @@ fn summonProjectiles(
     },
     shoot_angle: f32,
 ) !void {
+    if (Player.shooting_stats.?.timeout_end >= e.time.gameTime) return;
     const strct = switch (T) {
         .dash => inventory.equippedbar.current_weapon.weapon_dash,
         .heavy => inventory.equippedbar.current_weapon.weapon_heavy,

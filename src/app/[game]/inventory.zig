@@ -1897,6 +1897,49 @@ pub fn init() !void {
         .weapon_sprite_left = "sprites/weapons/dagger.png",
         .weapon_sprite_right = "sprites/weapons/dagger.png",
     });
+    _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
+        .T = .weapon,
+        .weapon_type = .claymore,
+        .rarity = .legendary,
+        .damage = 120,
+        .weapon_projectile_scale_light = e.Vec2(64, 128),
+
+        .name = "Claymore",
+        .attack_speed = 1,
+
+        .weapon_light = .{
+            .projectile_array = [4]?f32{ -180, -90, 0, 90 } ++ ([_]?f32{null} ** 12),
+            .projectile_health = 2000,
+            .projectile_scale = e.Vec2(128, 64),
+        },
+        .weapon_heavy = .{
+            .projectile_array = [8]?f32{
+                -180,
+                -135,
+                -90,
+                -45,
+                0,
+                45,
+                90,
+                135,
+            } ++ ([_]?f32{null} ** 8),
+            .projectile_health = 5000,
+            .projectile_scale = e.Vec2(256, 128),
+            .attack_speed_modifier = 2.5,
+        },
+        .weapon_dash = .{
+            .projectile_array = [1]?f32{0} ++ ([_]?f32{null} ** 15),
+            .projectile_health = 3500,
+            .projectile_scale = e.Vec2(385, 128),
+            .attack_speed_modifier = 2,
+            .projectile_speed = 720,
+        },
+
+        .icon = "sprites/weapons/claymore.png",
+        .weapon_sprite_left = e.MISSINGNO,
+        .weapon_sprite_right = "sprites/weapons/claymore.png",
+    });
 
     sortBag();
     try updateGUI();

@@ -21,6 +21,7 @@ pub const Hands = struct {
     playing_right: bool = false,
     left_base_rotation: f32 = 0,
     right_base_rotation: f32 = 0,
+    animation_attack_speed_ration: f32 = 0.8,
 
     light_hit_anim: []const u8 = "sword_hit_light",
     heavy_hit_anim: []const u8 = "sword_hit_heavy",
@@ -233,31 +234,32 @@ pub const Hands = struct {
                     0.35,
                     // 5,
                 );
-
-                dash.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
-                dash.chain(
-                    25,
-                    .{
-                        .ry = -24,
-                        .rx = 12,
-                        .rotation = -360,
-                    },
-                );
-                dash.chain(
-                    100,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
+                {
+                    dash.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    dash.chain(
+                        25,
+                        .{
+                            .ry = -24,
+                            .rx = 12,
+                            .rotation = -360,
+                        },
+                    );
+                    dash.chain(
+                        100,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
 
                 try this.right_animator.chain(dash);
                 break :Right;
@@ -265,7 +267,7 @@ pub const Hands = struct {
 
             break :PolearmAnimation;
         }
-        // Polearm animation
+        // Daggers animation
         DaggersAnimation: {
             Right: {
                 var light = e.Animator.Animation.init(
@@ -344,31 +346,32 @@ pub const Hands = struct {
                     0.35,
                     // 5,
                 );
-
-                dash.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
-                dash.chain(
-                    25,
-                    .{
-                        .ry = -24,
-                        .rx = 12,
-                        .rotation = -360,
-                    },
-                );
-                dash.chain(
-                    100,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
+                {
+                    dash.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    dash.chain(
+                        25,
+                        .{
+                            .ry = -24,
+                            .rx = 12,
+                            .rotation = -360,
+                        },
+                    );
+                    dash.chain(
+                        100,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
 
                 try this.right_animator.chain(dash);
                 break :Right;
@@ -489,6 +492,134 @@ pub const Hands = struct {
 
             break :DaggersAnimation;
         }
+        // Claymore animation
+        SwordAnimation: {
+            Right: {
+                var light = e.Animator.Animation.init(
+                    allocator,
+                    "claymore_hit_light",
+                    e.Animator.interpolation.ease_in_out,
+                    0.5,
+                );
+
+                light.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                    },
+                );
+                light.chain(
+                    1,
+                    .{
+                        .rotation = -360,
+                        .ry = 64,
+                    },
+                );
+                light.chain(
+                    2,
+                    .{
+                        .rotation = -360,
+                        .ry = 0,
+                    },
+                );
+
+                try this.right_animator.chain(light);
+
+                var heavy = e.Animator.Animation.init(
+                    allocator,
+                    "claymore_hit_heavy",
+                    e.Animator.interpolation.ease_out,
+                    0.25,
+                );
+
+                heavy.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                    },
+                );
+                heavy.chain(
+                    1,
+                    .{
+                        .rotation = -720,
+                        .ry = 128,
+                    },
+                );
+                heavy.chain(
+                    1,
+                    .{
+                        .rotation = -720,
+                        .ry = 64,
+                    },
+                );
+                heavy.chain(
+                    2,
+                    .{
+                        .rotation = -720,
+                        .ry = 0,
+                    },
+                );
+
+                try this.right_animator.chain(heavy);
+
+                var dash = e.Animator.Animation.init(
+                    allocator,
+                    "claymore_hit_dash",
+                    e.Animator.interpolation.ease_in_out,
+                    0.25,
+                );
+
+                dash.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                    },
+                );
+                dash.chain(
+                    1,
+                    .{
+                        .ry = 0,
+                        .rotation = 180,
+                    },
+                );
+                dash.chain(
+                    2,
+                    .{
+                        .ry = 24,
+                        .rotation = -90,
+                    },
+                );
+                dash.chain(
+                    3,
+                    .{
+                        .ry = 24,
+                        .rotation = -90,
+                    },
+                );
+                dash.chain(
+                    4,
+                    .{
+                        .ry = 24,
+                        .rotation = -90,
+                    },
+                );
+                dash.chain(
+                    5,
+                    .{
+                        .ry = 0,
+                        .rotation = 0,
+                    },
+                );
+
+                try this.right_animator.chain(dash);
+                break :Right;
+            }
+
+            break :SwordAnimation;
+        }
         return this;
     }
 
@@ -515,11 +646,13 @@ pub const Hands = struct {
             .dash => self.dash_hit_anim,
         };
 
-        if (!self.left_animator.isPlaying(id))
-            try self.left_animator.play(id);
+        // if (!self.left_animator.isPlaying(id))
+        self.left_animator.stop(id);
+        try self.left_animator.play(id);
 
-        if (!self.right_animator.isPlaying(id))
-            try self.right_animator.play(id);
+        // if (!self.right_animator.isPlaying(id))
+        self.right_animator.stop(id);
+        try self.right_animator.play(id);
     }
 
     pub fn equip(self: *Self, item: *conf.Item) void {
@@ -587,29 +720,59 @@ pub const Hands = struct {
                     else => "daggers_hit_light",
                 };
             },
-            .claymore => {},
+            .claymore => {
+                self.right.transform.scale = e.Vec2(48, 192);
+                self.left.transform.scale = e.Vec2(0, 0);
+
+                self.right_base_rotation = 85;
+
+                self.light_hit_anim = "claymore_hit_light";
+                self.heavy_hit_anim = switch (item.rarity) {
+                    .common => "claymore_hit_light",
+                    else => "claymore_hit_heavy",
+                };
+                self.dash_hit_anim = switch (item.rarity) {
+                    .legendary => "claymore_hit_dash",
+                    else => "claymore_hit_light",
+                };
+            },
             .special => {},
         }
 
+        std.log.debug("Item: {s}", .{item.name});
+
         if (self.left_animator.animations.getPtr(self.light_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier;
+            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
+            anim.recalculateTransitionTimePerKeyFrame();
         }
         if (self.right_animator.animations.getPtr(self.light_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier;
+            std.log.debug("lol", .{});
+            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
+            anim.recalculateTransitionTimePerKeyFrame();
+
+            std.log.debug("{any}", .{self.right_animator.animations.get(self.light_hit_anim).?.transition_time});
         }
 
-        if (self.left_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier;
-        }
-        if (self.right_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier;
+        if (!std.mem.eql(u8, self.heavy_hit_anim, self.light_hit_anim)) {
+            if (self.left_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
+                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration;
+                anim.recalculateTransitionTimePerKeyFrame();
+            }
+            if (self.right_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
+                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration;
+                anim.recalculateTransitionTimePerKeyFrame();
+            }
         }
 
-        if (self.left_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier;
-        }
-        if (self.right_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier;
+        if (!std.mem.eql(u8, self.dash_hit_anim, self.light_hit_anim)) {
+            if (self.left_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
+                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration;
+                anim.recalculateTransitionTimePerKeyFrame();
+            }
+            if (self.right_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
+                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration;
+                anim.recalculateTransitionTimePerKeyFrame();
+            }
         }
     }
 };

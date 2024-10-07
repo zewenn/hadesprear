@@ -70,6 +70,10 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     }
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
+    self.recalculateTransitionTimePerKeyFrame();
+}
+
+pub fn recalculateTransitionTimePerKeyFrame(self: *Self) void {
     switch (self.mode) {
         .forwards => std.sort.insertion(
             u8,
@@ -92,6 +96,10 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
         f64,
         @floatFromInt(self.keys_slice.?.len - 1),
     );
+
+    std.log.debug("name: {s}", .{self.id});
+    std.log.debug("keys: {any}", .{self.keys_slice});
+    std.log.debug("transition_time_pre_kf: {d}", .{self.transition_time_ms_per_kf});
 }
 
 pub fn deinit(self: *Self) void {

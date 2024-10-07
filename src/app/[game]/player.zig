@@ -100,7 +100,7 @@ fn summonProjectiles(
 
         try projectiles.new(Player.transform.position, .{
             .direction = shoot_angle + plus_angle,
-            .lifetime_end = e.time.currentTime +
+            .lifetime_end = e.time.gameTime +
                 strct.projectile_lifetime,
             .scale = strct.projectile_scale,
             .side = .player,
@@ -115,7 +115,7 @@ fn summonProjectiles(
         });
     }
 
-    Player.shooting_stats.?.timeout_end = e.time.currentTime + Player.shooting_stats.?.timeout;
+    Player.shooting_stats.?.timeout_end = e.time.gameTime + Player.shooting_stats.?.timeout;
 }
 
 // ===================== [Events] =====================
@@ -307,7 +307,7 @@ pub fn update() !void {
         const shoot_heavy = ((shoot and e.isKeyDown(.key_left_shift)) or
             e.isMouseButtonPressed(.mouse_button_right));
 
-        if (Player.shooting_stats.?.timeout_end >= e.time.currentTime) break :Input;
+        if (Player.shooting_stats.?.timeout_end >= e.time.gameTime) break :Input;
 
         if (shoot_heavy) {
             try summonProjectiles(.heavy, shoot_angle);
@@ -316,7 +316,7 @@ pub fn update() !void {
             break :Input;
         }
 
-        if (Player.dash_modifiers.?.dash_end + 0.1 >= e.time.currentTime and shoot) {
+        if (Player.dash_modifiers.?.dash_end + 0.1 >= e.time.gameTime and shoot) {
             try summonProjectiles(.dash, shoot_angle);
             try hands.play(.dash);
 

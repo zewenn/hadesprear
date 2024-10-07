@@ -110,6 +110,9 @@ pub const WeaponAttackTypeStats = struct {
     projectile_speed: f32 = 350,
     projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
     projectile_lifetime: f32 = 2,
+
+    /// Any projectile_health above 1 will make the
+    ///  projectile into a piercing projectile
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
 

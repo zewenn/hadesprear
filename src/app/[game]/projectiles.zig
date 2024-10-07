@@ -43,7 +43,7 @@ pub fn update() !void {
 
         const projectile_data = &(entity_ptr.projectile_data.?);
 
-        if (projectile_data.lifetime_end < e.time.currentTime) {
+        if (projectile_data.lifetime_end < e.time.gameTime) {
             ProjectileManager.free(projectile_array_index);
             continue;
         }

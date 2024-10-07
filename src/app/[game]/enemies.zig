@@ -194,12 +194,12 @@ pub fn update() !void {
             entity_ptr.transform.position.y += move_vec.y;
         }
 
-        if (entity_ptr.shooting_stats.?.timeout_end >= e.time.currentTime) continue;
+        if (entity_ptr.shooting_stats.?.timeout_end >= e.time.gameTime) continue;
 
         if (distance < entity_ptr.entity_stats.?.range) {
             try projectiles.new(entity_ptr.transform.position, .{
                 .direction = angle,
-                .lifetime_end = e.time.currentTime + entity_ptr.shooting_stats.?.projectile_lifetime,
+                .lifetime_end = e.time.gameTime + entity_ptr.shooting_stats.?.projectile_lifetime,
                 .scale = e.Vec2(64, 64),
                 .side = .enemy,
                 .weight = .light,
@@ -208,7 +208,7 @@ pub fn update() !void {
                 .sprite = e.MISSINGNO,
             });
 
-            entity_ptr.shooting_stats.?.timeout_end = e.time.currentTime + entity_ptr.shooting_stats.?.timeout;
+            entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + entity_ptr.shooting_stats.?.timeout;
         }
         // entity_ptr.entity_stats.?.health -= 0.1;
     }

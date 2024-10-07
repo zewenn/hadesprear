@@ -1856,7 +1856,7 @@ pub fn init() !void {
 }
 
 pub fn update() !void {
-    if (e.isKeyPressed(.key_i)) toggle();
+    if (e.isKeyPressed(.key_i) or e.isKeyPressed(.key_tab)) toggle();
     if (e.isKeyPressed(.key_escape) and shown) hide();
     if (!e.input.ui_mode) return;
 

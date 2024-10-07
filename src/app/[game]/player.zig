@@ -207,6 +207,10 @@ pub fn awake() !void {
 pub fn init() !void {}
 
 pub fn update() !void {
+    if (e.isKeyDown(.key_seven)) e.display.camera.zoom -= 0.01;
+    if (e.isKeyDown(.key_eight)) e.display.camera.zoom += 0.01;
+
+
     if (e.input.ui_mode) return;
     hands.equip(inventory.equippedbar.current_weapon);
 

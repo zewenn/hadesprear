@@ -23,12 +23,12 @@ fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
 
     return (
     //
-        lsh_transform.position.y -
+        lsh_transform.position.y * camera.zoom -
         if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
     //
     ) < (
     //
-        rsh_transform.position.y -
+        rsh_transform.position.y * camera.zoom -
         if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
     //
     );
@@ -60,7 +60,7 @@ pub fn update() !void {
     for (entity_slice) |entity| {
         const transform = entity.transform;
 
-        if (transform.scale.x == 0 and transform.scale.y == 0) continue;
+        if (transform.scale.x * camera.zoom <= 0 and transform.scale.y * camera.zoom <= 0) continue;
 
         const display = entity.display;
 
@@ -85,7 +85,7 @@ pub fn update() !void {
             break :Decide true;
         };
 
-        if (use_previous and entity.cached_display != null) {
+        if ((use_previous and entity.cached_display != null) and camera.zoom == camera.last_zoom) {
             img = rl.imageCopy(entity.cached_display.?.img.?);
             texture = entity.cached_display.?.texture.?;
         } else {
@@ -103,8 +103,8 @@ pub fn update() !void {
                 ),
                 .pixelate => rl.imageResizeNN(
                     &img,
-                    @intFromFloat(transform.scale.x),
-                    @intFromFloat(transform.scale.y),
+                    @intFromFloat(transform.scale.x * camera.zoom),
+                    @intFromFloat(transform.scale.y * camera.zoom),
                 ),
             }
             if (entity.cached_display) |cached| {
@@ -133,6 +133,7 @@ pub fn update() !void {
             display.ignore_world_pos,
         );
     }
+    camera.last_zoom = camera.zoom;
 
     // ==============================================
 
@@ -187,9 +188,7 @@ pub fn update() !void {
         //     }
         //     break :GetOrigin anchor;
         // };
-        const origin = transform.anchor.?.multiply(
-            rl.Vector2.init(camera.zoom, camera.zoom),
-        );
+        const origin = transform.anchor.?;
 
         BackgroundColorRendering: {
             var background_color: rl.Color = undefined;
@@ -212,6 +211,8 @@ pub fn update() !void {
 
         BacgroundImageRendering: {
             if (style.background.image == null) break :BacgroundImageRendering;
+
+            if (transform.scale.x <= 0 or transform.scale.y <= 0) break :BacgroundImageRendering;
 
             const display: entities.Display = .{
                 .sprite = style.background.image.?,
@@ -263,13 +264,13 @@ pub fn update() !void {
                 switch (display.scaling) {
                     .normal => rl.imageResize(
                         &img,
-                        @intFromFloat(transform.scale.x * camera.zoom),
-                        @intFromFloat(transform.scale.y * camera.zoom),
+                        @intFromFloat(transform.scale.x),
+                        @intFromFloat(transform.scale.y),
                     ),
                     .pixelate => rl.imageResizeNN(
                         &img,
-                        @intFromFloat(transform.scale.x * camera.zoom),
-                        @intFromFloat(transform.scale.y * camera.zoom),
+                        @intFromFloat(transform.scale.x),
+                        @intFromFloat(transform.scale.y),
                     ),
                 }
                 if (element.cached_display) |cached| {
@@ -358,23 +359,29 @@ fn drawTetxure(
     const X = GetX: {
         var x: f128 = 0;
         x = z.math.div(window.size.x, 2).?;
-        x += z.math.to_f128(transform.position.x).?;
-        if (!ignore_cam) x -= z.math.to_f128(camera.position.x).?;
+        x += z.math.to_f128(transform.position.x).? * camera.zoom;
+        if (!ignore_cam)
+            x -= z.math.to_f128(camera.position.x).? * camera.zoom;
 
         break :GetX z.math.f128_to(f32, x).?;
     };
 
     const Y = GetY: {
         var y = z.math.div(window.size.y, 2).?;
-        y += z.math.to_f128(transform.position.y).?;
+        y += z.math.to_f128(transform.position.y).? * camera.zoom;
         if (!ignore_cam)
-            y -= z.math.to_f128(camera.position.y).?;
+            y -= z.math.to_f128(camera.position.y).? * camera.zoom;
 
         break :GetY z.math.f128_to(f32, y).?;
     };
 
     const origin: rl.Vector2 = if (transform.anchor) |anchor|
-        anchor
+        anchor.multiply(
+            rl.Vector2.init(
+                camera.zoom,
+                camera.zoom,
+            ),
+        )
     else
         rl.Vector2.init(
             transform.scale.x * camera.zoom / 2,
@@ -383,8 +390,18 @@ fn drawTetxure(
 
     rl.drawTexturePro(
         texture,
-        rl.Rectangle.init(0, 0, transform.scale.x, transform.scale.y),
-        rl.Rectangle.init(X, Y, transform.scale.x, transform.scale.y),
+        rl.Rectangle.init(
+            0,
+            0,
+            transform.scale.x * camera.zoom,
+            transform.scale.y * camera.zoom,
+        ),
+        rl.Rectangle.init(
+            X,
+            Y,
+            transform.scale.x * camera.zoom,
+            transform.scale.y * camera.zoom,
+        ),
         origin,
         transform.rotation.z,
         tint,
@@ -397,8 +414,8 @@ fn drawTetxure(
         rl.drawRectangleLines(
             @intFromFloat(X - origin.x),
             @intFromFloat(Y - origin.y),
-            @intFromFloat(transform.scale.x),
-            @intFromFloat(transform.scale.y),
+            @intFromFloat(transform.scale.x * camera.zoom),
+            @intFromFloat(transform.scale.y * camera.zoom),
             rl.Color.lime,
         );
 

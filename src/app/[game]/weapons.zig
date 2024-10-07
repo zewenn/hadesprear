@@ -265,6 +265,230 @@ pub const Hands = struct {
 
             break :PolearmAnimation;
         }
+        // Polearm animation
+        DaggersAnimation: {
+            Right: {
+                var light = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_light",
+                    e.Animator.interpolation.ease_in_out,
+                    0.15,
+                );
+                {
+                    light.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    light.chain(
+                        1,
+                        .{
+                            .rotation = 10,
+                            .ry = 48,
+                        },
+                    );
+                    light.chain(
+                        2,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
+
+                try this.right_animator.chain(light);
+
+                var heavy = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_heavy",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+                {
+                    heavy.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    heavy.chain(
+                        1,
+                        .{
+                            .rotation = 0,
+                            .ry = 80,
+                        },
+                    );
+                    heavy.chain(
+                        2,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
+
+                try this.right_animator.chain(heavy);
+
+                var dash = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_dash",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+
+                dash.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+                dash.chain(
+                    25,
+                    .{
+                        .ry = -24,
+                        .rx = 12,
+                        .rotation = -360,
+                    },
+                );
+                dash.chain(
+                    100,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+
+                try this.right_animator.chain(dash);
+                break :Right;
+            }
+            Left: {
+                var light = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_light",
+                    e.Animator.interpolation.ease_in_out,
+                    0.2,
+                );
+                {
+                    light.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    light.chain(
+                        1,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    light.chain(
+                        2,
+                        .{
+                            .rotation = -10,
+                            .ry = 48,
+                        },
+                    );
+                    light.chain(
+                        3,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
+
+                try this.left_animator.chain(light);
+
+                var heavy = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_heavy",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+                {
+                    heavy.chain(
+                        0,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                    heavy.chain(
+                        2,
+                        .{
+                            .rotation = 0,
+                            .ry = 80,
+                        },
+                    );
+                    heavy.chain(
+                        3,
+                        .{
+                            .rotation = 0,
+                            .ry = 0,
+                            .rx = 0,
+                        },
+                    );
+                }
+                try this.left_animator.chain(heavy);
+
+                var dash = e.Animator.Animation.init(
+                    allocator,
+                    "daggers_hit_dash",
+                    e.Animator.interpolation.ease_in_out,
+                    0.35,
+                    // 5,
+                );
+
+                dash.chain(
+                    0,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+                dash.chain(
+                    25,
+                    .{
+                        .ry = -24,
+                        .rx = 12,
+                        .rotation = -360,
+                    },
+                );
+                dash.chain(
+                    100,
+                    .{
+                        .rotation = 0,
+                        .ry = 0,
+                        .rx = 0,
+                    },
+                );
+
+                try this.left_animator.chain(dash);
+                break :Left;
+            }
+
+            break :DaggersAnimation;
+        }
         return this;
     }
 
@@ -346,9 +570,46 @@ pub const Hands = struct {
                     else => "polearm_hit_light",
                 };
             },
-            .daggers => {},
+            .daggers => {
+                self.right.transform.scale = e.Vec2(48, 48);
+                self.left.transform.scale = e.Vec2(48, 48);
+
+                self.right_base_rotation = -10;
+                self.left_base_rotation = 10;
+
+                self.light_hit_anim = "daggers_hit_light";
+                self.heavy_hit_anim = switch (item.rarity) {
+                    .common => "daggers_hit_light",
+                    else => "daggers_hit_heavy",
+                };
+                self.dash_hit_anim = switch (item.rarity) {
+                    .legendary => "daggers_hit_dash",
+                    else => "daggers_hit_light",
+                };
+            },
             .claymore => {},
             .special => {},
+        }
+
+        if (self.left_animator.animations.getPtr(self.light_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier;
+        }
+        if (self.right_animator.animations.getPtr(self.light_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier;
+        }
+
+        if (self.left_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier;
+        }
+        if (self.right_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier;
+        }
+
+        if (self.left_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier;
+        }
+        if (self.right_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
+            anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier;
         }
     }
 };

@@ -115,7 +115,7 @@ fn summonProjectiles(
         });
     }
 
-    Player.shooting_stats.?.timeout_end = e.time.gameTime + Player.shooting_stats.?.timeout;
+    Player.shooting_stats.?.timeout_end = e.time.gameTime + (inventory.equippedbar.current_weapon.attack_speed * strct.attack_speed_modifier);
 }
 
 // ===================== [Events] =====================

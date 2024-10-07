@@ -28,6 +28,8 @@ pub var HandsWeapon = conf.Item{
     .equipped = true,
     .unequippable = false,
 
+    .attack_speed = 0.25,
+
     .icon = "sprites/entity/player/weapons/gloves/left.png",
     .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
     .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
@@ -1816,7 +1818,7 @@ pub fn init() !void {
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = e.MISSINGNO,
+        .weapon_sprite_right = "sprites/weapons/steel_sword_heavy.png",
     });
     _ = pickUpSort(conf.Item{
         .id = e.uuid.v7.new(),
@@ -1834,8 +1836,8 @@ pub fn init() !void {
         },
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
+        .weapon_sprite_left = e.MISSINGNO,
+        .weapon_sprite_right = "sprites/weapons/steel_sword.png",
     });
     _ = pickUpSort(conf.Item{
         .id = e.uuid.v7.new(),
@@ -1870,7 +1872,30 @@ pub fn init() !void {
 
         .icon = "sprites/entity/player/weapons/plates/right.png",
         .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = e.MISSINGNO,
+        .weapon_sprite_right = "sprites/weapons/fork.png",
+    });
+    _ = pickUpSort(conf.Item{
+        .id = e.uuid.v7.new(),
+        .T = .weapon,
+        .weapon_type = .daggers,
+        .rarity = .legendary,
+        .damage = 10,
+        .weapon_projectile_scale_light = e.Vec2(64, 64),
+
+        .name = "Daggers of the Gods",
+
+        .weapon_light = .{
+            .projectile_array = [2]?f32{ -20, 20 } ++ ([_]?f32{null} ** 14),
+            .projectile_health = 500,
+        },
+        .weapon_heavy = .{
+            .projectile_array = [3]?f32{ -20, 0, 20 } ++ ([_]?f32{null} ** 13),
+            .projectile_health = 1000,
+        },
+
+        .icon = e.MISSINGNO,
+        .weapon_sprite_left = "sprites/weapons/dagger.png",
+        .weapon_sprite_right = "sprites/weapons/dagger.png",
     });
 
     sortBag();

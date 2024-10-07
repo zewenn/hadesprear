@@ -118,6 +118,7 @@ pub const WeaponAttackTypeStats = struct {
 
     multiplier: f32 = 1,
     sprite: []const u8 = "sprites/projectiles/player/generic/light.png",
+    attack_speed_modifier: f32 = 1,
 };
 
 pub const Item = struct {
@@ -156,9 +157,13 @@ pub const Item = struct {
     movement_speed: f32 = 0,
     dash_charges: f32 = 0,
 
+    /// Smaller better
+    attack_speed: f32 = 0.25,
+
     weapon_light: WeaponAttackTypeStats = .{},
     weapon_heavy: WeaponAttackTypeStats = .{
         .multiplier = 1.5,
+        .attack_speed_modifier = 2,
     },
     weapon_dash: WeaponAttackTypeStats = .{
         .projectile_scale = .{
@@ -166,6 +171,7 @@ pub const Item = struct {
             .y = 64,
         },
         .multiplier = 1.25,
+        .attack_speed_modifier = 1.5,
     },
 
     weapon_projectile_scale_light: rl.Vector2 = .{

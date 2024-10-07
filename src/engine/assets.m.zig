@@ -3,7 +3,7 @@ const Import = @import("../.temp/imports.zig").Import;
 const std = @import("std");
 const rl = @import("raylib");
 const Allocator = @import("std").mem.Allocator;
-const z = Import(.z);
+const z = @import("./z/z.m.zig");
 
 pub const Image = rl.Image;
 pub const Sound = rl.Sound;

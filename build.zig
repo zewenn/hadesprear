@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const rlz = @import("raylib-zig");
 const Allocator = @import("std").mem.Allocator;
 const String = @import("./src/engine/strings.m.zig").String;
@@ -37,17 +38,32 @@ pub fn build(b: *std.Build) !void {
         }
 
         var writer = output_file.writer();
-        writer.writeAll("") catch unreachable;
-        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
+        writer.writeAll("") catch break :Filenames;
+        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch break :Filenames;
 
         for (res, 0..) |item, i| {
             if (i == 0) {
-                _ = writer.write("\t\"") catch unreachable;
+                _ = writer.write("\t\"") catch break :Filenames;
             } else {
-                _ = writer.write("\",\n\t\"") catch unreachable;
+                _ = writer.write("\",\n\t\"") catch break :Filenames;
             }
 
-            writer.print("{s}", .{item.name}) catch unreachable;
+            switch (builtin.os.tag) {
+                .windows => {
+                    const str = try allocator.alloc(u8, item.name.len);
+                    defer allocator.free(str);
+
+                    std.mem.copyForwards(u8, str, item.name);
+
+                    const owned = std.mem.replaceOwned(u8, allocator, item.name, "\\", "/") catch break :Filenames;
+                    defer allocator.free(owned);
+
+                    writer.print("{s}", .{owned}) catch break :Filenames;
+                },
+                else => {
+                    writer.print("{s}", .{item.name}) catch break :Filenames;
+                },
+            }
 
             if (i == res.len - 1) {
                 _ = writer.write("\"") catch unreachable;
@@ -226,7 +242,22 @@ pub fn build(b: *std.Build) !void {
             FnString.concat(module.name) catch break :ModuleImports;
             FnString.concat(" => ") catch break :ModuleImports;
             FnString.concat("@import(\"") catch break :ModuleImports;
-            FnString.concat(module.abs_path) catch break :ModuleImports;
+            switch (builtin.os.tag) {
+                .windows => {
+                    const str = try allocator.alloc(u8, module.abs_path.len);
+                    defer allocator.free(str);
+
+                    std.mem.copyForwards(u8, str, module.abs_path);
+
+                    const owned = std.mem.replaceOwned(u8, allocator, str, "\\", "/") catch break :ModuleImports;
+                    defer allocator.free(owned);
+
+                    FnString.concat(owned) catch break :ModuleImports;
+                },
+                else => {
+                    FnString.concat(module.abs_path) catch break :ModuleImports;
+                },
+            }
             FnString.concat("\"),\n") catch break :ModuleImports;
         }
 

@@ -60,7 +60,11 @@ pub fn update() !void {
     std.sort.insertion(*entities.Entity, entity_slice, {}, sortEntities);
 
     for (entity_slice) |entity| {
+
         const transform = entity.transform;
+
+        if (transform.scale.x == 0 and transform.scale.y == 0) continue;
+
         const display = entity.display;
 
         var img: rl.Image = undefined;
@@ -94,17 +98,16 @@ pub fn update() !void {
                 std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
                 continue;
             }
-
             switch (display.scaling) {
                 .normal => rl.imageResize(
                     &img,
-                    @intFromFloat(transform.scale.x * camera.zoom),
-                    @intFromFloat(transform.scale.y * camera.zoom),
+                    @intFromFloat(transform.scale.x),
+                    @intFromFloat(transform.scale.y),
                 ),
                 .pixelate => rl.imageResizeNN(
                     &img,
-                    @intFromFloat(transform.scale.x * camera.zoom),
-                    @intFromFloat(transform.scale.y * camera.zoom),
+                    @intFromFloat(transform.scale.x),
+                    @intFromFloat(transform.scale.y),
                 ),
             }
             if (entity.cached_display) |cached| {

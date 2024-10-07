@@ -88,13 +88,9 @@ pub fn calculateTransform(self: *Self) entities.Transform {
 }
 
 pub fn addChild(self: *Self, child: *Self) !void {
-    std.log.debug("h1", .{});
-    std.log.debug("self: {any}", .{self});
     if (self.children) |*children| {
-        std.log.debug("h2", .{});
         child.parent = self;
-        std.log.debug("h3", .{});
+
         try children.append(child);
-        std.log.debug("h4", .{});
     }
 }

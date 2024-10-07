@@ -244,15 +244,31 @@ pub const Hands = struct {
                         },
                     );
                     dash.chain(
-                        25,
+                        1,
                         .{
+                            .rotation = -10,
                             .ry = -24,
-                            .rx = 12,
-                            .rotation = -360,
+                            .rx = -12,
                         },
                     );
                     dash.chain(
-                        100,
+                        2,
+                        .{
+                            .rotation = -10,
+                            .ry = 64,
+                            .rx = 24,
+                        },
+                    );
+                    dash.chain(
+                        3,
+                        .{
+                            .rotation = -10,
+                            .ry = 64,
+                            .rx = 24,
+                        },
+                    );
+                    dash.chain(
+                        4,
                         .{
                             .rotation = 0,
                             .ry = 0,
@@ -739,18 +755,13 @@ pub const Hands = struct {
             .special => {},
         }
 
-        std.log.debug("Item: {s}", .{item.name});
-
         if (self.left_animator.animations.getPtr(self.light_hit_anim)) |anim| {
             anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
             anim.recalculateTransitionTimePerKeyFrame();
         }
         if (self.right_animator.animations.getPtr(self.light_hit_anim)) |anim| {
-            std.log.debug("lol", .{});
             anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
             anim.recalculateTransitionTimePerKeyFrame();
-
-            std.log.debug("{any}", .{self.right_animator.animations.get(self.light_hit_anim).?.transition_time});
         }
 
         if (!std.mem.eql(u8, self.heavy_hit_anim, self.light_hit_anim)) {

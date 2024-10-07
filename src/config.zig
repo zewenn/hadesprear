@@ -107,7 +107,7 @@ pub const WeaponAttackTypeStats = struct {
         .x = 64,
         .y = 64,
     },
-    projectile_speed: f32 = 350,
+    projectile_speed: f32 = 450,
     projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
     projectile_lifetime: f32 = 2,
 

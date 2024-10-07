@@ -325,7 +325,6 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
 
     var O = options;
     if (z.eql(O.hover, StyleSheet{})) {
-        std.log.debug("lol", .{});
         O.hover = StyleSheet{
             .font = .{
                 .size = O.style.font.size + 1,

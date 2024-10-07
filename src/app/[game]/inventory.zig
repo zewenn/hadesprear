@@ -21,8 +21,15 @@ pub var delete_mode_last_frame: bool = false;
 pub var HandsWeapon = conf.Item{
     .id = 0,
     .T = .weapon,
+    .weapon_type = .daggers,
+
     .damage = 10,
     .weapon_projectile_scale_light = e.Vec2(64, 64),
+
+    .weapon_heavy = .{
+        .sprite = "sprites/projectiles/player/generic/heavy.png",
+        .attack_speed_modifier = 2,
+    },
 
     .name = "Hands",
     .equipped = true,
@@ -1814,6 +1821,7 @@ pub fn init() !void {
         },
         .weapon_heavy = .{
             .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
+            .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
@@ -1833,6 +1841,7 @@ pub fn init() !void {
         },
         .weapon_heavy = .{
             .projectile_health = 1000,
+            .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
         .icon = "sprites/entity/player/weapons/gloves/left.png",
@@ -1862,12 +1871,20 @@ pub fn init() !void {
 
         .name = "Wounding Spear",
 
+        .attack_speed = 0.15,
+
         .weapon_light = .{
-            .projectile_array = [2]?f32{ -180, 0 } ++ ([_]?f32{null} ** 14),
+            .projectile_array = [3]?f32{ -60, 0, 60 } ++ ([_]?f32{null} ** 13),
             .projectile_health = 500,
         },
         .weapon_heavy = .{
             .projectile_health = 1000,
+            .sprite = "sprites/projectiles/player/generic/heavy.png",
+        },
+        .weapon_dash = .{
+            .projectile_array = [5]?f32{ -100, -60, 0, 60, 100 } ++ ([_]?f32{null} ** 11),
+            .projectile_health = 750,
+            .projectile_speed = 720,
         },
 
         .icon = "sprites/entity/player/weapons/plates/right.png",
@@ -1891,6 +1908,7 @@ pub fn init() !void {
         .weapon_heavy = .{
             .projectile_array = [3]?f32{ -20, 0, 20 } ++ ([_]?f32{null} ** 13),
             .projectile_health = 1000,
+            .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
         .icon = e.MISSINGNO,
@@ -1914,19 +1932,11 @@ pub fn init() !void {
             .projectile_scale = e.Vec2(128, 64),
         },
         .weapon_heavy = .{
-            .projectile_array = [8]?f32{
-                -180,
-                -135,
-                -90,
-                -45,
-                0,
-                45,
-                90,
-                135,
-            } ++ ([_]?f32{null} ** 8),
+            .projectile_array = [8]?f32{ -180, -135, -90, -45, 0, 45, 90, 135 } ++ ([_]?f32{null} ** 8),
             .projectile_health = 5000,
             .projectile_scale = e.Vec2(256, 128),
             .attack_speed_modifier = 2.5,
+            .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
         .weapon_dash = .{
             .projectile_array = [1]?f32{0} ++ ([_]?f32{null} ** 15),

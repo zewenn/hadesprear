@@ -38,5 +38,15 @@
 	"Case Expression": {
 		"prefix": "caseexpression",
 		"body": "$1 => $2,\n"
+	},
+	"Callback": {
+		"prefix": "callback",
+		"body": [
+			"(struct {",
+			"\tpub fn callback() !void {",
+			"\t\t$1",
+			"\t}",
+			"}).callback"
+		]
 	}
 }

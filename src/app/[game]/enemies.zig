@@ -203,7 +203,7 @@ pub fn update() !void {
                 .weight = .light,
                 .speed = 350,
                 .damage = entity_ptr.entity_stats.?.damage,
-                .sprite = e.MISSINGNO,
+                .sprite = "sprites/projectiles/enemy/generic/light.png",
             });
 
             entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + entity_ptr.shooting_stats.?.timeout;

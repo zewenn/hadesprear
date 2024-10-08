@@ -10,6 +10,8 @@ const e = @import("../../engine/engine.m.zig");
 
 // ===================== [Events] =====================
 
+const weapons = @import("weapons.zig");
+
 const ProjectileManager = e.entities.Manager(.{ .max_entities = 2048 });
 const PLAYER_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_player_light.png";
 const PLAYER_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_player_heavy.png";
@@ -82,10 +84,21 @@ pub fn update() !void {
 
             if (projectile_data.health > 1) {
                 other.entity_stats.?.health -= projectile_data.damage * 5 * e.time.DeltaTime();
-                continue;
+            } else {
+                other.entity_stats.?.health -= projectile_data.damage;
             }
 
-            other.entity_stats.?.health -= projectile_data.damage;
+            if ((projectile_data.health <= 0 and other.entity_stats.?.health <= 0) or
+                other.entity_stats.?.health <= 0)
+            {
+                if (projectile_data.owner) |owner| {
+                    weapons.applyOnHitEffect(
+                        @ptrCast(owner),
+                        projectile_data.on_hit_effect,
+                        projectile_data.on_hit_effect_strength,
+                    );
+                }
+            }
 
             if (projectile_data.health <= 0) {
                 ProjectileManager.free(projectile_array_index);

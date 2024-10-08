@@ -1815,7 +1815,7 @@ pub fn init() !void {
 
         .level = 999,
 
-        .name = "Legendary Gloves",
+        .name = "Legendary Sword",
         .weapon_light = .{
             .projectile_array = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
         },
@@ -1864,6 +1864,7 @@ pub fn init() !void {
     _ = pickUpSort(conf.Item{
         .id = e.uuid.v7.new(),
         .T = .weapon,
+        .level = 10,
         .weapon_type = .polearm,
         .rarity = .legendary,
         .damage = 10,
@@ -1876,6 +1877,7 @@ pub fn init() !void {
         .weapon_light = .{
             .projectile_array = [3]?f32{ -60, 0, 60 } ++ ([_]?f32{null} ** 13),
             .projectile_health = 500,
+            .projectile_on_hit_effect = .energized,
         },
         .weapon_heavy = .{
             .projectile_health = 1000,

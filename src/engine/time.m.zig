@@ -9,6 +9,7 @@ const Timeout = struct {
 };
 
 var timeouts: std.ArrayList(Timeout) = undefined;
+
 var alloc: *Allocator = undefined;
 
 /// The current time in seconds
@@ -17,8 +18,8 @@ pub var currentTime: f64 = 0;
 /// The delta time in seconds
 pub var deltaTime: f64 = 0;
 
-/// The currentTime minus 
-/// the time the game was paused, in seconds. 
+/// The currentTime minus
+/// the time the game was paused, in seconds.
 pub var gameTime: f64 = 0;
 var paused = false;
 

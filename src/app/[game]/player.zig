@@ -113,6 +113,14 @@ fn summonProjectiles(
             .health = strct.projectile_health,
             .bleed_per_second = strct.projectile_bps,
             .sprite = strct.sprite,
+
+            .owner = &Player,
+            .on_hit_effect = strct.projectile_on_hit_effect,
+            .on_hit_effect_strength = @as(
+                f32,
+                @floatFromInt(inventory.equippedbar.current_weapon.level),
+            ) *
+                strct.projectile_on_hit_strength_multiplier,
         });
     }
 
@@ -210,7 +218,6 @@ pub fn update() !void {
     if (e.isKeyDown(.key_seven)) e.display.camera.zoom *= 0.99;
     if (e.isKeyDown(.key_eight)) e.display.camera.zoom *= 1.01;
 
-
     if (e.input.ui_mode) return;
     hands.equip(inventory.equippedbar.current_weapon);
 
@@ -244,14 +251,24 @@ pub fn update() !void {
             move_vector.x += 1;
         }
         if (e.isKeyPressed(.key_f)) {
-            try enemies.spawn();
+            switch (e.isKeyDown(.key_one)) {
+                true => {
+                    for (0..10) |_| {
+                        try enemies.spawn();
+                    }
+                },
+                false => try enemies.spawn(),
+            }
+        }
+        if (e.isKeyPressed(.key_q)) {
+            weapons.applyOnHitEffect(@ptrCast(&Player), .energized, 10);
         }
 
         const norm_vector = move_vector.normalize();
 
         if (Player.entity_stats.?.can_move) {
-            Player.transform.position.x += norm_vector.x * 350 * @as(f32, @floatCast(e.time.deltaTime));
-            Player.transform.position.y += norm_vector.y * 350 * @as(f32, @floatCast(e.time.deltaTime));
+            Player.transform.position.x += norm_vector.x * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
+            Player.transform.position.y += norm_vector.y * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
         }
 
         if (e.isKeyPressed(.key_space)) {

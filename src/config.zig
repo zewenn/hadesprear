@@ -50,6 +50,10 @@ pub const ProjectileData = struct {
     damage: f32 = 10,
     health: f32 = 0.01,
     bleed_per_second: f32 = 100,
+
+    owner: ?*Entity = null,
+    on_hit_effect: on_hit_effects = .none,
+    on_hit_effect_strength: f32 = 0,
 };
 
 pub const ShootingStats = struct {
@@ -61,6 +65,7 @@ pub const ShootingStats = struct {
 
 pub const EntityStats = struct {
     movement_speed: f32 = 335,
+    max_movement_speed: f32 = 1280,
 
     health: f32 = 100,
     damage: f32 = 20,
@@ -102,6 +107,13 @@ pub const ItemStats = enum {
     tenacity,
 };
 
+pub const on_hit_effects = enum {
+    none,
+    energized,
+    vamp,
+    stengthen,
+};
+
 pub const WeaponAttackTypeStats = struct {
     projectile_scale: rl.Vector2 = .{
         .x = 64,
@@ -115,6 +127,9 @@ pub const WeaponAttackTypeStats = struct {
     ///  projectile into a piercing projectile
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
+
+    projectile_on_hit_effect: on_hit_effects = .none,
+    projectile_on_hit_strength_multiplier: f32 = 1,
 
     multiplier: f32 = 1,
     sprite: []const u8 = "sprites/projectiles/player/generic/light.png",

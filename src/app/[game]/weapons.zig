@@ -113,7 +113,7 @@ pub inline fn applyOnHitEffect(
             use_timeout = true;
 
             new = en.entity_stats.?.damage * calculateStrength(strength);
-            old = en.entity_stats.?.movement_speed;
+            old = en.entity_stats.?.damage;
             en.entity_stats.?.damage = new;
         },
     }
@@ -126,7 +126,7 @@ pub inline fn applyOnHitEffect(
         .entity = en,
         .delta = delta,
         .T = effect,
-        .end_time = e.time.gameTime + strength / 10,
+        .end_time = e.time.gameTime + std.math.clamp(strength / 3, 0, 15),
     });
 }
 

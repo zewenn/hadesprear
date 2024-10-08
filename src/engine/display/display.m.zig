@@ -60,7 +60,7 @@ pub fn update() !void {
     for (entity_slice) |entity| {
         const transform = entity.transform;
 
-        if (transform.scale.x * camera.zoom <= 0 and transform.scale.y * camera.zoom <= 0) continue;
+        if (transform.scale.x * camera.zoom <= 0 or transform.scale.y * camera.zoom <= 0) continue;
 
         const display = entity.display;
 
@@ -126,12 +126,7 @@ pub fn update() !void {
             texture = entity.cached_display.?.texture.?;
         }
 
-        drawTetxure(
-            texture,
-            transform,
-            display.tint,
-            display.ignore_world_pos,
-        );
+        drawTetxure(texture, transform, display.tint, display.ignore_world_pos, entity.collider);
     }
     camera.last_zoom = camera.zoom;
 
@@ -355,6 +350,7 @@ fn drawTetxure(
     transform: entities.Transform,
     tint: rl.Color,
     ignore_cam: bool,
+    collider: ?entities.Collider,
 ) void {
     const X = GetX: {
         var x: f128 = 0;
@@ -411,14 +407,6 @@ fn drawTetxure(
     Debug: {
         if (!z.debug.debugDisplay) break :Debug;
 
-        rl.drawRectangleLines(
-            @intFromFloat(X - origin.x),
-            @intFromFloat(Y - origin.y),
-            @intFromFloat(transform.scale.x * camera.zoom),
-            @intFromFloat(transform.scale.y * camera.zoom),
-            rl.Color.lime,
-        );
-
         rl.drawLine(
             @intFromFloat(X),
             @intFromFloat(Y),
@@ -429,5 +417,209 @@ fn drawTetxure(
 
         rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
         rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
+
+        if (collider) |coll| {
+            const PC = rl.Vector2.init(
+                X + transform.scale.x * camera.zoom / 2 - coll.rect.width * camera.zoom / 2,
+                Y + transform.scale.y * camera.zoom / 2 - coll.rect.height * camera.zoom / 2,
+            );
+            const P0 = PC.add(
+                rl.Vector2
+                    .init(-coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P1 = PC.add(
+                rl.Vector2
+                    .init(coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P2 = PC.add(
+                rl.Vector2
+                    .init(-coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P3 = PC.add(
+                rl.Vector2
+                    .init(coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+
+            rl.drawCircle(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                4,
+                rl.Color.pink,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                4,
+                rl.Color.gold,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                4,
+                rl.Color.green,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                4,
+                rl.Color.sky_blue,
+            );
+
+            // P0 -> P1
+            rl.drawLine(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                rl.Color.pink,
+            );
+
+            // P1 -> P3
+            rl.drawLine(
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                rl.Color.gold,
+            );
+
+            // P0 -> P2
+            rl.drawLine(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                rl.Color.green,
+            );
+
+            // P2 -> P3
+            rl.drawLine(
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                rl.Color.sky_blue,
+            );
+            // rl.drawCircle(
+            //     @intFromFloat(
+            //         X + transform.scale.x - coll.rect.width / 2,
+            //     ),
+            //     @intFromFloat(
+            //         Y + transform.scale.y - coll.rect.height / 2,
+            //     ),
+            //     4,
+            //     rl.Color.pink,
+            // );
+        } else {
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    1,
+                    transform.scale.y * camera.zoom,
+                ),
+                origin,
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    1,
+                    transform.scale.y * camera.zoom,
+                ),
+                .{
+                    .x = origin.x - transform.scale.x * camera.zoom,
+                    .y = origin.y,
+                },
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    transform.scale.x * camera.zoom,
+                    1,
+                ),
+                origin,
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    transform.scale.x * camera.zoom,
+                    1,
+                ),
+                .{
+                    .x = origin.x,
+                    .y = origin.y - transform.scale.y * camera.zoom,
+                },
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            // rl.drawRectangleLines(
+            //     @intFromFloat(X - origin.x),
+            //     @intFromFloat(Y - origin.y),
+            //     @intFromFloat(transform.scale.x * camera.zoom),
+            //     @intFromFloat(transform.scale.y * camera.zoom),
+            //     rl.Color.lime,
+            // );
+        }
     }
 }

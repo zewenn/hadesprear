@@ -141,8 +141,8 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
             .rect = e.Rect(
                 0,
                 0,
-                64,
-                64,
+                data.scale.x,
+                data.scale.y,
             ),
         },
     };

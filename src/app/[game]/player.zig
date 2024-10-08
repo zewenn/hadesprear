@@ -38,6 +38,7 @@ pub var Player = e.entities.Entity{
 
     .entity_stats = .{
         .can_move = true,
+        .damage = 10,
     },
     .dash_modifiers = .{
         .dash_time = 0.25,
@@ -108,6 +109,7 @@ fn summonProjectiles(
             .weight = .heavy,
             .speed = strct.projectile_speed,
             .damage = Player.entity_stats.?.damage +
+                Player.entity_stats.?.damage +
                 inventory.equippedbar.get(.damage) *
                 strct.multiplier,
             .health = strct.projectile_health,

@@ -30,6 +30,10 @@ color: rl.Color = rl.Color.black,
 background: struct {
     color: ?rl.Color = null,
     image: ?[]const u8 = null,
+    fill: enum {
+        scale,
+        contain,
+    } = .scale,
 } = .{},
 
 font: struct {

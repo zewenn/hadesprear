@@ -573,6 +573,8 @@ pub fn updateGUI() !void {
         }
         button.options.hover.background.image = "sprites/gui/slot_highlight.png";
     }
+
+    if (e.input.input_mode == .Keyboard) try autoSelect();
 }
 
 pub fn logSortedBag() void {
@@ -584,6 +586,18 @@ pub fn logSortedBag() void {
             continue;
         }
         std.debug.print("null\n", .{});
+    }
+}
+
+pub fn autoSelect() !void {
+    const button = GUI.hovered_button.?;
+
+    if (button.button_interface_ptr == null) return;
+
+    if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
+        std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
+    {
+        try button.button_interface_ptr.?.callback_fn();
     }
 }
 
@@ -670,8 +684,8 @@ inline fn MainSlotButton(
         try GUI.Empty(.{
             .id = shower_id,
             .style = .{
-                .width = u("100%"),
-                .height = u("100%"),
+                .width = u("75%"),
+                .height = u("75%"),
                 .top = u("50%"),
                 .left = u("50%"),
                 .translate = .{
@@ -680,6 +694,7 @@ inline fn MainSlotButton(
                 },
                 .background = .{
                     .image = "sprites/entity/player/weapons/gloves/left.png",
+                    .fill = .contain,
                 },
             },
         }),
@@ -771,10 +786,17 @@ inline fn EquippedSlotButton(
         try GUI.Empty(.{
             .id = shower_id,
             .style = .{
-                .width = u("100%"),
-                .height = u("100%"),
+                .width = u("75%"),
+                .height = u("75%"),
+                .left = u("50%"),
+                .top = u("50%"),
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
                 .background = .{
                     .image = "sprites/entity/player/weapons/gloves/left.png",
+                    .fill = .contain,
                 },
             },
         }),
@@ -1158,6 +1180,7 @@ pub fn awake() !void {
                                         .left = u("50%"),
                                         .background = .{
                                             .image = "sprites/entity/player/weapons/gloves/left.png",
+                                            .fill = .contain,
                                         },
                                         .rotation = 135,
                                         .translate = .{
@@ -1824,7 +1847,7 @@ pub fn init() !void {
             .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
+        .icon = "sprites/weapons/steel_sword_heavy.png",
         .weapon_sprite_left = e.MISSINGNO,
         .weapon_sprite_right = "sprites/weapons/steel_sword_heavy.png",
     });
@@ -1844,7 +1867,7 @@ pub fn init() !void {
             .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
+        .icon = "sprites/weapons/steel_sword.png",
         .weapon_sprite_left = e.MISSINGNO,
         .weapon_sprite_right = "sprites/weapons/steel_sword.png",
     });
@@ -1889,7 +1912,7 @@ pub fn init() !void {
             .projectile_speed = 720,
         },
 
-        .icon = "sprites/entity/player/weapons/plates/right.png",
+        .icon = "sprites/weapons/fork.png",
         .weapon_sprite_left = e.MISSINGNO,
         .weapon_sprite_right = "sprites/weapons/fork.png",
     });
@@ -1913,7 +1936,7 @@ pub fn init() !void {
             .sprite = "sprites/projectiles/player/generic/heavy.png",
         },
 
-        .icon = e.MISSINGNO,
+        .icon = "sprites/weapons/dagger.png",
         .weapon_sprite_left = "sprites/weapons/dagger.png",
         .weapon_sprite_right = "sprites/weapons/dagger.png",
     });
@@ -1983,23 +2006,13 @@ pub fn update() !void {
         try preview.equippButtonCallback();
     }
 
-    AutoSelect: {
-        if ((e.isKeyPressed(.key_up) or
-            e.isKeyPressed(.key_down) or
-            e.isKeyPressed(.key_left) or
-            e.isKeyPressed(.key_right)) and
-            GUI.hovered_button != null)
-        {
-            const button = GUI.hovered_button.?;
-
-            if (button.button_interface_ptr == null) break :AutoSelect;
-
-            if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
-                std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
-            {
-                try button.button_interface_ptr.?.callback_fn();
-            }
-        }
+    if ((e.isKeyPressed(.key_up) or
+        e.isKeyPressed(.key_down) or
+        e.isKeyPressed(.key_left) or
+        e.isKeyPressed(.key_right)) and
+        GUI.hovered_button != null)
+    {
+        try autoSelect();
     }
 
     delete_mode_last_frame = delete_mode;

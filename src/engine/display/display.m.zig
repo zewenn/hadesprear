@@ -183,7 +183,7 @@ pub fn update() !void {
         //     }
         //     break :GetOrigin anchor;
         // };
-        const origin = transform.anchor.?;
+        var origin = transform.anchor.?;
 
         BackgroundColorRendering: {
             var background_color: rl.Color = undefined;
@@ -254,6 +254,24 @@ pub fn update() !void {
                 } else {
                     std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
                     continue;
+                }
+
+                if (style.background.fill == .contain) {
+                    const img_w: f32 = @floatFromInt(img.width);
+                    const img_h: f32 = @floatFromInt(img.height);
+
+                    const img_aspect_ratio: f32 = img_w / img_h;
+                    const transform_aspect_ration = transform.scale.x / transform.scale.y;
+
+                    if (!std.math.approxEqRel(
+                        f32,
+                        img_aspect_ratio,
+                        transform_aspect_ration,
+                        0.0001,
+                    )) {
+                        origin.x -= (transform.scale.x - transform.scale.y * img_aspect_ratio) / 2;
+                        transform.scale.x = transform.scale.y * img_aspect_ratio;
+                    }
                 }
 
                 switch (display.scaling) {
@@ -407,16 +425,35 @@ fn drawTetxure(
     Debug: {
         if (!z.debug.debugDisplay) break :Debug;
 
+        const origin_point = rl.Vector2.init(X, Y)
+            .subtract(rl.Vector2
+            .init(origin.x, origin.y)
+            .rotate(std.math.degreesToRadians(transform.rotation.z)));
+
         rl.drawLine(
             @intFromFloat(X),
             @intFromFloat(Y),
-            @intFromFloat(X - origin.x),
-            @intFromFloat(Y - origin.y),
+            @intFromFloat(origin_point.x),
+            @intFromFloat(origin_point.y),
             rl.Color.yellow,
         );
 
         rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
-        rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
+        rl.drawCircle(@intFromFloat(origin_point.x), @intFromFloat(origin_point.y), 2, rl.Color.red);
+        // rl.drawRectanglePro(
+        //     rl.Rectangle.init(
+        //         X,
+        //         Y,
+        //         5,
+        //         5,
+        //     ),
+        //     .{
+        //         .x = origin.x + 2.5,
+        //         .y = origin.y + 2.5,
+        //     },
+        //     transform.rotation.z,
+        //     rl.Color.white,
+        // );
 
         if (collider) |coll| {
             const PC = rl.Vector2.init(

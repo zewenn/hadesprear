@@ -188,8 +188,8 @@ pub fn update() !void {
         }
 
         if (entity_ptr.entity_stats.?.can_move) {
-            entity_ptr.transform.position.x += move_vec.x;
-            entity_ptr.transform.position.y += move_vec.y;
+            entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
         }
 
         if (entity_ptr.shooting_stats.?.timeout_end >= e.time.gameTime) continue;

@@ -85,8 +85,11 @@ pub inline fn applyOnHitEffect(
     const scaled_strength: f32 = (-(1 / (strength + 1)) + 1) * 10;
     if (en.entity_stats == null) return;
 
-    var delta: f32 = 0;
     var use_timeout: bool = true;
+
+    var new: f32 = 0;
+    var old: f32 = 0;
+    var delta: f32 = 0;
 
     switch (effect) {
         .none => use_timeout = false,
@@ -98,19 +101,26 @@ pub inline fn applyOnHitEffect(
         .energized => {
             use_timeout = true;
 
-            const new_ms: f32 = std.math.clamp(
+            new = std.math.clamp(
                 en.entity_stats.?.movement_speed * calculateStrength(strength),
                 -1 * en.entity_stats.?.max_movement_speed,
                 en.entity_stats.?.max_movement_speed,
             );
-            const old_ms = en.entity_stats.?.movement_speed;
-            delta = new_ms - old_ms;
-            en.entity_stats.?.movement_speed = new_ms;
+            old = en.entity_stats.?.movement_speed;
+            en.entity_stats.?.movement_speed = new;
         },
-        else => {},
+        .stengthen => {
+            use_timeout = true;
+
+            new = en.entity_stats.?.damage * calculateStrength(strength);
+            old = en.entity_stats.?.movement_speed;
+            en.entity_stats.?.damage = new;
+        },
     }
 
     if (!use_timeout) return;
+
+    delta = new - old;
 
     on_hits.malloc(.{
         .entity = en,
@@ -917,6 +927,9 @@ pub fn update() !void {
         switch (item.T) {
             .energized => {
                 item.entity.entity_stats.?.movement_speed -= item.delta;
+            },
+            .stengthen => {
+                item.entity.entity_stats.?.damage -= item.delta;
             },
             else => {},
         }

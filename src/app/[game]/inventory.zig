@@ -7,6 +7,9 @@ const GUI = e.GUI;
 const u = GUI.u;
 const toUnit = GUI.toUnit;
 
+const prefabs = @import("items.zig").prefabs;
+const usePrefab = @import("items.zig").usePrefab;
+
 const bag_pages: comptime_int = 3;
 const bag_page_rows: comptime_int = 4;
 const bag_page_cols: comptime_int = 7;
@@ -18,29 +21,7 @@ pub const Item = conf.Item;
 pub var delete_mode: bool = false;
 pub var delete_mode_last_frame: bool = false;
 
-pub var HandsWeapon = conf.Item{
-    .id = 0,
-    .T = .weapon,
-    .weapon_type = .daggers,
-
-    .damage = 10,
-    .weapon_projectile_scale_light = e.Vec2(64, 64),
-
-    .weapon_heavy = .{
-        .sprite = "sprites/projectiles/player/generic/heavy.png",
-        .attack_speed_modifier = 2,
-    },
-
-    .name = "Hands",
-    .equipped = true,
-    .unequippable = false,
-
-    .attack_speed = 0.25,
-
-    .icon = "sprites/entity/player/weapons/gloves/left.png",
-    .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-    .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-};
+pub var HandsWeapon: Item = undefined;
 
 pub var bag: [bag_size]?conf.Item = [_]?conf.Item{null} ** bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
@@ -910,6 +891,7 @@ pub fn toggle() void {
 }
 
 pub fn awake() !void {
+    HandsWeapon = usePrefab(prefabs.hands);
     // e.input.ui_mode = true;
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
@@ -1829,154 +1811,24 @@ pub fn init() !void {
     preview.select();
     preview.hideElement();
 
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .weapon,
-        .rarity = .legendary,
-        .damage = 10,
-        .weapon_projectile_scale_light = e.Vec2(64, 64),
-
-        .level = 999,
-
-        .name = "Legendary Sword",
-        .weapon_light = .{
-            .projectile_array = [5]?f32{ -90, -45, 0, 45, 90 } ++ ([_]?f32{null} ** 11),
-        },
-        .weapon_heavy = .{
-            .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
-            .sprite = "sprites/projectiles/player/generic/heavy.png",
-        },
-
-        .icon = "sprites/weapons/steel_sword_heavy.png",
-        .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = "sprites/weapons/steel_sword_heavy.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .weapon,
-        .rarity = .epic,
-        .damage = 10,
-
-        .name = "Bleeding Wounds",
-
-        .weapon_light = .{
-            .projectile_health = 500,
-        },
-        .weapon_heavy = .{
-            .projectile_health = 1000,
-            .sprite = "sprites/projectiles/player/generic/heavy.png",
-        },
-
-        .icon = "sprites/weapons/steel_sword.png",
-        .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = "sprites/weapons/steel_sword.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .amethyst,
-        .rarity = .epic,
-        .damage = 10,
-        .weapon_projectile_scale_light = e.Vec2(64, 64),
-
-        .name = "Epic Amethyst",
-
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .weapon,
-        .level = 10,
-        .weapon_type = .polearm,
-        .rarity = .legendary,
-        .damage = 10,
-        .weapon_projectile_scale_light = e.Vec2(64, 64),
-
-        .name = "Wounding Spear",
-
-        .attack_speed = 0.15,
-
-        .weapon_light = .{
-            .projectile_array = [3]?f32{ -60, 0, 60 } ++ ([_]?f32{null} ** 13),
-            .projectile_health = 500,
-            .projectile_on_hit_effect = .energized,
-        },
-        .weapon_heavy = .{
-            .projectile_health = 1000,
-            .sprite = "sprites/projectiles/player/generic/heavy.png",
-        },
-        .weapon_dash = .{
-            .projectile_array = [5]?f32{ -100, -60, 0, 60, 100 } ++ ([_]?f32{null} ** 11),
-            .projectile_health = 750,
-            .projectile_speed = 720,
-        },
-
-        .icon = "sprites/weapons/fork.png",
-        .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = "sprites/weapons/fork.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .weapon,
-        .weapon_type = .daggers,
-        .rarity = .legendary,
-        .damage = 10,
-        .weapon_projectile_scale_light = e.Vec2(64, 64),
-
-        .name = "Daggers of the Gods",
-
-        .weapon_light = .{
-            .projectile_array = [2]?f32{ -20, 20 } ++ ([_]?f32{null} ** 14),
-            .projectile_health = 500,
-        },
-        .weapon_heavy = .{
-            .projectile_array = [3]?f32{ -20, 0, 20 } ++ ([_]?f32{null} ** 13),
-            .projectile_health = 1000,
-            .sprite = "sprites/projectiles/player/generic/heavy.png",
-        },
-
-        .icon = "sprites/weapons/dagger.png",
-        .weapon_sprite_left = "sprites/weapons/dagger.png",
-        .weapon_sprite_right = "sprites/weapons/dagger.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .id = e.uuid.v7.new(),
-        .T = .weapon,
-        .weapon_type = .claymore,
-        .rarity = .legendary,
-        .damage = 120,
-        .weapon_projectile_scale_light = e.Vec2(64, 128),
-
-        .name = "Claymore",
-        .attack_speed = 1,
-
-        .weapon_light = .{
-            .projectile_array = [4]?f32{ -180, -90, 0, 90 } ++ ([_]?f32{null} ** 12),
-            .projectile_health = 2000,
-            .projectile_scale = e.Vec2(128, 64),
-            .projectile_on_hit_effect = .stengthen,
-        },
-        .weapon_heavy = .{
-            .projectile_array = [8]?f32{ -180, -135, -90, -45, 0, 45, 90, 135 } ++ ([_]?f32{null} ** 8),
-            .projectile_health = 5000,
-            .projectile_scale = e.Vec2(256, 128),
-            .attack_speed_modifier = 2.5,
-            .sprite = "sprites/projectiles/player/generic/heavy.png",
-            .projectile_on_hit_effect = .stengthen,
-        },
-        .weapon_dash = .{
-            .projectile_array = [1]?f32{0} ++ ([_]?f32{null} ** 15),
-            .projectile_health = 3500,
-            .projectile_scale = e.Vec2(385, 128),
-            .attack_speed_modifier = 2,
-            .projectile_speed = 720,
-        },
-
-        .icon = "sprites/weapons/claymore.png",
-        .weapon_sprite_left = e.MISSINGNO,
-        .weapon_sprite_right = "sprites/weapons/claymore.png",
-    });
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.legendary_sword),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.epics.weapons.piercing_sword),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.epics.amethysts.test_amethyst),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.trident),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.daggers),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.claymore),
+    );
 
     sortBag();
     try updateGUI();

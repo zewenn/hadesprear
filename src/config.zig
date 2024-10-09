@@ -137,7 +137,8 @@ pub const WeaponAttackTypeStats = struct {
 };
 
 pub const Item = struct {
-    id: u128,
+    /// If id is 0 the Item is a prefab and should not be modified without cloning
+    id: u128 = 0,
 
     T: ItemTypes = .weapon,
     rarity: enum {

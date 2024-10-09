@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const rlz = @import("raylib-zig");
 const Allocator = @import("std").mem.Allocator;
 const String = @import("./src/engine/strings.m.zig").String;
@@ -37,17 +38,32 @@ pub fn build(b: *std.Build) !void {
         }
 
         var writer = output_file.writer();
-        writer.writeAll("") catch unreachable;
-        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
+        writer.writeAll("") catch break :Filenames;
+        _ = writer.write("pub const Filenames = [_][]const u8{\n") catch break :Filenames;
 
         for (res, 0..) |item, i| {
             if (i == 0) {
-                _ = writer.write("\t\"") catch unreachable;
+                _ = writer.write("\t\"") catch break :Filenames;
             } else {
-                _ = writer.write("\",\n\t\"") catch unreachable;
+                _ = writer.write("\",\n\t\"") catch break :Filenames;
             }
 
-            writer.print("{s}", .{item.name}) catch unreachable;
+            switch (builtin.os.tag) {
+                .windows => {
+                    const str = try allocator.alloc(u8, item.name.len);
+                    defer allocator.free(str);
+
+                    std.mem.copyForwards(u8, str, item.name);
+
+                    const owned = std.mem.replaceOwned(u8, allocator, item.name, "\\", "/") catch break :Filenames;
+                    defer allocator.free(owned);
+
+                    writer.print("{s}", .{owned}) catch break :Filenames;
+                },
+                else => {
+                    writer.print("{s}", .{item.name}) catch break :Filenames;
+                },
+            }
 
             if (i == res.len - 1) {
                 _ = writer.write("\"") catch unreachable;
@@ -95,8 +111,7 @@ pub fn build(b: *std.Build) !void {
 
         var writer = output_file.writer();
         writer.writeAll("") catch unreachable;
-        _ = writer.write("const Import = @import(\"./imports.zig\").Import;\n\n") catch unreachable;
-        _ = writer.write("const sc = Import(.scenes);\n\n") catch unreachable;
+        _ = writer.write("const sc = @import(\"../engine/scenes.m.zig\");\n\n") catch unreachable;
         _ = writer.write("pub fn register() !void {\n") catch unreachable;
 
         var files_dirs = getEntries("./src/app/", &allocator);
@@ -197,92 +212,6 @@ pub fn build(b: *std.Build) !void {
         }
         _ = writer.write("\n}") catch unreachable;
         break :Scenes;
-    }
-
-    ModuleImports: {
-        const modules = getAllModules(&allocator) catch break :ModuleImports;
-        defer allocator.free(modules);
-
-        var EnumString = String.init(allocator);
-        defer EnumString.deinit();
-
-        EnumString.concat("const InternalLibrarires = enum {\n") catch break :ModuleImports;
-
-        var FnString = String.init(allocator);
-        defer FnString.deinit();
-
-        FnString.concat("pub inline fn Import(comptime lib: InternalLibrarires) type {\n") catch break :ModuleImports;
-        FnString.concat("\treturn switch (lib) {\n") catch break :ModuleImports;
-
-        for (modules) |*module| {
-            defer module.destory();
-
-            EnumString.concat("\t") catch break :ModuleImports;
-            EnumString.concat(module.name) catch break :ModuleImports;
-            EnumString.concat(",\n") catch break :ModuleImports;
-
-            FnString.concat("\t\t") catch break :ModuleImports;
-            FnString.concat(".") catch break :ModuleImports;
-            FnString.concat(module.name) catch break :ModuleImports;
-            FnString.concat(" => ") catch break :ModuleImports;
-            FnString.concat("@import(\"") catch break :ModuleImports;
-            FnString.concat(module.abs_path) catch break :ModuleImports;
-            FnString.concat("\"),\n") catch break :ModuleImports;
-        }
-
-        EnumString.concat("};\n") catch break :ModuleImports;
-
-        FnString.concat("\t};\n") catch break :ModuleImports;
-        FnString.concat("\n}\n") catch break :ModuleImports;
-
-        const enum_slice = EnumString.toOwned() catch break :ModuleImports;
-        defer allocator.free(enum_slice.?);
-
-        const fn_slice = FnString.toOwned() catch break :ModuleImports;
-        defer allocator.free(fn_slice.?);
-
-        if (enum_slice == null or fn_slice == null) break :ModuleImports;
-
-        const cwd = std.fs.cwd();
-
-        const file = cwd.createFile("src/.temp/imports.zig", .{}) catch break :ModuleImports;
-        defer file.close();
-
-        file.writeAll("") catch break :ModuleImports;
-        _ = file.write(enum_slice.?) catch break :ModuleImports;
-        _ = file.write(fn_slice.?) catch break :ModuleImports;
-
-        // const InternalLibrarires = enum {
-        //     animator,
-        //     display,
-        //     ecs,
-        //     gui,
-        //     z,
-        //     assets,
-        //     collision,
-        //     engine,
-        //     events,
-        //     scenes,
-        //     time,
-        // };
-
-        // pub inline fn Import(comptime lib: InternalLibrarires) type {
-        //     return switch (lib) {
-        //         .animator => @import("./animator/Animator.zig"),
-        //         .display => @import("./display/display.zig"),
-        //         .entities => @import("./ecs/ecs.zig"),
-        //         .gui => @import("./gui/gui.zig"),
-        //         .z => @import("./z/z.zig"),
-        //         .assets => @import("./assets.zig"),
-        //         .collision => @import("./collision.zig"),
-        //         .engine => @import("./engine.zig"),
-        //         .events => @import("./events.zig"),
-        //         .scenes => @import("./scenes.zig"),
-        //         .time => @import("./time.zig"),
-        //     };
-        // }
-
-        break :ModuleImports;
     }
 
     const target = b.standardTargetOptions(.{});

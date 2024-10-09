@@ -1,11 +1,9 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
-const entities = Import(.ecs);
-const z = Import(.z);
-const input = Import(.input);
+const entities = @import("../engine.m.zig").entities;
+const z = @import("../z/z.m.zig");
+const input = @import("../input.m.zig");
 
 pub const GUIElement = @import("GUIElement.zig");
 pub const StyleSheet = @import("StyleSheet.zig");
@@ -325,7 +323,6 @@ pub fn Button(options: GUIElement.Options, text: [*:0]const u8, grid_pos: rl.Vec
 
     var O = options;
     if (z.eql(O.hover, StyleSheet{})) {
-        std.log.debug("lol", .{});
         O.hover = StyleSheet{
             .font = .{
                 .size = O.style.font.size + 1,

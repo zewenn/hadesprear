@@ -1,7 +1,8 @@
 const entities_module = @import("./engine/entities/entities.m.zig");
 const rl = @import("raylib");
+const uuid = @import("uuid");
 
-pub const entities = entities_module.make(struct {
+pub const Entity = struct {
     const Self = @This();
 
     id: []const u8,
@@ -28,7 +29,9 @@ pub const entities = entities_module.make(struct {
             }
         }
     }
-});
+};
+
+pub const entities = entities_module.make(Entity);
 
 pub const ProjectileData = struct {
     lifetime_end: f64,
@@ -40,10 +43,17 @@ pub const ProjectileData = struct {
         light,
         heavy,
     },
+    sprite: []const u8,
     speed: f32,
     direction: f32,
     scale: rl.Vector2,
     damage: f32 = 10,
+    health: f32 = 0.01,
+    bleed_per_second: f32 = 100,
+
+    owner: ?*Entity = null,
+    on_hit_effect: on_hit_effects = .none,
+    on_hit_effect_strength: f32 = 0,
 };
 
 pub const ShootingStats = struct {
@@ -55,6 +65,7 @@ pub const ShootingStats = struct {
 
 pub const EntityStats = struct {
     movement_speed: f32 = 335,
+    max_movement_speed: f32 = 1280,
 
     health: f32 = 100,
     damage: f32 = 20,
@@ -87,13 +98,64 @@ pub const ItemTypes = enum {
     wayfinder,
 };
 
+pub const ItemStats = enum {
+    damage,
+    health,
+    crit_rate,
+    crit_damage,
+    movement_speed,
+    tenacity,
+};
+
+pub const on_hit_effects = enum {
+    none,
+    energized,
+    vamp,
+    stengthen,
+};
+
+pub const WeaponAttackTypeStats = struct {
+    projectile_scale: rl.Vector2 = .{
+        .x = 64,
+        .y = 64,
+    },
+    projectile_speed: f32 = 450,
+    projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
+    projectile_lifetime: f32 = 2,
+
+    /// Any projectile_health above 1 will make the
+    ///  projectile into a piercing projectile
+    projectile_health: f32 = 0.01,
+    projectile_bps: f32 = 100,
+
+    projectile_on_hit_effect: on_hit_effects = .none,
+    projectile_on_hit_strength_multiplier: f32 = 1,
+
+    multiplier: f32 = 1,
+    sprite: []const u8 = "sprites/projectiles/player/generic/light.png",
+    attack_speed_modifier: f32 = 1,
+};
+
 pub const Item = struct {
+    /// If id is 0 the Item is a prefab and should not be modified without cloning
+    id: u128 = 0,
+
     T: ItemTypes = .weapon,
     rarity: enum {
         common,
         epic,
         legendary,
     } = .common,
+
+    // This is obviously not applicable to any non-weapons
+    weapon_type: enum {
+        sword,
+        polearm,
+        daggers,
+        claymore,
+        special,
+    } = .sword,
+
     equipped: bool = false,
     unequippable: bool = true,
 
@@ -111,7 +173,27 @@ pub const Item = struct {
     movement_speed: f32 = 0,
     dash_charges: f32 = 0,
 
-    weapon_projectile_scale: rl.Vector2,
+    /// Smaller better
+    attack_speed: f32 = 0.25,
+
+    weapon_light: WeaponAttackTypeStats = .{},
+    weapon_heavy: WeaponAttackTypeStats = .{
+        .multiplier = 1.5,
+        .attack_speed_modifier = 2,
+    },
+    weapon_dash: WeaponAttackTypeStats = .{
+        .projectile_scale = .{
+            .x = 128,
+            .y = 64,
+        },
+        .multiplier = 1.25,
+        .attack_speed_modifier = 1.5,
+    },
+
+    weapon_projectile_scale_light: rl.Vector2 = .{
+        .x = 64,
+        .y = 64,
+    },
 
     name: [*:0]const u8,
 

@@ -1,12 +1,10 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const Keyframe = @import("Keyframe.zig");
 const Number = @import("interpolation.zig").Number;
 
-const time = Import(.time);
-const z = Import(.z);
+const time = @import("../time.m.zig");
+const z = @import("../z/z.m.zig");
 
 const Self = @This();
 
@@ -70,6 +68,10 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     }
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
+    self.recalculateTransitionTimePerKeyFrame();
+}
+
+pub fn recalculateTransitionTimePerKeyFrame(self: *Self) void {
     switch (self.mode) {
         .forwards => std.sort.insertion(
             u8,
@@ -141,6 +143,18 @@ pub fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, percent: 
     if (kf1.y) |v1| {
         if (kf2.y) |v2| {
             new_kf.y = self.timing_fn(v1, v2, percent);
+        }
+    }
+
+    if (kf1.rx) |v1| {
+        if (kf2.rx) |v2| {
+            new_kf.rx = self.timing_fn(v1, v2, percent);
+        }
+    }
+
+    if (kf1.ry) |v1| {
+        if (kf2.ry) |v2| {
+            new_kf.ry = self.timing_fn(v1, v2, percent);
         }
     }
 

@@ -1,7 +1,5 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
-const e = Import(.engine);
+const e = @import("../../engine/engine.m.zig");
 
 // ===================== [Entity] =====================
 

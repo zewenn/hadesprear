@@ -1,5 +1,3 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
@@ -10,8 +8,8 @@ pub const Keyframe = @import("Keyframe.zig");
 pub const Animation = @import("Animation.zig");
 pub const Number = interpolation.Number;
 
-const time = Import(.time);
-const z = Import(.z);
+const time = @import("../time.m.zig");
+const z = @import("../z/z.m.zig");
 
 const Self = @This();
 
@@ -55,8 +53,8 @@ pub fn play(self: *Self, id: []const u8) !void {
         try self.playing.append(animation);
         animation.playing = true;
         animation.current_frame = 0;
-        animation.last_keyframe_at = time.currentTime;
-        animation.next_keyframe_at = time.currentTime + animation.transition_time_ms_per_kf;
+        animation.last_keyframe_at = time.gameTime;
+        animation.next_keyframe_at = time.gameTime + animation.transition_time_ms_per_kf;
     }
 }
 
@@ -94,6 +92,14 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
     }
 
     // Rotation
+    if (kf.rx) |v| {
+        self.transform.rotation.x = v;
+    }
+
+    if (kf.ry) |v| {
+        self.transform.rotation.y = v;
+    }
+
     if (kf.rotation) |v| {
         self.transform.rotation.z = v;
     }
@@ -123,15 +129,15 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
 pub fn update(self: *Self) void {
     for (self.playing.items) |anim| {
-        if (time.currentTime > anim.next_keyframe_at) {
+        if (time.gameTime > anim.next_keyframe_at) {
             anim.next();
             if (!anim.playing) {
                 self.stop(anim.id);
                 break;
             }
 
-            anim.last_keyframe_at = time.currentTime;
-            anim.next_keyframe_at = time.currentTime + anim.transition_time_ms_per_kf;
+            anim.last_keyframe_at = time.gameTime;
+            anim.next_keyframe_at = time.gameTime + anim.transition_time_ms_per_kf;
         }
 
         const current_kf = anim.getCurrent();
@@ -149,7 +155,7 @@ pub fn update(self: *Self) void {
 
         const p: f32 = 1 - @as(
             f32,
-            @floatCast(anim.next_keyframe_at - time.currentTime),
+            @floatCast(anim.next_keyframe_at - time.gameTime),
         ) / @as(
             f32,
             @floatCast(anim.transition_time_ms_per_kf),

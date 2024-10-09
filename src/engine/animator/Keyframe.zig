@@ -1,5 +1,3 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
@@ -15,6 +13,8 @@ x: ?f32 = null,
 y: ?f32 = null,
 
 // Rotation
+rx: ?f32 = null,
+ry: ?f32 = null,
 rotation: ?f32 = null,
 
 // Scale

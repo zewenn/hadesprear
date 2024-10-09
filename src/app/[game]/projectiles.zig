@@ -1,8 +1,6 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const config = @import("../../config.zig");
-const e = Import(.engine);
+const e = @import("../../engine/engine.m.zig");
 
 // ===================== [Entity] =====================
 
@@ -11,6 +9,8 @@ const e = Import(.engine);
 // ===================== [Others] =====================
 
 // ===================== [Events] =====================
+
+const weapons = @import("weapons.zig");
 
 const ProjectileManager = e.entities.Manager(.{ .max_entities = 2048 });
 const PLAYER_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_player_light.png";
@@ -41,9 +41,9 @@ pub fn update() !void {
             continue;
         }
 
-        const projectile_data = entity_ptr.projectile_data.?;
+        const projectile_data = &(entity_ptr.projectile_data.?);
 
-        if (projectile_data.lifetime_end < e.time.currentTime) {
+        if (projectile_data.lifetime_end < e.time.gameTime) {
             ProjectileManager.free(projectile_array_index);
             continue;
         }
@@ -80,10 +80,30 @@ pub fn update() !void {
                 continue;
             }
 
-            other.entity_stats.?.health -= projectile_data.damage;
+            projectile_data.health -= projectile_data.bleed_per_second * e.time.DeltaTime();
 
-            ProjectileManager.free(projectile_array_index);
-            continue :projectile_loop;
+            if (projectile_data.health > 1) {
+                other.entity_stats.?.health -= projectile_data.damage * 5 * e.time.DeltaTime();
+            } else {
+                other.entity_stats.?.health -= projectile_data.damage;
+            }
+
+            if ((projectile_data.health <= 0 and other.entity_stats.?.health <= 0) or
+                other.entity_stats.?.health <= 0)
+            {
+                if (projectile_data.owner) |owner| {
+                    weapons.applyOnHitEffect(
+                        @ptrCast(owner),
+                        projectile_data.on_hit_effect,
+                        projectile_data.on_hit_effect_strength,
+                    );
+                }
+            }
+
+            if (projectile_data.health <= 0) {
+                ProjectileManager.free(projectile_array_index);
+                continue :projectile_loop;
+            }
         }
     }
 }
@@ -111,16 +131,7 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
         },
         .display = .{
             .scaling = .pixelate,
-            .sprite = switch (data.side) {
-                .player => switch (data.weight) {
-                    .light => PLAYER_PROJECTILE_LIGHT_SPRITE,
-                    .heavy => PLAYER_PROJECTILE_HEAVY_SPRITE,
-                },
-                .enemy => switch (data.weight) {
-                    .light => ENEMY_PROJECTILE_LIGHT_SPRITE,
-                    .heavy => ENEMY_PROJECTILE_HEAVY_SPRITE,
-                },
-            },
+            .sprite = data.sprite,
         },
         .projectile_data = data,
         .collider = .{
@@ -130,8 +141,8 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
             .rect = e.Rect(
                 0,
                 0,
-                64,
-                64,
+                data.scale.x,
+                data.scale.y,
             ),
         },
     };

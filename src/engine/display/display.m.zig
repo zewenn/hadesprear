@@ -1,15 +1,13 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-const assets = Import(.assets);
+const assets = @import("../assets.m.zig");
 const entities = @import("../engine.m.zig").entities;
-const GUI = Import(.gui);
-const input = Import(.input);
+const GUI = @import("../gui/gui.m.zig");
+const input = @import("../input.m.zig");
 
 const rl = @import("raylib");
-const z = Import(.z);
+const z = @import("../z/z.m.zig");
 
 // ==================================================
 
@@ -25,12 +23,12 @@ fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
 
     return (
     //
-        lsh_transform.position.y -
+        lsh_transform.position.y * camera.zoom -
         if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
     //
     ) < (
     //
-        rsh_transform.position.y -
+        rsh_transform.position.y * camera.zoom -
         if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
     //
     );
@@ -61,6 +59,9 @@ pub fn update() !void {
 
     for (entity_slice) |entity| {
         const transform = entity.transform;
+
+        if (transform.scale.x * camera.zoom <= 0 or transform.scale.y * camera.zoom <= 0) continue;
+
         const display = entity.display;
 
         var img: rl.Image = undefined;
@@ -84,7 +85,7 @@ pub fn update() !void {
             break :Decide true;
         };
 
-        if (use_previous and entity.cached_display != null) {
+        if ((use_previous and entity.cached_display != null) and camera.zoom == camera.last_zoom) {
             img = rl.imageCopy(entity.cached_display.?.img.?);
             texture = entity.cached_display.?.texture.?;
         } else {
@@ -94,12 +95,11 @@ pub fn update() !void {
                 std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
                 continue;
             }
-
             switch (display.scaling) {
                 .normal => rl.imageResize(
                     &img,
-                    @intFromFloat(transform.scale.x * camera.zoom),
-                    @intFromFloat(transform.scale.y * camera.zoom),
+                    @intFromFloat(transform.scale.x),
+                    @intFromFloat(transform.scale.y),
                 ),
                 .pixelate => rl.imageResizeNN(
                     &img,
@@ -126,13 +126,9 @@ pub fn update() !void {
             texture = entity.cached_display.?.texture.?;
         }
 
-        drawTetxure(
-            texture,
-            transform,
-            display.tint,
-            display.ignore_world_pos,
-        );
+        drawTetxure(texture, transform, display.tint, display.ignore_world_pos, entity.collider);
     }
+    camera.last_zoom = camera.zoom;
 
     // ==============================================
 
@@ -187,9 +183,7 @@ pub fn update() !void {
         //     }
         //     break :GetOrigin anchor;
         // };
-        const origin = transform.anchor.?.multiply(
-            rl.Vector2.init(camera.zoom, camera.zoom),
-        );
+        var origin = transform.anchor.?;
 
         BackgroundColorRendering: {
             var background_color: rl.Color = undefined;
@@ -212,6 +206,8 @@ pub fn update() !void {
 
         BacgroundImageRendering: {
             if (style.background.image == null) break :BacgroundImageRendering;
+
+            if (transform.scale.x <= 0 or transform.scale.y <= 0) break :BacgroundImageRendering;
 
             const display: entities.Display = .{
                 .sprite = style.background.image.?,
@@ -260,16 +256,34 @@ pub fn update() !void {
                     continue;
                 }
 
+                if (style.background.fill == .contain) {
+                    const img_w: f32 = @floatFromInt(img.width);
+                    const img_h: f32 = @floatFromInt(img.height);
+
+                    const img_aspect_ratio: f32 = img_w / img_h;
+                    const transform_aspect_ration = transform.scale.x / transform.scale.y;
+
+                    if (!std.math.approxEqRel(
+                        f32,
+                        img_aspect_ratio,
+                        transform_aspect_ration,
+                        0.0001,
+                    )) {
+                        origin.x -= (transform.scale.x - transform.scale.y * img_aspect_ratio) / 2;
+                        transform.scale.x = transform.scale.y * img_aspect_ratio;
+                    }
+                }
+
                 switch (display.scaling) {
                     .normal => rl.imageResize(
                         &img,
-                        @intFromFloat(transform.scale.x * camera.zoom),
-                        @intFromFloat(transform.scale.y * camera.zoom),
+                        @intFromFloat(transform.scale.x),
+                        @intFromFloat(transform.scale.y),
                     ),
                     .pixelate => rl.imageResizeNN(
                         &img,
-                        @intFromFloat(transform.scale.x * camera.zoom),
-                        @intFromFloat(transform.scale.y * camera.zoom),
+                        @intFromFloat(transform.scale.x),
+                        @intFromFloat(transform.scale.y),
                     ),
                 }
                 if (element.cached_display) |cached| {
@@ -354,49 +368,54 @@ fn drawTetxure(
     transform: entities.Transform,
     tint: rl.Color,
     ignore_cam: bool,
+    collider: ?entities.Collider,
 ) void {
     const X = GetX: {
         var x: f128 = 0;
         x = z.math.div(window.size.x, 2).?;
-        x += z.math.to_f128(transform.position.x).?;
-        if (!ignore_cam) x -= z.math.to_f128(camera.position.x).?;
+        x += z.math.to_f128(transform.position.x).? * camera.zoom;
+        if (!ignore_cam)
+            x -= z.math.to_f128(camera.position.x).? * camera.zoom;
 
         break :GetX z.math.f128_to(f32, x).?;
     };
 
     const Y = GetY: {
         var y = z.math.div(window.size.y, 2).?;
-        y += z.math.to_f128(transform.position.y).?;
+        y += z.math.to_f128(transform.position.y).? * camera.zoom;
         if (!ignore_cam)
-            y -= z.math.to_f128(camera.position.y).?;
+            y -= z.math.to_f128(camera.position.y).? * camera.zoom;
 
         break :GetY z.math.f128_to(f32, y).?;
     };
 
     const origin: rl.Vector2 = if (transform.anchor) |anchor|
-        anchor
+        anchor.multiply(
+            rl.Vector2.init(
+                camera.zoom,
+                camera.zoom,
+            ),
+        )
     else
         rl.Vector2.init(
             transform.scale.x * camera.zoom / 2,
             transform.scale.y * camera.zoom / 2,
         );
 
-    rl.drawRectanglePro(
+    rl.drawTexturePro(
+        texture,
+        rl.Rectangle.init(
+            0,
+            0,
+            transform.scale.x * camera.zoom,
+            transform.scale.y * camera.zoom,
+        ),
         rl.Rectangle.init(
             X,
             Y,
-            (transform.scale.x),
-            (transform.scale.y),
+            transform.scale.x * camera.zoom,
+            transform.scale.y * camera.zoom,
         ),
-        origin,
-        transform.rotation.z,
-        rl.Color.red,
-    );
-
-    rl.drawTexturePro(
-        texture,
-        rl.Rectangle.init(0, 0, transform.scale.x, transform.scale.y),
-        rl.Rectangle.init(X, Y, transform.scale.x, transform.scale.y),
         origin,
         transform.rotation.z,
         tint,
@@ -406,23 +425,238 @@ fn drawTetxure(
     Debug: {
         if (!z.debug.debugDisplay) break :Debug;
 
-        rl.drawRectangleLines(
-            @intFromFloat(X - origin.x),
-            @intFromFloat(Y - origin.y),
-            @intFromFloat(transform.scale.x),
-            @intFromFloat(transform.scale.y),
-            rl.Color.lime,
-        );
+        const origin_point = rl.Vector2.init(X, Y)
+            .subtract(rl.Vector2
+            .init(origin.x, origin.y)
+            .rotate(std.math.degreesToRadians(transform.rotation.z)));
 
         rl.drawLine(
             @intFromFloat(X),
             @intFromFloat(Y),
-            @intFromFloat(X - origin.x),
-            @intFromFloat(Y - origin.y),
+            @intFromFloat(origin_point.x),
+            @intFromFloat(origin_point.y),
             rl.Color.yellow,
         );
 
         rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
-        rl.drawCircle(@intFromFloat(X - origin.x), @intFromFloat(Y - origin.y), 2, rl.Color.red);
+        rl.drawCircle(@intFromFloat(origin_point.x), @intFromFloat(origin_point.y), 2, rl.Color.red);
+        // rl.drawRectanglePro(
+        //     rl.Rectangle.init(
+        //         X,
+        //         Y,
+        //         5,
+        //         5,
+        //     ),
+        //     .{
+        //         .x = origin.x + 2.5,
+        //         .y = origin.y + 2.5,
+        //     },
+        //     transform.rotation.z,
+        //     rl.Color.white,
+        // );
+
+        if (collider) |coll| {
+            const PC = rl.Vector2.init(
+                X + transform.scale.x * camera.zoom / 2 - coll.rect.width * camera.zoom / 2,
+                Y + transform.scale.y * camera.zoom / 2 - coll.rect.height * camera.zoom / 2,
+            );
+            const P0 = PC.add(
+                rl.Vector2
+                    .init(-coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P1 = PC.add(
+                rl.Vector2
+                    .init(coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P2 = PC.add(
+                rl.Vector2
+                    .init(-coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+            const P3 = PC.add(
+                rl.Vector2
+                    .init(coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
+                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            );
+
+            rl.drawCircle(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                4,
+                rl.Color.pink,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                4,
+                rl.Color.gold,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                4,
+                rl.Color.green,
+            );
+            rl.drawCircle(
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                4,
+                rl.Color.sky_blue,
+            );
+
+            // P0 -> P1
+            rl.drawLine(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                rl.Color.pink,
+            );
+
+            // P1 -> P3
+            rl.drawLine(
+                @intFromFloat(
+                    P1.x,
+                ),
+                @intFromFloat(
+                    P1.y,
+                ),
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                rl.Color.gold,
+            );
+
+            // P0 -> P2
+            rl.drawLine(
+                @intFromFloat(
+                    P0.x,
+                ),
+                @intFromFloat(
+                    P0.y,
+                ),
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                rl.Color.green,
+            );
+
+            // P2 -> P3
+            rl.drawLine(
+                @intFromFloat(
+                    P2.x,
+                ),
+                @intFromFloat(
+                    P2.y,
+                ),
+                @intFromFloat(
+                    P3.x,
+                ),
+                @intFromFloat(
+                    P3.y,
+                ),
+                rl.Color.sky_blue,
+            );
+            // rl.drawCircle(
+            //     @intFromFloat(
+            //         X + transform.scale.x - coll.rect.width / 2,
+            //     ),
+            //     @intFromFloat(
+            //         Y + transform.scale.y - coll.rect.height / 2,
+            //     ),
+            //     4,
+            //     rl.Color.pink,
+            // );
+        } else {
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    1,
+                    transform.scale.y * camera.zoom,
+                ),
+                origin,
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    1,
+                    transform.scale.y * camera.zoom,
+                ),
+                .{
+                    .x = origin.x - transform.scale.x * camera.zoom,
+                    .y = origin.y,
+                },
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    transform.scale.x * camera.zoom,
+                    1,
+                ),
+                origin,
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            rl.drawRectanglePro(
+                rl.Rectangle.init(
+                    X,
+                    Y,
+                    transform.scale.x * camera.zoom,
+                    1,
+                ),
+                .{
+                    .x = origin.x,
+                    .y = origin.y - transform.scale.y * camera.zoom,
+                },
+                transform.rotation.z,
+                rl.Color.lime,
+            );
+            // rl.drawRectangleLines(
+            //     @intFromFloat(X - origin.x),
+            //     @intFromFloat(Y - origin.y),
+            //     @intFromFloat(transform.scale.x * camera.zoom),
+            //     @intFromFloat(transform.scale.y * camera.zoom),
+            //     rl.Color.lime,
+            // );
+        }
     }
 }

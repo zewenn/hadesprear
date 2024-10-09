@@ -7,6 +7,9 @@ const GUI = e.GUI;
 const u = GUI.u;
 const toUnit = GUI.toUnit;
 
+const prefabs = @import("items.zig").prefabs;
+const usePrefab = @import("items.zig").usePrefab;
+
 const bag_pages: comptime_int = 3;
 const bag_page_rows: comptime_int = 4;
 const bag_page_cols: comptime_int = 7;
@@ -18,25 +21,13 @@ pub const Item = conf.Item;
 pub var delete_mode: bool = false;
 pub var delete_mode_last_frame: bool = false;
 
-pub var Hands = conf.Item{
-    .T = .weapon,
-    .damage = 10,
-    .weapon_projectile_scale = e.Vec2(64, 64),
-
-    .name = "Hands",
-    .equipped = true,
-    .unequippable = false,
-
-    .icon = "sprites/entity/player/weapons/gloves/left.png",
-    .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-    .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-};
+pub var HandsWeapon: Item = undefined;
 
 pub var bag: [bag_size]?conf.Item = [_]?conf.Item{null} ** bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
 
-const equippedbar = struct {
-    pub var current_weapon: *Item = &Hands;
+pub const equippedbar = struct {
+    pub var current_weapon: *Item = &HandsWeapon;
     pub var ring: ?*Item = null;
     pub var amethyst: ?*Item = null;
     pub var wayfinder: ?*Item = null;
@@ -68,13 +59,23 @@ const equippedbar = struct {
         item.equipped = false;
         switch (item.T) {
             .weapon => {
-                current_weapon = &Hands;
-                Hands.equipped = true;
+                current_weapon = &HandsWeapon;
+                HandsWeapon.equipped = true;
             },
             .ring => ring = null,
             .amethyst => amethyst = null,
             .wayfinder => wayfinder = null,
         }
+    }
+
+    pub fn get(T: conf.ItemStats) f32 {
+        return switch (T) {
+            .damage => current_weapon.damage +
+                if (ring) |r| r.damage else 0 +
+                if (amethyst) |r| r.damage else 0 +
+                if (wayfinder) |r| r.damage else 0,
+            else => 0,
+        };
     }
 };
 
@@ -553,6 +554,8 @@ pub fn updateGUI() !void {
         }
         button.options.hover.background.image = "sprites/gui/slot_highlight.png";
     }
+
+    if (e.input.input_mode == .Keyboard) try autoSelect();
 }
 
 pub fn logSortedBag() void {
@@ -564,6 +567,18 @@ pub fn logSortedBag() void {
             continue;
         }
         std.debug.print("null\n", .{});
+    }
+}
+
+pub fn autoSelect() !void {
+    const button = GUI.hovered_button.?;
+
+    if (button.button_interface_ptr == null) return;
+
+    if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
+        std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
+    {
+        try button.button_interface_ptr.?.callback_fn();
     }
 }
 
@@ -650,8 +665,8 @@ inline fn MainSlotButton(
         try GUI.Empty(.{
             .id = shower_id,
             .style = .{
-                .width = u("100%"),
-                .height = u("100%"),
+                .width = u("75%"),
+                .height = u("75%"),
                 .top = u("50%"),
                 .left = u("50%"),
                 .translate = .{
@@ -660,6 +675,7 @@ inline fn MainSlotButton(
                 },
                 .background = .{
                     .image = "sprites/entity/player/weapons/gloves/left.png",
+                    .fill = .contain,
                 },
             },
         }),
@@ -734,7 +750,7 @@ inline fn EquippedSlotButton(
                     }
                     const it = item.?;
                     if (delete_mode) {
-                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(Hands.name))) {
+                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(HandsWeapon.name))) {
                             equippedbar.unequip(it);
                             // const x = @as(*?Item, @ptrCast(it));
                             // x.* = null;
@@ -751,10 +767,17 @@ inline fn EquippedSlotButton(
         try GUI.Empty(.{
             .id = shower_id,
             .style = .{
-                .width = u("100%"),
-                .height = u("100%"),
+                .width = u("75%"),
+                .height = u("75%"),
+                .left = u("50%"),
+                .top = u("50%"),
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
                 .background = .{
                     .image = "sprites/entity/player/weapons/gloves/left.png",
+                    .fill = .contain,
                 },
             },
         }),
@@ -868,6 +891,7 @@ pub fn toggle() void {
 }
 
 pub fn awake() !void {
+    HandsWeapon = usePrefab(prefabs.hands);
     // e.input.ui_mode = true;
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
@@ -1138,6 +1162,7 @@ pub fn awake() !void {
                                         .left = u("50%"),
                                         .background = .{
                                             .image = "sprites/entity/player/weapons/gloves/left.png",
+                                            .fill = .contain,
                                         },
                                         .rotation = 135,
                                         .translate = .{
@@ -1786,51 +1811,32 @@ pub fn init() !void {
     preview.select();
     preview.hideElement();
 
-    _ = pickUpSort(conf.Item{
-        .T = .weapon,
-        .rarity = .legendary,
-        .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
-
-        .level = 999,
-
-        .name = "Legendary Gloves",
-
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .T = .weapon,
-        .rarity = .epic,
-        .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
-
-        .name = "Epic Gloves",
-
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-    });
-    _ = pickUpSort(conf.Item{
-        .T = .amethyst,
-        .rarity = .epic,
-        .damage = 10,
-        .weapon_projectile_scale = e.Vec2(64, 64),
-
-        .name = "Epic Amethyst",
-
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-    });
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.legendary_sword),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.epics.weapons.piercing_sword),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.epics.amethysts.test_amethyst),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.trident),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.daggers),
+    );
+    _ = pickUpSort(
+        usePrefab(prefabs.legendaries.weapons.claymore),
+    );
 
     sortBag();
     try updateGUI();
 }
 
 pub fn update() !void {
-    if (e.isKeyPressed(.key_i)) toggle();
+    if (e.isKeyPressed(.key_i) or e.isKeyPressed(.key_tab)) toggle();
+    if (e.isKeyPressed(.key_escape) and shown) hide();
     if (!e.input.ui_mode) return;
 
     if ((e.isMouseButtonPressed(.mouse_button_left) or
@@ -1852,23 +1858,13 @@ pub fn update() !void {
         try preview.equippButtonCallback();
     }
 
-    AutoSelect: {
-        if ((e.isKeyPressed(.key_up) or
-            e.isKeyPressed(.key_down) or
-            e.isKeyPressed(.key_left) or
-            e.isKeyPressed(.key_right)) and
-            GUI.hovered_button != null)
-        {
-            const button = GUI.hovered_button.?;
-
-            if (button.button_interface_ptr == null) break :AutoSelect;
-
-            if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
-                std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
-            {
-                try button.button_interface_ptr.?.callback_fn();
-            }
-        }
+    if ((e.isKeyPressed(.key_up) or
+        e.isKeyPressed(.key_down) or
+        e.isKeyPressed(.key_left) or
+        e.isKeyPressed(.key_right)) and
+        GUI.hovered_button != null)
+    {
+        try autoSelect();
     }
 
     delete_mode_last_frame = delete_mode;

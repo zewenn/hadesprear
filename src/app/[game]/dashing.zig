@@ -1,7 +1,5 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
-const e = Import(.engine);
+const e = @import("../../engine/engine.m.zig");
 
 // ===================== [Entity] =====================
 
@@ -32,7 +30,7 @@ pub fn update() !void {
 
         if (!entity.entity_stats.?.is_dashing) continue;
 
-        if (entity.dash_modifiers.?.dash_end <= e.time.currentTime) {
+        if (entity.dash_modifiers.?.dash_end <= e.time.gameTime) {
             entity.entity_stats.?.is_dashing = false;
             entity.entity_stats.?.can_move = true;
             entity.entity_stats.?.is_invalnureable = false;
@@ -67,5 +65,5 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
         .rotate(std.math.degreesToRadians(towards))
         .normalize();
 
-    entity.dash_modifiers.?.dash_end = e.time.currentTime + entity.dash_modifiers.?.dash_time;
+    entity.dash_modifiers.?.dash_end = e.time.gameTime + entity.dash_modifiers.?.dash_time;
 }

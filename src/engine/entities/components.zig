@@ -1,8 +1,6 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
 const rl = @import("raylib");
-const z = Import(.z);
+const z = @import("../z/z.m.zig");
 
 pub const Transform = struct {
     const Self = @This();

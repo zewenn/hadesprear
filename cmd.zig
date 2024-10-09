@@ -1,8 +1,6 @@
-const Import = @import("./src/.temp/imports.zig").Import;
-
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
-const z = Import(.z);
+const z = @import("./src/engine/z/z.m.zig");
 const String = @import("./src/engine/strings.m.zig").String;
 
 const BUF_128MB = 1024000000;

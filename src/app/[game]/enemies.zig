@@ -1,7 +1,5 @@
-const Import = @import("../../.temp/imports.zig").Import;
-
 const std = @import("std");
-const e = Import(.engine);
+const e = @import("../../engine/engine.m.zig");
 
 var Player: ?*e.entities.Entity = null;
 
@@ -190,24 +188,25 @@ pub fn update() !void {
         }
 
         if (entity_ptr.entity_stats.?.can_move) {
-            entity_ptr.transform.position.x += move_vec.x;
-            entity_ptr.transform.position.y += move_vec.y;
+            entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
         }
 
-        if (entity_ptr.shooting_stats.?.timeout_end >= e.time.currentTime) continue;
+        if (entity_ptr.shooting_stats.?.timeout_end >= e.time.gameTime) continue;
 
         if (distance < entity_ptr.entity_stats.?.range) {
             try projectiles.new(entity_ptr.transform.position, .{
                 .direction = angle,
-                .lifetime_end = e.time.currentTime + entity_ptr.shooting_stats.?.projectile_lifetime,
+                .lifetime_end = e.time.gameTime + entity_ptr.shooting_stats.?.projectile_lifetime,
                 .scale = e.Vec2(64, 64),
                 .side = .enemy,
                 .weight = .light,
                 .speed = 350,
                 .damage = entity_ptr.entity_stats.?.damage,
+                .sprite = "sprites/projectiles/enemy/generic/light.png",
             });
 
-            entity_ptr.shooting_stats.?.timeout_end = e.time.currentTime + entity_ptr.shooting_stats.?.timeout;
+            entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + entity_ptr.shooting_stats.?.timeout;
         }
         // entity_ptr.entity_stats.?.health -= 0.1;
     }

@@ -15,12 +15,6 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-	"imp": {
-		"prefix": "imp",
-		"body": [
-			"const Import = @import(\"$1\").Import;"
-		]
-	},
 	"nm": {
 		"prefix": "nm",
 		"body": [
@@ -44,5 +38,15 @@
 	"Case Expression": {
 		"prefix": "caseexpression",
 		"body": "$1 => $2,\n"
+	},
+	"Callback": {
+		"prefix": "callback",
+		"body": [
+			"(struct {",
+			"\tpub fn callback() !void {",
+			"\t\t$1",
+			"\t}",
+			"}).callback"
+		]
 	}
 }

@@ -6,6 +6,7 @@ const window = @import("./window.zig");
 
 pub var position = rl.Vector2.init(0, 0);
 pub var zoom: f32 = 1;
+pub var last_zoom: f32 = 0.1;
 
 pub var following: ?*rl.Vector2 = null;
 

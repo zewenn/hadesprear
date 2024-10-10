@@ -14,7 +14,7 @@ const e = @import("../../engine/engine.m.zig");
 
 const weapons = @import("weapons.zig");
 
-const projectile_manager = e.zlib.HeapManager(e.entities.Entity, (struct {
+pub const manager = e.zlib.HeapManager(e.entities.Entity, (struct {
     pub fn callback(alloc: Allocator, item: *e.entities.Entity) !void {
         e.entities.delete(item.id);
         alloc.free(item.id);
@@ -26,7 +26,7 @@ const ENEMY_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_enemy_ligh
 const ENEMY_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_enemy_heavy.png";
 
 pub fn awake() !void {
-    projectile_manager.init(e.ALLOCATOR);
+    manager.init(e.ALLOCATOR);
     // std.log.info("Maximum projectile count: {d}", .{ProjectileManager.ArraySize});
 }
 
@@ -36,22 +36,22 @@ pub fn update() !void {
     const others = try e.entities.searchExclude("projectile");
     defer e.ALLOCATOR.free(others);
 
-    const items = try projectile_manager.items();
-    defer projectile_manager.alloc.free(items);
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
     projectile_loop: for (items) |entity_ptr| {
         if (entity_ptr.projectile_data == null) {
             std.log.err("Projectile without projectile data!", .{});
             std.log.err("Removing...", .{});
 
-            projectile_manager.remove(entity_ptr);
+            manager.remove(entity_ptr);
             continue;
         }
 
         const projectile_data = &(entity_ptr.projectile_data.?);
 
         if (projectile_data.lifetime_end < e.time.gameTime) {
-            projectile_manager.removeFreeId(entity_ptr);
+            manager.removeFreeId(entity_ptr);
             continue;
         }
 
@@ -101,7 +101,7 @@ pub fn update() !void {
             {
                 if (projectile_data.owner) |owner| {
                     weapons.applyOnHitEffect(
-                        @ptrCast(owner),
+                        owner,
                         projectile_data.on_hit_effect,
                         projectile_data.on_hit_effect_strength,
                     );
@@ -109,7 +109,7 @@ pub fn update() !void {
             }
 
             if (projectile_data.health <= 0) {
-                projectile_manager.removeFreeId(entity_ptr);
+                manager.removeFreeId(entity_ptr);
                 continue :projectile_loop;
             }
         }
@@ -117,13 +117,13 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    const items = try projectile_manager.items();
-    defer projectile_manager.alloc.free(items);
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
     for (items) |item| {
-        projectile_manager.removeFreeId(item);
+        manager.removeFreeId(item);
     }
-    projectile_manager.deinit();
+    manager.deinit();
 }
 
 pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
@@ -159,5 +159,60 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
         },
     };
 
-    try projectile_manager.append(New);
+    try manager.append(New);
+}
+
+pub fn summonMultiple(
+    T: enum {
+        light,
+        heavy,
+        dash,
+    },
+    entity: *e.entities.Entity,
+    weapon: config.Item,
+    bonus_damage: f32,
+    shoot_angle: f32,
+    side: config.ProjectileSide,
+) !void {
+    if (entity.shooting_stats.?.timeout_end >= e.time.gameTime) return;
+    const strct = switch (T) {
+        .dash => weapon.weapon_dash,
+        .heavy => weapon.weapon_heavy,
+
+        else => weapon.weapon_light,
+    };
+
+    for (strct.projectile_array) |pa| {
+        const plus_angle: f32 = if (pa) |p| p else continue;
+
+        try new(entity.transform.position, .{
+            .direction = shoot_angle + plus_angle,
+            .lifetime_end = e.time.gameTime +
+                strct.projectile_lifetime,
+            .scale = strct.projectile_scale,
+            .side = side,
+            .weight = .heavy,
+            .speed = strct.projectile_speed,
+            .damage = entity.entity_stats.?.damage +
+                entity.entity_stats.?.damage +
+                bonus_damage *
+                strct.multiplier,
+            .health = strct.projectile_health,
+            .bleed_per_second = strct.projectile_bps,
+            .sprite = strct.sprite,
+
+            .owner = entity,
+            .on_hit_effect = if (side == .player) strct.projectile_on_hit_effect else .none,
+            // .on_hit_effect = if (side == .player) strct.projectile_on_hit_effect else .none,
+            .on_hit_effect_strength = @as(
+                f32,
+                @floatFromInt(weapon.level),
+            ) *
+                strct.projectile_on_hit_strength_multiplier,
+        });
+    }
+
+    entity.shooting_stats.?.timeout_end = e.time.gameTime +
+        (weapon.attack_speed * strct.attack_speed_modifier) *
+        (if (side == .enemy) @as(f32, 1.5) else @as(f32, 1));
 }

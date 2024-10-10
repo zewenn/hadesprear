@@ -38,12 +38,14 @@ pub const Entity = struct {
 
 pub const entities = entities_module.make(Entity);
 
+pub const ProjectileSide = enum {
+    player,
+    enemy,
+};
+
 pub const ProjectileData = struct {
     lifetime_end: f64,
-    side: enum {
-        player,
-        enemy,
-    },
+    side: ProjectileSide,
     weight: enum {
         light,
         heavy,
@@ -124,7 +126,7 @@ pub const WeaponAttackTypeStats = struct {
         .x = 64,
         .y = 64,
     },
-    projectile_speed: f32 = 450,
+    projectile_speed: f32 = 650,
     projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
     projectile_lifetime: f32 = 0.5,
 

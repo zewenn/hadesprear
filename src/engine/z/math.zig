@@ -87,3 +87,7 @@ pub fn getPointDistance(x1: anytype, y1: anytype, x2: anytype, y2: anytype) f128
 
     return std.math.hypot(a, b);
 }
+
+pub fn clamp(comptime T: type, val: T, minimum: T, maximum: T) T {
+    return if (val > maximum) maximum else if (val < minimum) minimum else val;
+}

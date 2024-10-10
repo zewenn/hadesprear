@@ -18,17 +18,12 @@ fn calculateStrength(base: f32) f32 {
 }
 
 pub inline fn applyOnHitEffect(
-    entity: *?e.entities.Entity,
+    entity: *e.entities.Entity,
     effect: conf.on_hit_effects,
     strength: f32,
 ) void {
-    const en = e.zlib.nullAssertOptionalPointer(
-        e.entities.Entity,
-        entity,
-    ) catch return;
-
     const scaled_strength: f32 = (-(1 / (strength + 1)) + 1) * 10;
-    if (en.entity_stats == null) return;
+    if (entity.entity_stats == null) return;
 
     var use_timeout: bool = true;
 
@@ -41,25 +36,26 @@ pub inline fn applyOnHitEffect(
         .vamp => {
             use_timeout = false;
 
-            en.entity_stats.?.health *= scaled_strength;
+            entity.entity_stats.?.health *= scaled_strength;
         },
         .energized => {
             use_timeout = true;
 
-            new = std.math.clamp(
-                en.entity_stats.?.movement_speed * calculateStrength(strength),
-                -1 * en.entity_stats.?.max_movement_speed,
-                en.entity_stats.?.max_movement_speed,
+            new = e.zlib.math.clamp(
+                f32,
+                entity.entity_stats.?.movement_speed * calculateStrength(strength),
+                -1 * entity.entity_stats.?.max_movement_speed,
+                entity.entity_stats.?.max_movement_speed,
             );
-            old = en.entity_stats.?.movement_speed;
-            en.entity_stats.?.movement_speed = new;
+            old = entity.entity_stats.?.movement_speed;
+            entity.entity_stats.?.movement_speed = new;
         },
         .stengthen => {
             use_timeout = true;
 
-            new = en.entity_stats.?.damage * calculateStrength(strength);
-            old = en.entity_stats.?.damage;
-            en.entity_stats.?.damage = new;
+            new = entity.entity_stats.?.damage * calculateStrength(strength);
+            old = entity.entity_stats.?.damage;
+            entity.entity_stats.?.damage = new;
         },
     }
 
@@ -68,7 +64,7 @@ pub inline fn applyOnHitEffect(
     delta = new - old;
 
     manager.append(.{
-        .entity = en,
+        .entity = entity,
         .delta = delta,
         .T = effect,
         .end_time = e.time.gameTime + std.math.clamp(strength / 3, 0, 15),

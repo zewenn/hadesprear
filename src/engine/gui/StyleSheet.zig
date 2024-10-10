@@ -40,6 +40,13 @@ font: struct {
     family: []const u8 = "fonts/press_play.ttf",
     size: f32 = 12,
     spacing: f32 = 0,
+    shadow: ?struct {
+        offset: rl.Vector2 = .{
+            .x = 0,
+            .y = 0,
+        },
+        color: rl.Color,
+    } = null,
 } = .{},
 
 z_index: usize = 0,
@@ -81,6 +88,17 @@ pub fn merge(self: *Self, other: Self) Self {
 
     if (!z.eql(base.font.spacing, other.font.spacing))
         result.font.spacing = other.font.spacing;
+
+    if (base.font.shadow != null and other.font.shadow != null) {
+        if (!z.eql(base.font.shadow.?.color, other.font.shadow.?.color))
+            base.font.shadow.?.color = other.font.shadow.?.color;
+
+        if (!z.eql(base.font.shadow.?.offset.x, other.font.shadow.?.offset.x))
+            base.font.shadow.?.offset.x = other.font.shadow.?.offset.x;
+
+        if (!z.eql(base.font.shadow.?.offset.y, other.font.shadow.?.offset.y))
+            base.font.shadow.?.offset.y = other.font.shadow.?.offset.y;
+    }
 
     // Transform
 

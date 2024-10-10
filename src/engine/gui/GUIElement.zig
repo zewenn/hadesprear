@@ -8,6 +8,8 @@ const ButtonInterface = @import("ButtonInterface.zig");
 const rl = @import("raylib");
 const entities = @import("../engine.m.zig").entities;
 
+const z = @import("../z/z.m.zig");
+
 const Self = @This();
 
 pub const Options = struct {

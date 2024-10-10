@@ -126,7 +126,13 @@ pub fn update() !void {
             texture = entity.cached_display.?.texture.?;
         }
 
-        drawTetxure(texture, transform, display.tint, display.ignore_world_pos, entity.collider);
+        drawTetxure(
+            texture,
+            transform,
+            display.tint,
+            display.ignore_world_pos,
+            entity.cached_collider,
+        );
     }
     camera.last_zoom = camera.zoom;
 
@@ -340,6 +346,19 @@ pub fn update() !void {
             const ox: f32 = style.font.size * @as(f32, @floatFromInt(len)) / 2;
             const oy: f32 = style.font.size / 2;
 
+            if (style.font.shadow) |shadow| {
+                rl.drawTextPro(
+                    font,
+                    content,
+                    transform.position.add(shadow.offset),
+                    // origin,
+                    rl.Vector2.init(ox, oy),
+                    transform.rotation.z,
+                    style.font.size,
+                    style.font.spacing,
+                    shadow.color,
+                );
+            }
             rl.drawTextPro(
                 font,
                 content,
@@ -368,7 +387,7 @@ fn drawTetxure(
     transform: entities.Transform,
     tint: rl.Color,
     ignore_cam: bool,
-    collider: ?entities.Collider,
+    collider: ?entities.RectangleVertices,
 ) void {
     const X = GetX: {
         var x: f128 = 0;
@@ -389,18 +408,21 @@ fn drawTetxure(
         break :GetY z.math.f128_to(f32, y).?;
     };
 
-    const origin: rl.Vector2 = if (transform.anchor) |anchor|
-        anchor.multiply(
-            rl.Vector2.init(
-                camera.zoom,
-                camera.zoom,
-            ),
-        )
-    else
+    var anchor = transform.anchor;
+
+    if (anchor == null) {
+        anchor = .{
+            .x = transform.scale.x / 2,
+            .y = transform.scale.y / 2,
+        };
+    }
+
+    const origin: rl.Vector2 = anchor.?.multiply(
         rl.Vector2.init(
-            transform.scale.x * camera.zoom / 2,
-            transform.scale.y * camera.zoom / 2,
-        );
+            camera.zoom,
+            camera.zoom,
+        ),
+    );
 
     rl.drawTexturePro(
         texture,
@@ -438,47 +460,63 @@ fn drawTetxure(
             rl.Color.yellow,
         );
 
-        rl.drawCircle(@intFromFloat(X), @intFromFloat(Y), 2, rl.Color.purple);
-        rl.drawCircle(@intFromFloat(origin_point.x), @intFromFloat(origin_point.y), 2, rl.Color.red);
-        // rl.drawRectanglePro(
-        //     rl.Rectangle.init(
-        //         X,
-        //         Y,
-        //         5,
-        //         5,
-        //     ),
-        //     .{
-        //         .x = origin.x + 2.5,
-        //         .y = origin.y + 2.5,
-        //     },
-        //     transform.rotation.z,
-        //     rl.Color.white,
-        // );
+        rl.drawCircle(
+            @intFromFloat(X),
+            @intFromFloat(Y),
+            2,
+            rl.Color.purple,
+        );
+        rl.drawCircle(
+            @intFromFloat(origin_point.x),
+            @intFromFloat(origin_point.y),
+            2,
+            rl.Color.red,
+        );
 
         if (collider) |coll| {
-            const PC = rl.Vector2.init(
-                X + transform.scale.x * camera.zoom / 2 - coll.rect.width * camera.zoom / 2,
-                Y + transform.scale.y * camera.zoom / 2 - coll.rect.height * camera.zoom / 2,
+            const P0 = coll.P0.multiply(
+                .{
+                    .x = camera.zoom,
+                    .y = camera.zoom,
+                },
+            ).add(
+                .{
+                    .x = window.size.x / 2,
+                    .y = window.size.y / 2,
+                },
             );
-            const P0 = PC.add(
-                rl.Vector2
-                    .init(-coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
-                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            const P1 = coll.P1.multiply(
+                .{
+                    .x = camera.zoom,
+                    .y = camera.zoom,
+                },
+            ).add(
+                .{
+                    .x = window.size.x / 2,
+                    .y = window.size.y / 2,
+                },
             );
-            const P1 = PC.add(
-                rl.Vector2
-                    .init(coll.rect.width * camera.zoom / 2, -coll.rect.height * camera.zoom / 2)
-                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            const P2 = coll.P2.multiply(
+                .{
+                    .x = camera.zoom,
+                    .y = camera.zoom,
+                },
+            ).add(
+                .{
+                    .x = window.size.x / 2,
+                    .y = window.size.y / 2,
+                },
             );
-            const P2 = PC.add(
-                rl.Vector2
-                    .init(-coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
-                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
-            );
-            const P3 = PC.add(
-                rl.Vector2
-                    .init(coll.rect.width * camera.zoom / 2, coll.rect.height * camera.zoom / 2)
-                    .rotate(std.math.degreesToRadians(transform.rotation.z)),
+            const P3 = coll.P3.multiply(
+                .{
+                    .x = camera.zoom,
+                    .y = camera.zoom,
+                },
+            ).add(
+                .{
+                    .x = window.size.x / 2,
+                    .y = window.size.y / 2,
+                },
             );
 
             rl.drawCircle(
@@ -599,64 +637,58 @@ fn drawTetxure(
             //     4,
             //     rl.Color.pink,
             // );
-        } else {
-            rl.drawRectanglePro(
-                rl.Rectangle.init(
-                    X,
-                    Y,
-                    1,
-                    transform.scale.y * camera.zoom,
-                ),
-                origin,
-                transform.rotation.z,
-                rl.Color.lime,
-            );
-            rl.drawRectanglePro(
-                rl.Rectangle.init(
-                    X,
-                    Y,
-                    1,
-                    transform.scale.y * camera.zoom,
-                ),
-                .{
-                    .x = origin.x - transform.scale.x * camera.zoom,
-                    .y = origin.y,
-                },
-                transform.rotation.z,
-                rl.Color.lime,
-            );
-            rl.drawRectanglePro(
-                rl.Rectangle.init(
-                    X,
-                    Y,
-                    transform.scale.x * camera.zoom,
-                    1,
-                ),
-                origin,
-                transform.rotation.z,
-                rl.Color.lime,
-            );
-            rl.drawRectanglePro(
-                rl.Rectangle.init(
-                    X,
-                    Y,
-                    transform.scale.x * camera.zoom,
-                    1,
-                ),
-                .{
-                    .x = origin.x,
-                    .y = origin.y - transform.scale.y * camera.zoom,
-                },
-                transform.rotation.z,
-                rl.Color.lime,
-            );
-            // rl.drawRectangleLines(
-            //     @intFromFloat(X - origin.x),
-            //     @intFromFloat(Y - origin.y),
-            //     @intFromFloat(transform.scale.x * camera.zoom),
-            //     @intFromFloat(transform.scale.y * camera.zoom),
-            //     rl.Color.lime,
-            // );
+            return;
         }
+
+        rl.drawRectanglePro(
+            rl.Rectangle.init(
+                X,
+                Y,
+                1,
+                transform.scale.y * camera.zoom,
+            ),
+            origin,
+            transform.rotation.z,
+            rl.Color.lime,
+        );
+        rl.drawRectanglePro(
+            rl.Rectangle.init(
+                X,
+                Y,
+                1,
+                transform.scale.y * camera.zoom,
+            ),
+            .{
+                .x = origin.x - transform.scale.x * camera.zoom,
+                .y = origin.y,
+            },
+            transform.rotation.z,
+            rl.Color.lime,
+        );
+        rl.drawRectanglePro(
+            rl.Rectangle.init(
+                X,
+                Y,
+                transform.scale.x * camera.zoom,
+                1,
+            ),
+            origin,
+            transform.rotation.z,
+            rl.Color.lime,
+        );
+        rl.drawRectanglePro(
+            rl.Rectangle.init(
+                X,
+                Y,
+                transform.scale.x * camera.zoom,
+                1,
+            ),
+            .{
+                .x = origin.x,
+                .y = origin.y - transform.scale.y * camera.zoom,
+            },
+            transform.rotation.z,
+            rl.Color.lime,
+        );
     }
 }

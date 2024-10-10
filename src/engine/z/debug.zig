@@ -36,4 +36,4 @@ pub fn disable() void {
     debugDisplay = false;
 }
 
-pub var debugDisplay = true;
+pub var debugDisplay = false;

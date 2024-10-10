@@ -261,6 +261,14 @@ pub fn update() !void {
                 },
                 false => try enemies.spawn(),
             }
+            switch (e.isKeyDown(.key_two)) {
+                true => {
+                    for (0..50) |_| {
+                        try enemies.spawn();
+                    }
+                },
+                false => try enemies.spawn(),
+            }
         }
         if (e.isKeyPressed(.key_q)) {
             weapons.applyOnHitEffect(@ptrCast(&Player), .energized, 10);

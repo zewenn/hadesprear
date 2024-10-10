@@ -9,6 +9,7 @@ pub const Transform = components.Transform;
 pub const Display = components.Display;
 pub const Collider = components.Collider;
 pub const CachedDisplay = components.CachedDisplay;
+pub const RectangleVertices = components.RectangleVertices;
 
 const EntityTypeError = error{
     TypeMustBeStruct,
@@ -35,6 +36,7 @@ pub fn make(comptime T: type) type {
         var display_flag = false;
         var collider_flag = false;
         var cached_display_flag = false;
+        var cached_collider = false;
 
         const fields = std.meta.fields(T);
 
@@ -45,6 +47,7 @@ pub fn make(comptime T: type) type {
             if (std.mem.eql(u8, field.name, "display")) display_flag = true;
             if (std.mem.eql(u8, field.name, "collider")) collider_flag = true;
             if (std.mem.eql(u8, field.name, "cached_display")) cached_display_flag = true;
+            if (std.mem.eql(u8, field.name, "cached_collider")) cached_collider = true;
         }
 
         if (!id_flag) @compileError("Entity type must have field: \"id\"");
@@ -53,6 +56,7 @@ pub fn make(comptime T: type) type {
         if (!display_flag) @compileError("Entity type must have field: \"display\"");
         if (!collider_flag) @compileError("Entity type must have field: \"collider\"");
         if (!cached_display_flag) @compileError("Entity type must have field: \"cached_display\"");
+        if (!cached_collider) @compileError("Entity type must have field: \"cached_collider\"");
     }
 
     return struct {
@@ -62,6 +66,7 @@ pub fn make(comptime T: type) type {
         pub const Display = components.Display;
         pub const Collider = components.Collider;
         pub const CachedDisplay = components.CachedDisplay;
+        pub const RectangleVertices = components.RectangleVertices;
 
         const EntityArrayType = std.ArrayList(*Entity);
 

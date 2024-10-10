@@ -11,6 +11,8 @@ pub const Entity = struct {
     display: entities_module.Display,
     collider: ?entities_module.Collider = null,
     cached_display: ?entities_module.CachedDisplay = null,
+    cached_collider: ?entities_module.RectangleVertices = null,
+
     shooting_stats: ?ShootingStats = null,
 
     facing: enum { left, right } = .left,
@@ -124,7 +126,7 @@ pub const WeaponAttackTypeStats = struct {
     projectile_lifetime: f32 = 2,
 
     /// Any projectile_health above 1 will make the
-    ///  projectile into a piercing projectile
+    /// projectile into a piercing projectile
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
 
@@ -135,6 +137,10 @@ pub const WeaponAttackTypeStats = struct {
     sprite: []const u8 = "sprites/projectiles/player/generic/light.png",
     attack_speed_modifier: f32 = 1,
 };
+
+pub fn createProjectileArray(comptime size: usize, comptime degree_list: [size]?f32) [16]?f32 {
+    return degree_list ++ ([_]?f32{null} ** (16 - size));
+}
 
 pub const Item = struct {
     /// If id is 0 the Item is a prefab and should not be modified without cloning

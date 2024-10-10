@@ -176,15 +176,18 @@ pub const prefabs = struct {
                     .projectile_array = [4]?f32{ -180, -90, 0, 90 } ++ ([_]?f32{null} ** 12),
                     .projectile_health = 2000,
                     .projectile_scale = e.Vec2(128, 64),
-                    .projectile_on_hit_effect = .stengthen,
+                    // .projectile_on_hit_effect = .stengthen,
                 },
                 .weapon_heavy = .{
-                    .projectile_array = [8]?f32{ -180, -135, -90, -45, 0, 45, 90, 135 } ++ ([_]?f32{null} ** 8),
+                    .projectile_array = conf.createProjectileArray(
+                        8,
+                        [_]?f32{ -180, -135, -90, -45, 0, 45, 90, 135 },
+                    ),
                     .projectile_health = 5000,
                     .projectile_scale = e.Vec2(256, 128),
                     .attack_speed_modifier = 2.5,
                     .sprite = "sprites/projectiles/player/generic/heavy.png",
-                    .projectile_on_hit_effect = .stengthen,
+                    // .projectile_on_hit_effect = .stengthen,
                 },
                 .weapon_dash = .{
                     .projectile_array = [1]?f32{0} ++ ([_]?f32{null} ** 15),

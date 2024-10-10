@@ -276,100 +276,7 @@ pub const box_system = struct {
     }
 };
 
-pub const RectangleVertices = struct {
-    const Self = @This();
-
-    transform: *entities.Transform,
-
-    P0: rl.Vector2,
-    P1: rl.Vector2,
-    P2: rl.Vector2,
-    P3: rl.Vector2,
-
-    x_min: f32 = 0,
-    x_max: f32 = 0,
-
-    y_min: f32 = 0,
-    y_max: f32 = 0,
-
-    pub fn init(transform: *entities.Transform, collider: *entities.Collider) Self {
-        const PC = rl.Vector2.init(
-            transform.position.x + transform.scale.x / 2 - collider.rect.width / 2,
-            transform.position.y + transform.scale.y / 2 - collider.rect.height / 2,
-        );
-        const P0 = PC.add(
-            rl.Vector2
-                .init(-collider.rect.width / 2, -collider.rect.height / 2)
-                .rotate(std.math.degreesToRadians(transform.rotation.z)),
-        );
-        const P1 = PC.add(
-            rl.Vector2
-                .init(collider.rect.width / 2, -collider.rect.height / 2)
-                .rotate(std.math.degreesToRadians(transform.rotation.z)),
-        );
-        const P2 = PC.add(
-            rl.Vector2
-                .init(-collider.rect.width / 2, collider.rect.height / 2)
-                .rotate(std.math.degreesToRadians(transform.rotation.z)),
-        );
-        const P3 = PC.add(
-            rl.Vector2
-                .init(collider.rect.width / 2, collider.rect.height / 2)
-                .rotate(std.math.degreesToRadians(transform.rotation.z)),
-        );
-
-        const x_min: f32 = @min(@min(P0.x, P1.x), @min(P2.x, P3.x));
-        const x_max: f32 = @max(@max(P0.x, P1.x), @max(P2.x, P3.x));
-
-        const y_min: f32 = @min(@min(P0.y, P1.y), @min(P2.y, P3.y));
-        const y_max: f32 = @max(@max(P0.y, P1.y), @max(P2.y, P3.y));
-
-        return Self{
-            .transform = transform,
-            .P0 = P0,
-            .P1 = P1,
-            .P2 = P2,
-            .P3 = P3,
-            .x_min = x_min,
-            .x_max = x_max,
-            .y_min = y_min,
-            .y_max = y_max,
-        };
-    }
-
-    pub fn overlaps(self: *Self, other: Self) bool {
-        if ((self.x_max > other.x_min and self.x_min < other.x_max) and
-            (self.y_max > other.y_min and self.y_min < other.y_max))
-            return true;
-        return false;
-    }
-
-    pub fn pushback(a: *Self, b: Self, weight: f32) void {
-        const overlap_x = @min(a.x_max - b.x_min, b.x_max - a.x_min);
-        const overlap_y = @min(a.y_max - b.y_min, b.y_max - a.y_min);
-
-        switch (overlap_x < overlap_y) {
-            true => PushBack_X: {
-                if (a.x_max > b.x_min and a.x_max < b.x_max) {
-                    a.transform.position.x -= overlap_x * weight;
-                    break :PushBack_X;
-                }
-
-                a.transform.position.x += overlap_x * weight;
-                break :PushBack_X;
-            },
-            false => PushBack_Y: {
-                if (a.y_max > b.y_min and a.y_max < b.y_max) {
-                    a.transform.position.y -= overlap_y * weight;
-                    break :PushBack_Y;
-                }
-
-                a.transform.position.y += overlap_y * weight;
-                break :PushBack_Y;
-            },
-        }
-    }
-};
+const RectangleVertices = entities.RectangleVertices;
 
 /// If both entities have a collider it returns the `.collidionChech()`
 /// result, if not it returns false.
@@ -377,16 +284,42 @@ pub fn collides(entity1: *entities.Entity, entity2: *entities.Entity) bool {
     if (entity1.collider == null) return false;
     if (entity2.collider == null) return false;
 
-    var a = RectangleVertices.init(
-        &entity1.transform,
-        &(entity1.collider.?),
-    );
-    const b = RectangleVertices.init(
-        &entity2.transform,
-        &(entity2.collider.?),
-    );
+    var a = getCachedOrNew(entity1);
+    entity1.cached_collider = a;
+    const b = getCachedOrNew(entity2);
+    entity2.cached_collider = b;
 
     return a.overlaps(b);
+}
+
+pub fn getCachedOrNew(e: *entities.Entity) RectangleVertices {
+    if (e.cached_collider == null or e.cached_display == null)
+        return RectangleVertices.init(
+            &e.transform,
+            &e.collider.?,
+        );
+
+    var cc = e.cached_collider.?;
+    const cd = e.cached_display.?;
+
+    if (cd.transform.scale.equals(e.transform.scale) == 0 or
+        cd.transform.rotation.z != e.transform.rotation.z)
+    {
+        return RectangleVertices.init(
+            &e.transform,
+            &e.collider.?,
+        );
+    }
+
+    cc.PC = .{
+        .x = e.transform.position.x + e.transform.scale.x / 2 - e.collider.?.rect.width / 2,
+        .y = e.transform.position.y + e.transform.scale.y / 2 - e.collider.?.rect.height / 2,
+    };
+
+    cc.recalculatePoints();
+    cc.recalculateXYMinMax();
+
+    return cc;
 }
 
 pub fn update(alloc: *Allocator) !void {
@@ -397,16 +330,12 @@ pub fn update(alloc: *Allocator) !void {
         if (e.collider == null) continue;
         if (e.collider.?.trigger) continue;
 
-        const e_transform = &e.transform;
-
         const e_collider = &e.collider.?;
 
         if (!e_collider.dynamic) continue :dynamic;
 
-        var entity_vertices = RectangleVertices.init(
-            e_transform,
-            e_collider,
-        );
+        var entity_vertices = getCachedOrNew(e);
+        e.cached_collider = entity_vertices;
 
         other: for (entities_slice) |other| {
             if (other.collider == null) continue;
@@ -414,14 +343,9 @@ pub fn update(alloc: *Allocator) !void {
 
             if (std.mem.eql(u8, e.id, other.id)) continue :other;
 
-            const other_transform = &other.transform;
-
             const other_collider = &other.collider.?;
 
-            var other_vertices = RectangleVertices.init(
-                other_transform,
-                other_collider,
-            );
+            var other_vertices = getCachedOrNew(other);
 
             if (!entity_vertices.overlaps(other_vertices)) continue :other;
 

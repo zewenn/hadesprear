@@ -108,16 +108,35 @@ pub fn deinit() !void {
 }
 
 pub fn update() !void {
+    // var last_farme_at = time.currentTime;
     try time.tick();
     std.debug.print("FPS: {d:.3}\r", .{1 / time.deltaTime});
 
+    // last_farme_at = rl.getTime();
     input.update();
+    // std.log.info("INPUT: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 
+    // last_farme_at = rl.getTime();
     GUI.update();
+    // std.log.info("GUI: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 
+    // last_farme_at = rl.getTime();
     try events.call(.Update);
 
+    // std.log.info("EVENTS: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
+
+    // last_farme_at = rl.getTime();
     try collision.update(&ALLOCATOR);
+
+    // std.log.info("COLLISION: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
+
+    // last_farme_at = rl.getTime();
     camera.update();
+    // std.log.info("CAMERA: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
+
+    // last_farme_at = rl.getTime();
     try display.update();
+    // std.log.info("DISPLAY: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
+
+    // std.debug.print("\n\n\n" ** 10, .{});
 }

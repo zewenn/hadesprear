@@ -128,11 +128,44 @@ const preview = struct {
     pub var crit_rate: *GUI.GUIElement = undefined;
     pub var crit_damage: *GUI.GUIElement = undefined;
     pub var move_speed: *GUI.GUIElement = undefined;
+    pub var attack_speed: *GUI.GUIElement = undefined;
     pub var tenacity: *GUI.GUIElement = undefined;
     pub var upgrade_title_text: *GUI.GUIElement = undefined;
     pub var upgrade_cost_text: *GUI.GUIElement = undefined;
     pub var upgrade_currency_shower: *GUI.GUIElement = undefined;
     pub var equip: *GUI.GUIElement = undefined;
+
+    pub const generic_stat_button_style = GUI.StyleSheet{
+        .background = .{
+            .image = e.MISSINGNO,
+        },
+        .width = .{
+            .value = SLOT_SIZE * 2 + 1,
+            .unit = .vw,
+        },
+        .height = .{
+            .value = (SLOT_SIZE - 1) / 2,
+            .unit = .vw,
+        },
+
+        .translate = .{
+            .x = .min,
+            .y = .center,
+        },
+
+        .font = .{
+            .size = 10,
+            .shadow = .{
+                .color = e.Color{
+                    .r = 100,
+                    .g = 100,
+                    .b = 100,
+                    .a = 255,
+                },
+                .offset = e.Vec2(2, 2),
+            },
+        },
+    };
 
     pub fn select() void {
         element = GUI.assertSelect("#item-preview");
@@ -146,6 +179,7 @@ const preview = struct {
         crit_rate = GUI.assertSelect("#preview-crit-rate-number");
         crit_damage = GUI.assertSelect("#preview-crit-damage-number");
         move_speed = GUI.assertSelect("#preview-move-speed-number");
+        attack_speed = GUI.assertSelect("#preview-attack-speed-number");
         tenacity = GUI.assertSelect("#preview-tenacity-number");
         upgrade_title_text = GUI.assertSelect("#preview-upgrade-title");
         upgrade_cost_text = GUI.assertSelect("#preview-upgrade-text");
@@ -153,6 +187,14 @@ const preview = struct {
         equip = GUI.assertSelect("#preview-equip-button");
 
         selected = true;
+    }
+
+    pub fn toNamedHeapString(elem: *GUI.GUIElement, string: []const u8, number: f32, percent: bool) !void {
+        const named_damage_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d}{s}", .{ string, number, if (percent) "%" else "" });
+        defer e.ALLOCATOR.free(named_damage_string);
+
+        elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_damage_string);
+        elem.is_content_heap = true;
     }
 
     pub fn show(item: *Item) !void {
@@ -181,41 +223,13 @@ const preview = struct {
 
         name.contents = item.name;
 
-        const damage_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.damage);
-        defer e.ALLOCATOR.free(damage_string);
-
-        damage.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, damage_string);
-        damage.is_content_heap = true;
-
-        const health_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.health);
-        defer e.ALLOCATOR.free(health_string);
-
-        health.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, health_string);
-        health.is_content_heap = true;
-
-        const crit_rate_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.crit_rate);
-        defer e.ALLOCATOR.free(crit_rate_string);
-
-        crit_rate.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, crit_rate_string);
-        crit_rate.is_content_heap = true;
-
-        const crit_damage_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.crit_damage_multiplier);
-        defer e.ALLOCATOR.free(crit_damage_string);
-
-        crit_damage.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, crit_damage_string);
-        crit_damage.is_content_heap = true;
-
-        const move_speed_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.movement_speed);
-        defer e.ALLOCATOR.free(move_speed_string);
-
-        move_speed.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, move_speed_string);
-        move_speed.is_content_heap = true;
-
-        const tenacity_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.tenacity);
-        defer e.ALLOCATOR.free(tenacity_string);
-
-        tenacity.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, tenacity_string);
-        tenacity.is_content_heap = true;
+        try toNamedHeapString(damage, "DAMAGE", item.damage, false);
+        try toNamedHeapString(health, "HEALTH", item.health, false);
+        try toNamedHeapString(crit_rate, "CRIT RATE", item.crit_rate, true);
+        try toNamedHeapString(crit_damage, "CRIT DMG", item.crit_damage_multiplier, true);
+        try toNamedHeapString(move_speed, "MOVE SPEED", item.movement_speed, false);
+        try toNamedHeapString(attack_speed, "ATK SPEED", @round(1 / item.attack_speed), false);
+        try toNamedHeapString(tenacity, "TENACITY", item.tenacity, false);
 
         const upgrade_text_string = try e.zlib.arrays.NumberToString(
             e.ALLOCATOR,
@@ -281,6 +295,9 @@ const preview = struct {
         }
         if (move_speed.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, move_speed.contents.?);
+        }
+        if (attack_speed.is_content_heap) {
+            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, attack_speed.contents.?);
         }
         if (tenacity.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, tenacity.contents.?);
@@ -1212,6 +1229,7 @@ pub fn awake() !void {
                                         .top = u("-28x"),
                                         .font = .{
                                             .size = 16,
+                                            .shadow = preview.generic_stat_button_style.font.shadow,
                                         },
                                         .color = PREVIEW_FONT_COLOR,
                                         .translate = .{
@@ -1229,6 +1247,7 @@ pub fn awake() !void {
                                         .top = u("12x"),
                                         .font = .{
                                             .size = 44,
+                                            .shadow = preview.generic_stat_button_style.font.shadow,
                                         },
                                         .color = PREVIEW_FONT_COLOR,
                                         .translate = .{
@@ -1270,6 +1289,10 @@ pub fn awake() !void {
                                 .background = .{
                                     .image = PREVIEW_4x1,
                                 },
+                                .font = .{
+                                    .size = 14,
+                                    .shadow = preview.generic_stat_button_style.font.shadow,
+                                },
                             },
                         },
                         "Item Name",
@@ -1279,24 +1302,17 @@ pub fn awake() !void {
                         .{
                             .id = "preview-damage-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
-                                    .unit = .vw,
-                                },
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
                                 .left = .{
                                     .value = -1 * (SLOT_SIZE * 2 + 1.5),
                                     .unit = .vw,
                                 },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
+                                .top = .{
+                                    .value = -1 * (SLOT_SIZE - 1) / 4,
+                                    .unit = .vw,
                                 },
                             },
                         },
@@ -1304,26 +1320,9 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-damage-title",
-                                        .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
-                                            .left = u("50%"),
-                                            .color = PREVIEW_FONT_COLOR,
-                                        },
-                                    },
-                                    "DAMAGE",
-                                ),
-                                try GUI.Text(
-                                    .{
                                         .id = "preview-damage-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
@@ -1338,24 +1337,17 @@ pub fn awake() !void {
                         .{
                             .id = "preview-health-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
+                                .top = .{
+                                    .value = -1 * (SLOT_SIZE - 1) / 4,
                                     .unit = .vw,
                                 },
                                 .left = .{
                                     .value = 0.5,
                                     .unit = .vw,
-                                },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1363,26 +1355,10 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-health-title",
-                                        .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
-                                            .left = u("50%"),
-                                            .color = PREVIEW_FONT_COLOR,
-                                        },
-                                    },
-                                    "HEALTH",
-                                ),
-                                try GUI.Text(
-                                    .{
                                         .id = "preview-health-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            // .top = u("10x"),
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
@@ -1397,28 +1373,17 @@ pub fn awake() !void {
                         .{
                             .id = "preview-crit-rate-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
+                                .top = .{
+                                    .value = (SLOT_SIZE - 1) / 2,
                                     .unit = .vw,
                                 },
                                 .left = .{
                                     .value = -1 * (SLOT_SIZE * 2 + 1.5),
                                     .unit = .vw,
-                                },
-                                .top = .{
-                                    .value = SLOT_SIZE + 1,
-                                    .unit = .vw,
-                                },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1426,26 +1391,9 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-crit-rate-title",
-                                        .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
-                                            .left = u("50%"),
-                                            .color = PREVIEW_FONT_COLOR,
-                                        },
-                                    },
-                                    "CRIT RATE",
-                                ),
-                                try GUI.Text(
-                                    .{
                                         .id = "preview-crit-rate-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
@@ -1460,28 +1408,17 @@ pub fn awake() !void {
                         .{
                             .id = "preview-crit-damage-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
+                                .top = .{
+                                    .value = (SLOT_SIZE - 1) / 2,
                                     .unit = .vw,
                                 },
                                 .left = .{
                                     .value = 0.5,
                                     .unit = .vw,
-                                },
-                                .top = .{
-                                    .value = SLOT_SIZE + 1,
-                                    .unit = .vw,
-                                },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1489,26 +1426,9 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-crit-damage-title",
-                                        .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
-                                            .left = u("50%"),
-                                            .color = PREVIEW_FONT_COLOR,
-                                        },
-                                    },
-                                    "CRIT DAMAGE",
-                                ),
-                                try GUI.Text(
-                                    .{
                                         .id = "preview-crit-damage-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
@@ -1523,28 +1443,17 @@ pub fn awake() !void {
                         .{
                             .id = "preview-move-speed-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
-                                    .unit = .vw,
-                                },
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
                                 .left = .{
                                     .value = -1 * (SLOT_SIZE * 2 + 1.5),
                                     .unit = .vw,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE * 2 + 2,
+                                    .value = SLOT_SIZE + 2 - 1 * ((SLOT_SIZE - 1) / 2),
                                     .unit = .vw,
-                                },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1552,26 +1461,9 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-move-speed-title",
-                                        .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
-                                            .left = u("50%"),
-                                            .color = PREVIEW_FONT_COLOR,
-                                        },
-                                    },
-                                    "MOVE SPEED",
-                                ),
-                                try GUI.Text(
-                                    .{
                                         .id = "preview-move-speed-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
@@ -1581,33 +1473,22 @@ pub fn awake() !void {
                             },
                         ),
                     ),
-                    // Tenacity
+                    // Attack Speed
                     try GUI.Container(
                         .{
-                            .id = "preview-tenacity-container",
+                            .id = "preview-attack-speed-container",
                             .style = .{
-                                .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
-                                },
-                                .height = .{
-                                    .value = SLOT_SIZE,
-                                    .unit = .vw,
-                                },
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
                                 .left = .{
                                     .value = 0.5,
                                     .unit = .vw,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE * 2 + 2,
+                                    .value = SLOT_SIZE + 2 - 1 * ((SLOT_SIZE - 1) / 2),
                                     .unit = .vw,
-                                },
-                                .translate = .{
-                                    .x = .min,
-                                    .y = .center,
-                                },
-                                .background = .{
-                                    .image = PREVIEW_2x1,
                                 },
                             },
                         },
@@ -1615,26 +1496,44 @@ pub fn awake() !void {
                             &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
-                                        .id = "preview-tenacity-title",
+                                        .id = "preview-attack-speed-number",
                                         .style = .{
-                                            .top = u("-10x"),
-                                            .font = .{
-                                                .size = 12,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },
                                     },
-                                    "TENACITY",
+                                    "10",
                                 ),
+                            },
+                        ),
+                    ),
+                    // Tenacity
+                    try GUI.Container(
+                        .{
+                            .id = "preview-tenacity-container",
+                            .style = .{
+                                .width = preview.generic_stat_button_style.width,
+                                .height = preview.generic_stat_button_style.height,
+                                .translate = preview.generic_stat_button_style.translate,
+                                .background = preview.generic_stat_button_style.background,
+                                .left = .{
+                                    .value = -1 * (SLOT_SIZE * 2 + 1.5),
+                                    .unit = .vw,
+                                },
+                                .top = .{
+                                    .value = 2 * (SLOT_SIZE) - 1 * ((SLOT_SIZE - 1) / 2),
+                                    .unit = .vw,
+                                },
+                            },
+                        },
+                        @constCast(
+                            &[_]*GUI.GUIElement{
                                 try GUI.Text(
                                     .{
                                         .id = "preview-tenacity-number",
                                         .style = .{
-                                            .top = u("10x"),
-                                            .font = .{
-                                                .size = 16,
-                                            },
+                                            .font = preview.generic_stat_button_style.font,
                                             .left = u("50%"),
                                             .color = PREVIEW_FONT_COLOR,
                                         },

@@ -476,7 +476,7 @@ fn drawTetxure(
         );
 
         if (collider) |coll| {
-            const P0 = coll.P0.multiply(
+            const P0 = coll.top_left.multiply(
                 .{
                     .x = camera.zoom,
                     .y = camera.zoom,
@@ -487,7 +487,7 @@ fn drawTetxure(
                     .y = window.size.y / 2,
                 },
             );
-            const P1 = coll.P1.multiply(
+            const P1 = coll.top_right.multiply(
                 .{
                     .x = camera.zoom,
                     .y = camera.zoom,
@@ -498,7 +498,7 @@ fn drawTetxure(
                     .y = window.size.y / 2,
                 },
             );
-            const P2 = coll.P2.multiply(
+            const P2 = coll.bottom_left.multiply(
                 .{
                     .x = camera.zoom,
                     .y = camera.zoom,
@@ -509,7 +509,7 @@ fn drawTetxure(
                     .y = window.size.y / 2,
                 },
             );
-            const P3 = coll.P3.multiply(
+            const P3 = coll.bottom_right.multiply(
                 .{
                     .x = camera.zoom,
                     .y = camera.zoom,

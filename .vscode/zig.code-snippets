@@ -22,6 +22,14 @@
 			"    result.$1 = other.$1;\n"
 		]
 	},
+	"wnm": {
+		"prefix": "wnm",
+		"body": [
+			"if (!z.eql(base.$1, new.$1) and",
+			"\t!z.eql(default.$1, new.$1))",
+			"\tres.$1 = new.$1;",
+		]
+	},
 	"import raylib": {
 		"prefix": "irl",
 		"body": "const rl = @import(\"raylib\");",

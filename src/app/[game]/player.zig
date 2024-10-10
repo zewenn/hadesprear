@@ -267,7 +267,7 @@ pub fn update() !void {
                         try enemies.spawn();
                     }
                 },
-                false => try enemies.spawn(),
+                false => {},
             }
         }
         if (e.isKeyPressed(.key_q)) {

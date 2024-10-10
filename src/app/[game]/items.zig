@@ -3,6 +3,12 @@ const conf = @import("../../config.zig");
 
 const e = @import("../../engine/engine.m.zig");
 
+const LightStats = conf.WeaponAttackLightStats;
+const HeavyStats = conf.WeaponAttackHeavyStats;
+const DashStats = conf.WeaponAttackDashStats;
+
+const Item = conf.newItem;
+
 pub fn awake() !void {}
 
 pub fn init() !void {}
@@ -11,9 +17,9 @@ pub fn update() !void {}
 
 pub fn deinit() !void {}
 
-/// If the id of an item is 0 it's a prefab.
+/// If the id of an item is 0, it's a prefab.
 pub const prefabs = struct {
-    pub const hands: conf.Item = .{
+    pub const hands = Item(.{
         .id = 0,
         .T = .weapon,
         .weapon_type = .daggers,
@@ -23,7 +29,6 @@ pub const prefabs = struct {
 
         .weapon_heavy = .{
             .sprite = "sprites/projectiles/player/generic/heavy.png",
-            .attack_speed_modifier = 2,
         },
 
         .name = "Hands",
@@ -35,7 +40,7 @@ pub const prefabs = struct {
         .icon = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
         .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
-    };
+    });
 
     pub const commons = struct {
         pub const weapons = struct {};
@@ -43,7 +48,7 @@ pub const prefabs = struct {
 
     pub const epics = struct {
         pub const weapons = struct {
-            pub const piercing_sword: conf.Item = .{
+            pub const piercing_sword = Item(.{
                 .T = .weapon,
                 .rarity = .epic,
                 .damage = 10,
@@ -61,7 +66,7 @@ pub const prefabs = struct {
                 .icon = "sprites/weapons/steel_sword.png",
                 .weapon_sprite_left = e.MISSINGNO,
                 .weapon_sprite_right = "sprites/weapons/steel_sword.png",
-            };
+            });
         };
         pub const amethysts = struct {
             pub const test_amethyst: conf.Item = .{
@@ -81,7 +86,7 @@ pub const prefabs = struct {
 
     pub const legendaries = struct {
         pub const weapons = struct {
-            pub const legendary_sword: conf.Item = .{
+            pub const legendary_sword = Item(.{
                 .id = 0,
                 .T = .weapon,
                 .rarity = .legendary,
@@ -104,9 +109,9 @@ pub const prefabs = struct {
                 .icon = "sprites/weapons/steel_sword_heavy.png",
                 .weapon_sprite_left = e.MISSINGNO,
                 .weapon_sprite_right = "sprites/weapons/steel_sword_heavy.png",
-            };
+            });
 
-            pub const trident: conf.Item = .{
+            pub const trident = Item(.{
                 .T = .weapon,
                 .level = 10,
                 .weapon_type = .polearm,
@@ -136,9 +141,9 @@ pub const prefabs = struct {
                 .icon = "sprites/weapons/fork.png",
                 .weapon_sprite_left = e.MISSINGNO,
                 .weapon_sprite_right = "sprites/weapons/fork.png",
-            };
+            });
 
-            pub const daggers: conf.Item = .{
+            pub const daggers = Item(.{
                 .T = .weapon,
                 .weapon_type = .daggers,
                 .rarity = .legendary,
@@ -160,9 +165,9 @@ pub const prefabs = struct {
                 .icon = "sprites/weapons/dagger.png",
                 .weapon_sprite_left = "sprites/weapons/dagger.png",
                 .weapon_sprite_right = "sprites/weapons/dagger.png",
-            };
+            });
 
-            pub const claymore: conf.Item = .{
+            pub const claymore = Item(.{
                 .T = .weapon,
                 .weapon_type = .claymore,
                 .rarity = .legendary,
@@ -200,7 +205,7 @@ pub const prefabs = struct {
                 .icon = "sprites/weapons/claymore.png",
                 .weapon_sprite_left = e.MISSINGNO,
                 .weapon_sprite_right = "sprites/weapons/claymore.png",
-            };
+            });
         };
     };
 };

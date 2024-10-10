@@ -1,6 +1,9 @@
+const std = @import("std");
+
 const entities_module = @import("./engine/entities/entities.m.zig");
 const rl = @import("raylib");
 const uuid = @import("uuid");
+const z = @import("./engine/z/z.m.zig");
 
 pub const Entity = struct {
     const Self = @This();
@@ -123,7 +126,7 @@ pub const WeaponAttackTypeStats = struct {
     },
     projectile_speed: f32 = 450,
     projectile_array: [16]?f32 = [1]?f32{0} ++ ([_]?f32{null} ** 15),
-    projectile_lifetime: f32 = 2,
+    projectile_lifetime: f32 = 0.5,
 
     /// Any projectile_health above 1 will make the
     /// projectile into a piercing projectile
@@ -138,8 +141,69 @@ pub const WeaponAttackTypeStats = struct {
     attack_speed_modifier: f32 = 1,
 };
 
+pub fn mergeWeaponAttackStats(base: WeaponAttackTypeStats, new: WeaponAttackTypeStats) WeaponAttackTypeStats {
+    const default = WeaponAttackTypeStats{};
+    var res = base;
+
+    const fields: []const std.builtin.Type.StructField = std.meta.fields(WeaponAttackTypeStats);
+
+    inline for (fields) |field| {
+        if (!z.eql(@field(base, field.name), @field(new, field.name)) and
+            !z.eql(@field(default, field.name), @field(new, field.name)))
+        {
+            const fieldptr = &(@field(res, field.name));
+            fieldptr.* = @field(new, field.name);
+        }
+    }
+
+    return res;
+}
+
+pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
+    return mergeWeaponAttackStats(
+        .{
+            .projectile_lifetime = 0.5,
+        },
+        stats,
+    );
+}
+pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
+    return mergeWeaponAttackStats(
+        .{
+            .projectile_lifetime = 1,
+            .multiplier = 2,
+            .attack_speed_modifier = 2,
+        },
+        stats,
+    );
+}
+pub fn WeaponAttackDashStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
+    return mergeWeaponAttackStats(
+        .{
+            .projectile_lifetime = 2,
+            .multiplier = 1.25,
+            .attack_speed_modifier = 1.5,
+            .projectile_scale = .{
+                .x = 128,
+                .y = 64,
+            },
+            .projectile_speed = 860,
+        },
+        stats,
+    );
+}
+
 pub fn createProjectileArray(comptime size: usize, comptime degree_list: [size]?f32) [16]?f32 {
     return degree_list ++ ([_]?f32{null} ** (16 - size));
+}
+
+pub fn newItem(item: Item) Item {
+    var res = item;
+    res.weapon_light = WeaponAttackLightStats(res.weapon_light);
+    res.weapon_heavy = WeaponAttackHeavyStats(res.weapon_heavy);
+    res.weapon_dash = WeaponAttackDashStats(res.weapon_dash);
+
+    return res;
 }
 
 pub const Item = struct {
@@ -182,19 +246,9 @@ pub const Item = struct {
     /// Smaller better
     attack_speed: f32 = 0.25,
 
-    weapon_light: WeaponAttackTypeStats = .{},
-    weapon_heavy: WeaponAttackTypeStats = .{
-        .multiplier = 1.5,
-        .attack_speed_modifier = 2,
-    },
-    weapon_dash: WeaponAttackTypeStats = .{
-        .projectile_scale = .{
-            .x = 128,
-            .y = 64,
-        },
-        .multiplier = 1.25,
-        .attack_speed_modifier = 1.5,
-    },
+    weapon_light: WeaponAttackTypeStats = WeaponAttackLightStats(.{}),
+    weapon_heavy: WeaponAttackTypeStats = WeaponAttackHeavyStats(.{}),
+    weapon_dash: WeaponAttackTypeStats = WeaponAttackDashStats(.{}),
 
     weapon_projectile_scale_light: rl.Vector2 = .{
         .x = 64,

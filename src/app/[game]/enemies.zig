@@ -1,10 +1,16 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
 const e = @import("../../engine/engine.m.zig");
 
 var Player: ?*e.entities.Entity = null;
 
-const Manager = e.entities.Manager(.{ .max_entities = 1024 });
-var Animators: [Manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** Manager.ArraySize;
+const manager = e.zlib.HeapManager(e.entities.Entity, (struct {
+    pub fn callback(alloc: Allocator, item: *e.entities.Entity) !void {
+        e.entities.delete(item.id);
+        alloc.free(item.id);
+    }
+}).callback);
+var Animators: [manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** manager.ArraySize;
 
 const dashing = @import("dashing.zig");
 const projectiles = @import("projectiles.zig");
@@ -29,10 +35,13 @@ pub fn init() !void {
 }
 
 pub fn update() !void {
-    for (Manager.array, 0..) |item, index| {
+    const items = try manager.items();
+    defer manager.alloc.free(items);
+
+    for (items, 0..) |item, index| {
         if (item == null) continue;
 
-        var entity_ptr: *e.entities.Entity = &Manager.array[index].?;
+        var entity_ptr: *e.entities.Entity = &manager.array[index].?;
 
         const entity_flag: bool = Get: {
             if (entity_ptr.entity_stats == null) break :Get false;
@@ -44,14 +53,14 @@ pub fn update() !void {
             std.log.err("Enemy without projectile data!", .{});
             std.log.err("Removing...", .{});
 
-            Manager.free(index);
+            manager.free(index);
             continue;
         }
 
         if (entity_ptr.entity_stats.?.health <= 0) {
             e.entities.delete(entity_ptr.id);
             // e.ALLOCATOR.free(entity_ptr.id);
-            Manager.free(index);
+            manager.free(index);
 
             if (Animators[index] == null) continue;
 
@@ -213,12 +222,12 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    for (0..Manager.array.len) |index| {
+    for (0..manager.array.len) |index| {
         // if (item.*) |value| {
         //     e.ALLOCATOR.free(value.id);
         // }
 
-        Manager.free(index);
+        manager.free(index);
     }
 
     for (&Animators, 0..) |*obj, index| {
@@ -270,5 +279,5 @@ pub fn spawn() !void {
         },
     };
 
-    Manager.malloc(New);
+    manager.malloc(New);
 }

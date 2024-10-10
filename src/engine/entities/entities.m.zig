@@ -116,7 +116,7 @@ pub fn make(comptime T: type) type {
             for (entities.items) |item| {
                 if (!std.mem.containsAtLeast(
                     u8,
-                    item.id,
+                    item.tags,
                     1,
                     tag,
                 )) try list.append(item);

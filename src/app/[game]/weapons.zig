@@ -859,11 +859,11 @@ pub const Hands = struct {
     }
 };
 
-pub fn awake() !void {}
-
-pub fn init() !void {
-    try manager.init(e.ALLOCATOR);
+pub fn awake() !void {
+    manager.init(e.ALLOCATOR);
 }
+
+pub fn init() !void {}
 
 pub fn update() !void {
     const items = try manager.items();

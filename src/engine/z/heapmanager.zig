@@ -5,8 +5,10 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
     return struct {
         var array: std.ArrayList(*T) = undefined;
         pub var alloc: Allocator = undefined;
+        var initalised = false;
 
-        pub fn init(allocator: Allocator) !void {
+        pub fn init(allocator: Allocator) void {
+            initalised = true;
             alloc = allocator;
 
             array = std.ArrayList(*T).init(alloc);
@@ -20,6 +22,7 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
         }
 
         pub fn append(item: T) !void {
+            if (!initalised) @panic("Manager was not initalised!");
             const ptr = try alloc.create(T);
             ptr.* = item;
 
@@ -27,6 +30,7 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
         }
 
         pub fn remove(item: *T) void {
+            if (!initalised) @panic("Manager was not initalised!");
             for (array.items, 0..) |it, index| {
                 if (!std.meta.eql(item.*, it.*)) continue;
                 alloc.destroy(it);
@@ -36,6 +40,7 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
         }
 
         pub fn removeFreeId(item: *T) void {
+            if (!initalised) @panic("Manager was not initalised!");
             for (array.items, 0..) |it, index| {
                 if (!std.meta.eql(item.*, it.*)) continue;
 
@@ -53,12 +58,14 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
 
         /// Caller owns the returned memory!
         pub fn items() ![]*T {
+            if (!initalised) @panic("Manager was not initalised!");
             var copy = try array.clone();
 
             return copy.toOwnedSlice();
         }
 
         pub fn len() usize {
+            if (!initalised) @panic("Manager was not initalised!");
             return array.items.len;
         }
     };

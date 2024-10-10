@@ -37,7 +37,7 @@ const MELEE_WALK_RIGHT_SPRITE_1 = "sprites/entity/enemies/melee/right_1.png";
 // ===================== [Events] =====================
 
 pub fn awake() !void {
-    try manager.init(e.ALLOCATOR);
+    manager.init(e.ALLOCATOR);
 }
 
 pub fn init() !void {

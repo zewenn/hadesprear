@@ -26,7 +26,7 @@ const ENEMY_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_enemy_ligh
 const ENEMY_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_enemy_heavy.png";
 
 pub fn awake() !void {
-    try projectile_manager.init(e.ALLOCATOR);
+    projectile_manager.init(e.ALLOCATOR);
     // std.log.info("Maximum projectile count: {d}", .{ProjectileManager.ArraySize});
 }
 

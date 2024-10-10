@@ -96,7 +96,7 @@ pub fn init(allocator: *Allocator) !void {
 pub fn deinit() !void {
     try events.call(.Deinit);
 
-    GUI.deinit();
+    try GUI.deinit();
 
     assets.deinit();
 

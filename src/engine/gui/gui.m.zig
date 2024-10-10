@@ -11,80 +11,12 @@ pub const ButtonInterface = @import("ButtonInterface.zig");
 pub const u = @import("Unit.zig").u;
 pub const toUnit = @import("Unit.zig").toUnit;
 
-pub const elements = struct {
-    const T = GUIElement;
-    const options: struct {
-        max_size: usize = 8_000_000,
-        max_entities: ?usize = null,
-    } = .{
-        .max_size = 8_000_000,
-        .max_entities = 1024,
-    };
-
-    pub const TSize: comptime_int = @sizeOf(T);
-    pub const MaxArraySize: comptime_int = @divTrunc(options.max_size, TSize);
-    pub const ArraySize: comptime_int = if (options.max_entities) |max| @min(max, MaxArraySize) else MaxArraySize;
-    pub var array: [ArraySize]?T = [_]?T{null} ** ArraySize;
-
-    /// This will search for the next free *(value == null)*
-    /// index in the array and return it.
-    /// If there are no available indexes in the array and override is:
-    /// - **false**: it will override the 0th address.
-    /// - **true**: it will randomly return an address.
-    pub fn searchNextIndex(override: bool) usize {
-        for (array, 0..) |value, index| {
-            if (index == 0) continue;
-            if (value == null) return index;
-        }
-
-        // No null, everything is used...
-
-        // This saves your ass 1 time
-        if (!override) {
-            array[0] = null;
-            return 0;
-        }
-
-        const rIndex = std.crypto.random.uintLessThan(usize, ArraySize);
-
-        if (array[rIndex]) |_| {
-            free(rIndex);
-        }
-
-        array[rIndex] = null;
-        return rIndex;
+pub const manager = z.HeapManager(GUIElement, (struct {
+    pub fn callback(_: Allocator, item: *GUIElement) !void {
+        if (!item.heap_id) return;
+        alloc.free(item.options.id);
     }
-
-    /// Uses the `searchNextIndex()` function to get an index
-    /// and puts the value into it
-    pub fn malloc(value: T) void {
-        const index = searchNextIndex(true);
-        array[index] = value;
-    }
-
-    /// Sets the value of the index to `null`
-    pub fn free(index: usize) void {
-        array[index] = null;
-    }
-
-    pub fn get(id: []const u8) ?*GUIElement {
-        for (array, 0..) |item, index| {
-            if (item == null) continue;
-            if (std.mem.eql(u8, id, item.?.options.id)) return &(array[index].?);
-        }
-        return null;
-    }
-
-    pub fn freeWithFreeId(index: usize) void {
-        const value = array[index];
-
-        if (value == null) return;
-
-        alloc.free(value.?.options.id);
-
-        array[index] = null;
-    }
-};
+}).callback);
 
 pub var ButtonMatrix: [9][16]?ButtonInterface = undefined;
 pub var hovered_button: ?*GUIElement = null;
@@ -94,6 +26,7 @@ var alloc: *Allocator = undefined;
 
 pub fn init(allocator: *Allocator) void {
     alloc = allocator;
+    manager.init(alloc.*);
 
     ButtonMatrix = [_][16]?ButtonInterface{
         [_]?ButtonInterface{null} ** 16,
@@ -189,30 +122,28 @@ pub fn update() void {
     }
 }
 
-pub fn deinit() void {
-    for (elements.array, 0..) |element, index| {
-        if (element == null) continue;
+pub fn deinit() !void {
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
-        if (element.?.children) |children| {
+    for (items) |item| {
+        if (item.children) |children| {
             children.deinit();
         }
-        if (element.?.heap_id) {
-            elements.freeWithFreeId(index);
-            continue;
-        }
 
-        elements.free(index);
+        manager.removeFreeId(item);
     }
+    manager.deinit();
 }
 
 pub fn select(selector: []const u8) ?*GUIElement {
-    for (0..elements.array.len) |entry| {
-        const v = elements.array[entry];
+    const items = manager.items() catch return Err: {
+        std.log.err("FAILED TO GET MANAGER ITEMS IN GUI/SELECT!", .{});
+        break :Err null;
+    };
+    defer manager.alloc.free(items);
 
-        if (v == null) continue;
-
-        const value = &elements.array[entry].?;
-
+    for (items) |value| {
         switch (selector[0]) {
             '.' => {
                 // Class based search
@@ -244,19 +175,15 @@ pub fn assertSelect(selector: []const u8) *GUIElement {
     );
 }
 
-pub fn clear() void {
-    for (elements.array, 0..) |element, index| {
-        if (element == null) continue;
+pub fn clear() !void {
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
-        if (element.?.children) |children| {
+    for (items) |item| {
+        if (item.children) |children| {
             children.deinit();
         }
-        if (element.?.heap_id) {
-            elements.freeWithFreeId(index);
-            continue;
-        }
-
-        elements.free(index);
+        manager.removeFreeId(item);
     }
 
     ButtonMatrix = [_][16]?ButtonInterface{
@@ -275,13 +202,12 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
     Parent.children = childrn;
     Parent.contents = content;
 
-    if (elements.get(options.id) != null) {
-        std.log.warn("Data clobbering", .{});
-    }
+    try manager.append(Parent);
 
-    elements.malloc(Parent);
+    const getFMT = try std.fmt.allocPrint(alloc.*, "#{s}", .{Parent.options.id});
+    defer alloc.free(getFMT);
 
-    const el_ptr = elements.get(Parent.options.id).?;
+    const el_ptr = select(getFMT).?;
 
     for (childrn.items) |child| {
         if (child.options.style.z_index == 0)

@@ -145,9 +145,11 @@ pub fn update() !void {
     var GUIElements = std.ArrayList(*GUI.GUIElement).init(std.heap.page_allocator);
     defer GUIElements.deinit();
 
-    for (GUI.elements.array, 0..) |entry, index| {
-        if (entry == null) continue;
-        try GUIElements.insert(0, &(GUI.elements.array[index].?));
+    const GUIItems = try GUI.manager.items();
+    defer GUI.manager.alloc.free(GUIItems);
+
+    for (GUIItems) |item| {
+        try GUIElements.insert(0, item);
         // try GUIElements.append(entry.value_ptr);
     }
 

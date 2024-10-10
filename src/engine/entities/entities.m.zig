@@ -1,4 +1,6 @@
 const std = @import("std");
+const builtin = @import("builtin");
+
 const Allocator = @import("std").mem.Allocator;
 
 const rl = @import("raylib");
@@ -21,6 +23,13 @@ const EntityTypeError = error{
     NoCachedDisplayField,
 };
 
+inline fn containsFieldName(fields: []const std.builtin.Type.StructField, name: []const u8) bool {
+    for (fields) |field| {
+        if (std.mem.eql(u8, field.name, name)) return true;
+    }
+    return false;
+}
+
 /// `T` is the type all entities must match.
 /// This type must have all internal fields since
 /// otherwise some engine modules won't work
@@ -30,33 +39,23 @@ pub fn make(comptime T: type) type {
     comptime {
         if (@typeInfo(T) != .Struct) @compileError("Type must be struct");
 
-        var id_flag = false;
-        var tags_flag = false;
-        var transform_flag = false;
-        var display_flag = false;
-        var collider_flag = false;
-        var cached_display_flag = false;
-        var cached_collider = false;
+        const must_have_fields = [_][]const u8{
+            "id",
+            "tags",
+            "transform",
+            "display",
+            "collider",
+            "cached_display",
+            "cached_collider",
+        };
 
         const fields = std.meta.fields(T);
 
-        for (fields) |field| {
-            if (std.mem.eql(u8, field.name, "id")) id_flag = true;
-            if (std.mem.eql(u8, field.name, "tags")) tags_flag = true;
-            if (std.mem.eql(u8, field.name, "transform")) transform_flag = true;
-            if (std.mem.eql(u8, field.name, "display")) display_flag = true;
-            if (std.mem.eql(u8, field.name, "collider")) collider_flag = true;
-            if (std.mem.eql(u8, field.name, "cached_display")) cached_display_flag = true;
-            if (std.mem.eql(u8, field.name, "cached_collider")) cached_collider = true;
+        for (must_have_fields) |field| {
+            if (!containsFieldName(fields, field)) {
+                @compileError("Missing field \"" ++ field ++ "\" on entity type!");
+            }
         }
-
-        if (!id_flag) @compileError("Entity type must have field: \"id\"");
-        if (!tags_flag) @compileError("Entity type must have field: \"tags\"");
-        if (!transform_flag) @compileError("Entity type must have field: \"transform\"");
-        if (!display_flag) @compileError("Entity type must have field: \"display\"");
-        if (!collider_flag) @compileError("Entity type must have field: \"collider\"");
-        if (!cached_display_flag) @compileError("Entity type must have field: \"cached_display\"");
-        if (!cached_collider) @compileError("Entity type must have field: \"cached_collider\"");
     }
 
     return struct {
@@ -116,7 +115,7 @@ pub fn make(comptime T: type) type {
             for (entities.items) |item| {
                 if (!std.mem.containsAtLeast(
                     u8,
-                    item.id,
+                    item.tags,
                     1,
                     tag,
                 )) try list.append(item);
@@ -152,72 +151,6 @@ pub fn make(comptime T: type) type {
 
         pub fn clear() void {
             entities.clearAndFree();
-        }
-
-        /// **IMPORTANT**:
-        /// You **need** to use this with heap allocated ids,
-        /// since `.free()` will try to free the id of the object!
-        pub fn Manager(comptime options: struct {
-            max_size: usize = 8_000_000,
-            max_entities: ?usize = null,
-        }) type {
-            return struct {
-                pub const EntitySize: comptime_int = @sizeOf(Entity);
-                pub const MaxArraySize: comptime_int = @divTrunc(options.max_size, EntitySize);
-                pub const ArraySize: comptime_int = if (options.max_entities) |max| @min(max, MaxArraySize) else MaxArraySize;
-                pub var array: [ArraySize]?Entity = [_]?Entity{null} ** ArraySize;
-
-                /// This will search for the next free *(value == null)*
-                /// index in the array and return it.
-                /// If there are no available indexes in the array and override is:
-                /// - **false**: it will override the 0th address.
-                /// - **true**: it will randomly return an address.
-                pub fn searchNextIndex(override: bool) usize {
-                    for (array, 0..) |value, index| {
-                        if (index == 0) continue;
-                        if (value == null) return index;
-                    }
-
-                    // No null, everything is used...
-
-                    // This saves your ass 1 time
-                    if (!override) {
-                        array[0] = null;
-                        return 0;
-                    }
-
-                    const rIndex = std.crypto.random.uintLessThan(usize, ArraySize);
-
-                    if (array[rIndex]) |_| {
-                        free(rIndex);
-                    }
-
-                    array[rIndex] = null;
-                    return rIndex;
-                }
-
-                /// Uses the `searchNextIndex()` function to get an index
-                /// and puts the value into it
-                pub fn malloc(value: Entity) void {
-                    const index = searchNextIndex(true);
-                    array[index] = value;
-                }
-
-                /// Sets the value of the index to `null`
-                pub fn free(index: usize) void {
-                    var value = array[index];
-
-                    if (value == null) return;
-
-                    value.?.freeRaylibStructs();
-                    if (exists(value.?.id)) {
-                        _ = delete(value.?.id);
-                    }
-                    alloc.free(value.?.id);
-
-                    array[index] = null;
-                }
-            };
         }
     };
 }

@@ -22,7 +22,7 @@ pub fn dprint(comptime msg: []const u8, args: anytype) void {
 }
 
 pub fn addrprint(name: []const u8, ptr: anytype) void {
-    switch (@TypeOf(ptr)) {
+    switch (@typeInfo(@TypeOf(ptr))) {
         .Pointer => dprint("ADDR[{s}]: 0x{x}", .{ name, @intFromPtr(ptr) }),
         else => print("{any}", .{ptr}),
     }

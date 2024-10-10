@@ -76,7 +76,7 @@ pub fn load(comptime id: String) !void {
     current = id;
 
     events.clear();
-    GUI.clear();
+    try GUI.clear();
     entities.clear();
 
     const data = script_map.get(id);

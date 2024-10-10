@@ -1,10 +1,24 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
 const e = @import("../../engine/engine.m.zig");
 
 var Player: ?*e.entities.Entity = null;
 
-const Manager = e.entities.Manager(.{ .max_entities = 1024 });
-var Animators: [Manager.ArraySize]?e.Animator = [_]?e.Animator{null} ** Manager.ArraySize;
+const EnemyStruct = struct {
+    entity: e.entities.Entity,
+    animator: ?e.Animator = null,
+};
+
+const manager = e.zlib.HeapManager(EnemyStruct, (struct {
+    pub fn callback(alloc: Allocator, item: *EnemyStruct) !void {
+        e.entities.delete(item.entity.id);
+        alloc.free(item.entity.id);
+
+        if (item.animator) |*animator| {
+            animator.deinit();
+        }
+    }
+}).callback);
 
 const dashing = @import("dashing.zig");
 const projectiles = @import("projectiles.zig");
@@ -22,17 +36,20 @@ const MELEE_WALK_RIGHT_SPRITE_1 = "sprites/entity/enemies/melee/right_1.png";
 
 // ===================== [Events] =====================
 
-pub fn awake() !void {}
+pub fn awake() !void {
+    manager.init(e.ALLOCATOR);
+}
 
 pub fn init() !void {
     Player = e.entities.get("Player").?;
 }
 
 pub fn update() !void {
-    for (Manager.array, 0..) |item, index| {
-        if (item == null) continue;
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
-        var entity_ptr: *e.entities.Entity = &Manager.array[index].?;
+    for (items) |item| {
+        var entity_ptr = &(item.entity);
 
         const entity_flag: bool = Get: {
             if (entity_ptr.entity_stats == null) break :Get false;
@@ -44,35 +61,24 @@ pub fn update() !void {
             std.log.err("Enemy without projectile data!", .{});
             std.log.err("Removing...", .{});
 
-            Manager.free(index);
+            manager.remove(item);
             continue;
         }
 
         if (entity_ptr.entity_stats.?.health <= 0) {
-            e.entities.delete(entity_ptr.id);
-            // e.ALLOCATOR.free(entity_ptr.id);
-            Manager.free(index);
-
-            if (Animators[index] == null) continue;
-
-            (&Animators[index].?).deinit();
-            Animators[index] = null;
+            manager.removeFreeId(item);
             continue;
         }
 
         if (!e.entities.exists(entity_ptr.id)) {
-            if (Animators[index]) |*old| {
-                old.deinit();
-                Animators[index] = null;
-            }
-
             try e.entities.register(entity_ptr);
-            Animators[index] = e.Animator.init(
+
+            item.animator = e.Animator.init(
                 &e.ALLOCATOR,
                 entity_ptr,
             );
 
-            var animator = &Animators[index].?;
+            var animator = &(item.animator.?);
             {
                 var walk_left_anim = e.Animator.Animation.init(
                     &e.ALLOCATOR,
@@ -139,7 +145,7 @@ pub fn update() !void {
             }
         }
 
-        var animator = &Animators[index].?;
+        var animator = &(item.animator.?);
         animator.update();
 
         if (!animator.isPlaying("walk_right"))
@@ -213,21 +219,13 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    for (0..Manager.array.len) |index| {
-        // if (item.*) |value| {
-        //     e.ALLOCATOR.free(value.id);
-        // }
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
-        Manager.free(index);
+    for (items) |item| {
+        manager.removeFreeId(item);
     }
-
-    for (&Animators, 0..) |*obj, index| {
-        if (obj.* == null) continue;
-
-        obj.*.?.deinit();
-
-        Animators[index] = null;
-    }
+    manager.deinit();
 }
 
 pub fn spawn() !void {
@@ -270,5 +268,9 @@ pub fn spawn() !void {
         },
     };
 
-    Manager.malloc(New);
+    try manager.append(
+        .{
+            .entity = New,
+        },
+    );
 }

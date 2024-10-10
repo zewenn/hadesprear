@@ -38,3 +38,5 @@ pub const print = debug.print;
 pub const println = debug.println;
 pub const dprint = debug.dprint;
 pub const addrprint = debug.addrprint;
+
+pub const HeapManager = @import("heapmanager.zig").HeapManager;

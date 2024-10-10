@@ -11,62 +11,7 @@ pub const OnHit = struct {
     end_time: f64,
 };
 
-pub const on_hits = struct {
-    const T = OnHit;
-    const options: struct {
-        max_size: usize = 8_000_000,
-        max_entities: ?usize = null,
-    } = .{
-        .max_size = 8_000_000,
-        .max_entities = 128,
-    };
-
-    pub const TSize: comptime_int = @sizeOf(T);
-    pub const MaxArraySize: comptime_int = @divTrunc(options.max_size, TSize);
-    pub const ArraySize: comptime_int = if (options.max_entities) |max| @min(max, MaxArraySize) else MaxArraySize;
-    pub var array: [ArraySize]?T = [_]?T{null} ** ArraySize;
-
-    /// This will search for the next free *(value == null)*
-    /// index in the array and return it.
-    /// If there are no available indexes in the array and override is:
-    /// - **false**: it will override the 0th address.
-    /// - **true**: it will randomly return an address.
-    pub fn searchNextIndex(override: bool) usize {
-        for (array, 0..) |value, index| {
-            if (index == 0) continue;
-            if (value == null) return index;
-        }
-
-        // No null, everything is used...
-
-        // This saves your ass 1 time
-        if (!override) {
-            array[0] = null;
-            return 0;
-        }
-
-        const rIndex = std.crypto.random.uintLessThan(usize, ArraySize);
-
-        if (array[rIndex]) |_| {
-            free(rIndex);
-        }
-
-        array[rIndex] = null;
-        return rIndex;
-    }
-
-    /// Uses the `searchNextIndex()` function to get an index
-    /// and puts the value into it
-    pub fn malloc(value: T) void {
-        const index = searchNextIndex(true);
-        array[index] = value;
-    }
-
-    /// Sets the value of the index to `null`
-    pub fn free(index: usize) void {
-        array[index] = null;
-    }
-};
+pub const manager = e.zlib.HeapManager(OnHit, null);
 
 fn calculateStrength(base: f32) f32 {
     return (-(1 / (base + 1)) + 1) * 2;
@@ -122,12 +67,12 @@ pub inline fn applyOnHitEffect(
 
     delta = new - old;
 
-    on_hits.malloc(.{
+    manager.append(.{
         .entity = en,
         .delta = delta,
         .T = effect,
         .end_time = e.time.gameTime + std.math.clamp(strength / 3, 0, 15),
-    });
+    }) catch {};
 }
 
 pub const Hands = struct {
@@ -916,12 +861,15 @@ pub const Hands = struct {
 
 pub fn awake() !void {}
 
-pub fn init() !void {}
+pub fn init() !void {
+    try manager.init(e.ALLOCATOR);
+}
 
 pub fn update() !void {
-    for (on_hits.array, 0..) |it, index| {
-        const item: *OnHit = if (it) |_| &(on_hits.array[index].?) else continue;
+    const items = try manager.items();
+    defer manager.alloc.free(items);
 
+    for (items) |item| {
         if (item.end_time >= e.time.gameTime) continue;
 
         switch (item.T) {
@@ -934,8 +882,10 @@ pub fn update() !void {
             else => {},
         }
 
-        on_hits.free(index);
+        manager.remove(item);
     }
 }
 
-pub fn deinit() !void {}
+pub fn deinit() !void {
+    manager.deinit();
+}

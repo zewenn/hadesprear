@@ -110,7 +110,7 @@ pub fn deinit() !void {
 pub fn update() !void {
     // var last_farme_at = time.currentTime;
     try time.tick();
-    std.log.info("FPS: {d:.3}", .{1 / time.deltaTime});
+    std.debug.print("FPS: {d:.3}\r", .{1 / time.deltaTime});
 
     // last_farme_at = rl.getTime();
     input.update();

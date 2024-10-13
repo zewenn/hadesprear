@@ -486,6 +486,13 @@ fn drawTetxure(
                     .x = window.size.x / 2,
                     .y = window.size.y / 2,
                 },
+            ).subtract(
+                camera.position.multiply(
+                    .{
+                        .x = camera.zoom,
+                        .y = camera.zoom,
+                    },
+                ),
             );
             const P1 = coll.top_right.multiply(
                 .{
@@ -497,6 +504,13 @@ fn drawTetxure(
                     .x = window.size.x / 2,
                     .y = window.size.y / 2,
                 },
+            ).subtract(
+                camera.position.multiply(
+                    .{
+                        .x = camera.zoom,
+                        .y = camera.zoom,
+                    },
+                ),
             );
             const P2 = coll.bottom_left.multiply(
                 .{
@@ -508,6 +522,13 @@ fn drawTetxure(
                     .x = window.size.x / 2,
                     .y = window.size.y / 2,
                 },
+            ).subtract(
+                camera.position.multiply(
+                    .{
+                        .x = camera.zoom,
+                        .y = camera.zoom,
+                    },
+                ),
             );
             const P3 = coll.bottom_right.multiply(
                 .{
@@ -519,6 +540,13 @@ fn drawTetxure(
                     .x = window.size.x / 2,
                     .y = window.size.y / 2,
                 },
+            ).subtract(
+                camera.position.multiply(
+                    .{
+                        .x = camera.zoom,
+                        .y = camera.zoom,
+                    },
+                ),
             );
 
             rl.drawCircle(

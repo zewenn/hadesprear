@@ -476,78 +476,10 @@ fn drawTetxure(
         );
 
         if (collider) |coll| {
-            const P0 = coll.top_left.multiply(
-                .{
-                    .x = camera.zoom,
-                    .y = camera.zoom,
-                },
-            ).add(
-                .{
-                    .x = window.size.x / 2,
-                    .y = window.size.y / 2,
-                },
-            ).subtract(
-                camera.position.multiply(
-                    .{
-                        .x = camera.zoom,
-                        .y = camera.zoom,
-                    },
-                ),
-            );
-            const P1 = coll.top_right.multiply(
-                .{
-                    .x = camera.zoom,
-                    .y = camera.zoom,
-                },
-            ).add(
-                .{
-                    .x = window.size.x / 2,
-                    .y = window.size.y / 2,
-                },
-            ).subtract(
-                camera.position.multiply(
-                    .{
-                        .x = camera.zoom,
-                        .y = camera.zoom,
-                    },
-                ),
-            );
-            const P2 = coll.bottom_left.multiply(
-                .{
-                    .x = camera.zoom,
-                    .y = camera.zoom,
-                },
-            ).add(
-                .{
-                    .x = window.size.x / 2,
-                    .y = window.size.y / 2,
-                },
-            ).subtract(
-                camera.position.multiply(
-                    .{
-                        .x = camera.zoom,
-                        .y = camera.zoom,
-                    },
-                ),
-            );
-            const P3 = coll.bottom_right.multiply(
-                .{
-                    .x = camera.zoom,
-                    .y = camera.zoom,
-                },
-            ).add(
-                .{
-                    .x = window.size.x / 2,
-                    .y = window.size.y / 2,
-                },
-            ).subtract(
-                camera.position.multiply(
-                    .{
-                        .x = camera.zoom,
-                        .y = camera.zoom,
-                    },
-                ),
-            );
+            const P0 = camera.worldPositionToScreenPosition(coll.top_left);
+            const P1 = camera.worldPositionToScreenPosition(coll.top_right);
+            const P2 = camera.worldPositionToScreenPosition(coll.bottom_left);
+            const P3 = camera.worldPositionToScreenPosition(coll.bottom_right);
 
             rl.drawCircle(
                 @intFromFloat(

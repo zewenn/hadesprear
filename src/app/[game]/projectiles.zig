@@ -216,6 +216,5 @@ pub fn summonMultiple(
     }
 
     entity.shooting_stats.?.timeout_end = e.time.gameTime +
-        (weapon.attack_speed * strct.attack_speed_modifier) *
-        (if (side == .enemy) @as(f32, ENEMY_ATTACK_TIMEOUT_MULTIPLIER) else @as(f32, 1));
+        (weapon.attack_speed * strct.attack_speed_modifier);
 }

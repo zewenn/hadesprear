@@ -43,7 +43,56 @@ pub const prefabs = struct {
     });
 
     pub const commons = struct {
-        pub const weapons = struct {};
+        pub const weapons = struct {
+            pub const angler_spear = Item(.{
+                .T = .weapon,
+                .rarity = .common,
+                .weapon_type = .polearm,
+                .damage = 0.025,
+
+                .name = "Angler Spear",
+
+                .weapon_light = .{
+                    .projectile_speed = 720,
+                    .projectile_array = conf.createProjectileArray(
+                        4,
+                        [_]?f32{ -180, -90, 0, 90 },
+                    ),
+                },
+
+                .icon = "sprites/weapons/fork.png",
+                .weapon_sprite_right = "sprites/weapons/fork.png",
+            });
+            pub const tank_spreader = Item(.{
+                .T = .weapon,
+                .rarity = .common,
+                .weapon_type = .sword,
+                .damage = 0.0025,
+
+                .name = "Tank Spreader",
+
+                .weapon_light = .{
+                    .projectile_speed = 720,
+                    .projectile_array = conf.createProjectileArray(
+                        9,
+                        [_]?f32{
+                            -50,
+                            -37.5,
+                            -25,
+                            -12.5,
+                            0,
+                            12.5,
+                            25,
+                            37.5,
+                            50,
+                        },
+                    ),
+                },
+
+                .icon = "sprites/weapons/steel_sword.png",
+                .weapon_sprite_right = "sprites/weapons/steel_sword.png",
+            });
+        };
     };
 
     pub const epics = struct {

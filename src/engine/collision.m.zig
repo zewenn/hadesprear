@@ -278,8 +278,8 @@ pub const box_system = struct {
 
 const RectangleVertices = entities.RectangleVertices;
 
-/// If both entities have a collider it returns the `.collidionChech()`
-/// result, if not it returns false.
+/// If both entities have a collider, returns the value of
+/// `collder.overlaps()` else returns null
 pub fn collides(entity1: *entities.Entity, entity2: *entities.Entity) bool {
     if (entity1.collider == null) return false;
     if (entity2.collider == null) return false;
@@ -326,39 +326,40 @@ pub fn update(alloc: *Allocator) !void {
     const entities_slice = try entities.all();
     defer alloc.free(entities_slice);
 
-    dynamic: for (entities_slice) |e| {
-        if (e.collider == null) continue;
-        if (e.collider.?.trigger) continue;
+    dynamic_colliders: for (entities_slice) |dynamic| {
+        if (dynamic.collider == null) continue;
+        if (dynamic.collider.?.trigger) continue;
 
-        const e_collider = &e.collider.?;
+        const dynamic_collider = &dynamic.collider.?;
 
-        if (!e_collider.dynamic) continue :dynamic;
+        if (!dynamic_collider.dynamic) continue :dynamic_colliders;
 
-        var entity_vertices = getCachedOrNew(e);
-        e.cached_collider = entity_vertices;
+        var dynamic_vertices = getCachedOrNew(dynamic);
+        dynamic.cached_collider = dynamic_vertices;
 
         other: for (entities_slice) |other| {
             if (other.collider == null) continue;
             if (other.collider.?.trigger) continue;
 
-            if (std.mem.eql(u8, e.id, other.id)) continue :other;
+            if (std.mem.eql(u8, dynamic.id, other.id)) continue :other;
 
             const other_collider = &other.collider.?;
 
             var other_vertices = getCachedOrNew(other);
 
-            if (!entity_vertices.overlaps(other_vertices)) continue :other;
+            if (!dynamic_vertices.overlaps(other_vertices)) continue :other;
 
-            // Collision Happening
-
+            // Single dynamic
             if (!other_collider.dynamic) {
-                entity_vertices.pushback(other_vertices, 1);
+                dynamic_vertices.pushback(other_vertices, 1);
                 continue :other;
             }
 
-            const combined_weight = z.math.to_f128(e_collider.weight + other_collider.weight).?;
+            // Multiple dynamic
+
+            const combined_weight = z.math.to_f128(dynamic_collider.weight + other_collider.weight).?;
             const e_mult = z.math.f128_to(f32, z.math.div(
-                e_collider.weight,
+                dynamic_collider.weight,
                 combined_weight,
             ).?).?;
             const other_mult = z.math.f128_to(f32, z.math.div(
@@ -366,11 +367,8 @@ pub fn update(alloc: *Allocator) !void {
                 combined_weight,
             ).?).?;
 
-            // moveBack(e_distances, e_transform, e_collider, other_transform, other_collider, other_mult);
-            // moveBack(other_distances, other_transform, other_collider, e_transform, e_collider, e_mult);
-
-            entity_vertices.pushback(other_vertices, other_mult);
-            other_vertices.pushback(entity_vertices, e_mult);
+            dynamic_vertices.pushback(other_vertices, other_mult);
+            other_vertices.pushback(dynamic_vertices, e_mult);
         }
     }
 }

@@ -47,6 +47,10 @@
 		"prefix": "caseexpression",
 		"body": "$1 => $2,\n"
 	},
+	"Else Expression": {
+		"prefix": "caseelse",
+		"body": "else => $1,\n"
+	},
 	"Callback": {
 		"prefix": "callback",
 		"body": [

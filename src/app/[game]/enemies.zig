@@ -6,6 +6,7 @@ const e = @import("../../engine/engine.m.zig");
 
 const weapons = @import("weapons.zig");
 const prefabs = @import("items.zig").prefabs;
+const usePrefab = @import("items.zig").usePrefab;
 
 const dashing = @import("dashing.zig");
 const projectiles = @import("projectiles.zig");
@@ -275,15 +276,17 @@ pub fn update() !void {
 
         const distance: f32 = distance_vec.length();
 
-        const move_vec = distance_vec
+        const normalised_distance_vec = distance_vec
             .normalize();
 
         const angle = HAND_ANGLE_SNAP_DEGREES * @round(std.math.radiansToDegrees(
             std.math.atan2(
-                move_vec.y,
-                move_vec.x,
+                normalised_distance_vec.y,
+                normalised_distance_vec.x,
             ),
         ) / HAND_ANGLE_SNAP_DEGREES);
+
+        const move_vec = normalised_distance_vec;
 
         switch (action) {
             // Apply dash
@@ -306,24 +309,41 @@ pub fn update() !void {
             else => {},
         }
 
-        if (entity_ptr.entity_stats.?.can_move and distance >= item.entity.entity_stats.?.range * 0.75) {
+        if (entity_ptr.entity_stats.?.can_move and distance >= item.entity.entity_stats.?.range) {
             entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
             entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+        } else if (distance < item.entity.entity_stats.?.range) {
+            entity_ptr.transform.position.x -= move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            entity_ptr.transform.position.y -= move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
         }
 
         if (entity_ptr.shooting_stats.?.timeout_end < e.time.gameTime and
             distance < entity_ptr.entity_stats.?.range)
         {
-            try projectiles.summonMultiple(
-                .light,
-                &item.entity,
-                item.current_weapon,
-                0,
-                angle,
-                .enemy,
-            );
+            switch (item.entity.entity_stats.?.enemy_archetype) {
+                .shaman => {
+                    for (0..3) |_| {
+                        try spawnArchetype(
+                            .minion,
+                            item.entity.entity_stats.?.enemy_subtype,
+                            item.entity.transform.position
+                        );
+                        entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + item.current_weapon.attack_speed;
+                    }
+                },
+                else => {
+                    try projectiles.summonMultiple(
+                        .light,
+                        &item.entity,
+                        item.current_weapon,
+                        0,
+                        angle,
+                        .enemy,
+                    );
 
-            try item.hands.?.play(.light);
+                    try item.hands.?.play(.light);
+                },
+            }
         }
 
         if (item.hands) |*hands| {
@@ -520,4 +540,188 @@ pub fn spawn() !void {
                 prefabs.hands,
         },
     );
+}
+
+pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtypes, at: e.Vector2) !void {
+    const id = try e.UUIDV7();
+
+    const scale_and_collider = switch (archetype) {
+        .minion => e.Vec2(48, 48),
+        .brute => e.Vec2(80, 80),
+        .tank => e.Vec2(128, 128),
+        .shaman => e.Vec2(80, 80),
+        .knight => e.Vec2(64, 128),
+
+        else => e.Vec2(64, 64),
+    };
+
+    const max_health: f32 = switch (archetype) {
+        .minion => 20,
+        .brute => 100,
+        .angler => 40,
+        .tank => 350,
+        .shaman => 240,
+        .knight => 210,
+    };
+
+    const move_speed: f32 = switch (archetype) {
+        .minion => 650,
+        .brute => 325,
+        .angler => 250,
+        .tank => 225,
+        .shaman => 235,
+        .knight => 350,
+    };
+
+    const New = e.entities.Entity{
+        .id = id,
+        .tags = "enemy",
+        .transform = .{
+            .position = at,
+            .scale = scale_and_collider,
+        },
+        .display = .{
+            .scaling = .pixelate,
+            .sprite = switch (archetype) {
+                else => MELEE_WALK_LEFT_SPRITE_0,
+            },
+        },
+        .entity_stats = .{
+            .is_enemy = true,
+            .can_move = true,
+            .can_dash = switch (archetype) {
+                .minion, .brute, .knight => true,
+                else => false,
+            },
+
+            .health = max_health,
+            .max_health = max_health,
+
+            .movement_speed = move_speed,
+
+            .enemy_archetype = archetype,
+            .enemy_subtype = subtype,
+
+            .range = switch (archetype) {
+                .minion => 200,
+                .brute => 250,
+                .angler => 750,
+                .tank => 450,
+                .shaman => 500,
+                .knight => 350,
+            },
+        },
+        .dash_modifiers = .{
+            .dash_time = 0.25,
+        },
+        .collider = .{
+            .dynamic = true,
+            .rect = e.Rectangle.init(
+                0,
+                0,
+                scale_and_collider.x,
+                scale_and_collider.y,
+            ),
+            .weight = 0.95,
+        },
+        .shooting_stats = .{
+            .damage = 10,
+            .timeout = 0.55,
+        },
+    };
+
+    const hand0_id = try std.fmt.allocPrint(
+        e.ALLOCATOR,
+        "hand0-{s}",
+        .{id},
+    );
+    const hand1_id = try std.fmt.allocPrint(
+        e.ALLOCATOR,
+        "hand1-{s}",
+        .{id},
+    );
+
+    const Hand0 = e.entities.Entity{
+        .id = hand0_id,
+        .tags = "hand",
+        .transform = e.entities.Transform{
+            .scale = e.Vec2(48, 48),
+        },
+        .display = .{
+            .scaling = .pixelate,
+            .sprite = e.MISSINGNO,
+        },
+    };
+
+    const Hand1 = e.entities.Entity{
+        .id = hand1_id,
+        .tags = "hand",
+        .transform = e.entities.Transform{
+            .scale = e.Vec2(96, 256),
+        },
+        .display = .{
+            .scaling = .pixelate,
+            .sprite = e.MISSINGNO,
+        },
+    };
+
+    try manager.append(
+        .{
+            .entity = New,
+            .hand0 = Hand0,
+            .hand1 = Hand1,
+            .current_weapon = getWeaponOfArchetype(
+                archetype,
+                subtype,
+            ),
+        },
+    );
+}
+
+pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtypes) conf.Item {
+    var weapon = switch (archetype) {
+        .minion => switch (subtype) {
+            .normal => usePrefab(prefabs.epics.weapons.piercing_sword),
+        },
+        .brute => switch (subtype) {
+            .normal => usePrefab(prefabs.epics.weapons.piercing_sword),
+        },
+        .angler => switch (subtype) {
+            .normal => usePrefab(prefabs.commons.weapons.angler_spear),
+        },
+        .tank => switch (subtype) {
+            .normal => usePrefab(prefabs.commons.weapons.tank_spreader),
+        },
+        .shaman => switch (subtype) {
+            .normal => usePrefab(prefabs.legendaries.weapons.trident),
+        },
+        .knight => switch (subtype) {
+            .normal => usePrefab(prefabs.legendaries.weapons.claymore),
+        },
+    };
+
+    const lifetime_scale_amount: f32 = switch (archetype) {
+        .minion => 1,
+        .brute => 1.25,
+        .angler => 10,
+        .tank => 4,
+        .shaman => 7.5,
+        .knight => 2,
+    };
+    const attack_speed_scale_amount: f32 = @as(f32, 4) + @as(f32, switch (archetype) {
+        .minion => 1.5,
+        .brute => 3,
+        .angler => 1,
+        .tank => 5,
+        .shaman => 40,
+        .knight => 2,
+    });
+
+    weapon.weapon_light.projectile_lifetime *= lifetime_scale_amount;
+    weapon.weapon_heavy.projectile_lifetime *= lifetime_scale_amount;
+    weapon.weapon_dash.projectile_lifetime *= lifetime_scale_amount;
+
+    weapon.attack_speed *= attack_speed_scale_amount;
+
+    return weapon;
 }

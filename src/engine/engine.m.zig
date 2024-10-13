@@ -65,12 +65,13 @@ pub fn Rect(x: anytype, y: anytype, w: anytype, h: anytype) rl.Rectangle {
     );
 }
 
-pub fn UUIDV7() ![38]u8 {
+pub fn UUIDV7() ![]u8 {
     const id_o = uuid.urn.serialize(uuid.v7.new());
-    // std.log.debug("id: {s}", .{id});
 
     const id = try ALLOCATOR.alloc(u8, 36);
     std.mem.copyForwards(u8, id, &id_o);
+
+    return id;
 }
 
 pub fn init(allocator: *Allocator) !void {

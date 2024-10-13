@@ -4,6 +4,7 @@ const entities_module = @import("./engine/entities/entities.m.zig");
 const rl = @import("raylib");
 const uuid = @import("uuid");
 const z = @import("./engine/z/z.m.zig");
+const UUIDV7 = @import("./engine/engine.m.zig").UUIDV7;
 
 pub const Entity = struct {
     const Self = @This();
@@ -76,7 +77,7 @@ pub const EntityStats = struct {
 
     health: f32 = 100,
     max_health: f32 = 100,
-    damage: f32 = 20,
+    damage: f32 = 1,
 
     crit_rate: f32 = 0,
     crit_damage_multiplier: f32 = 2,
@@ -85,8 +86,25 @@ pub const EntityStats = struct {
     range: f32 = 500,
 
     can_move: bool = false,
+    can_dash: bool = true,
     is_dashing: bool = false,
     is_invalnureable: bool = false,
+
+    enemy_archetype: EnemyArchetypes = .minion,
+    enemy_subtype: EnemySubtypes = .normal,
+};
+
+pub const EnemyArchetypes = enum {
+    minion,
+    brute,
+    angler,
+    tank,
+    shaman,
+    knight,
+};
+
+pub const EnemySubtypes = enum {
+    normal,
 };
 
 pub const DashModifiers = struct {
@@ -165,7 +183,7 @@ pub fn mergeWeaponAttackStats(base: WeaponAttackTypeStats, new: WeaponAttackType
 pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.45,
+            .projectile_lifetime = 0.65,
         },
         stats,
     );
@@ -173,7 +191,7 @@ pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.65,
+            .projectile_lifetime = 0.85,
             .multiplier = 2,
             .attack_speed_modifier = 2,
         },
@@ -183,7 +201,7 @@ pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackDashStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.85,
+            .projectile_lifetime = 1.05,
             .multiplier = 1.25,
             .attack_speed_modifier = 1.5,
             .projectile_scale = .{

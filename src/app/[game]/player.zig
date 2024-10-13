@@ -263,21 +263,52 @@ pub fn update() !void {
             move_vector.x += 1;
         }
         if (e.isKeyPressed(.key_f)) {
-            switch (e.isKeyDown(.key_one)) {
-                true => {
-                    for (0..10) |_| {
-                        try enemies.spawn();
-                    }
-                },
-                false => try enemies.spawn(),
+            if (e.isKeyDown(.key_zero)) {
+                for (0..10) |_| {
+                    try enemies.spawn();
+                }
             }
-            switch (e.isKeyDown(.key_two)) {
-                true => {
-                    for (0..50) |_| {
-                        try enemies.spawn();
-                    }
-                },
-                false => {},
+            if (e.isKeyDown(.key_one)) {
+                try enemies.spawnArchetype(
+                    .minion,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
+            }
+            if (e.isKeyDown(.key_two)) {
+                try enemies.spawnArchetype(
+                    .brute,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
+            }
+            if (e.isKeyDown(.key_three)) {
+                try enemies.spawnArchetype(
+                    .angler,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
+            }
+            if (e.isKeyDown(.key_four)) {
+                try enemies.spawnArchetype(
+                    .tank,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
+            }
+            if (e.isKeyDown(.key_five)) {
+                try enemies.spawnArchetype(
+                    .shaman,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
+            }
+            if (e.isKeyDown(.key_six)) {
+                try enemies.spawnArchetype(
+                    .knight,
+                    .normal,
+                    e.Vec2(0, 0),
+                );
             }
         }
         if (e.isKeyPressed(.key_q)) {

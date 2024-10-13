@@ -73,6 +73,8 @@ pub var Hand1 = e.entities.Entity{
 var player_animator: e.Animator = undefined;
 var hands: weapons.Hands = undefined;
 
+var health_display: *e.GUI.GUIElement = undefined;
+
 // ===================== [Entity] =====================
 
 // =================== [Components] ===================
@@ -82,51 +84,17 @@ var hands: weapons.Hands = undefined;
 var mouse_rotation: f32 = 0;
 
 fn summonProjectiles(
-    T: enum {
-        light,
-        heavy,
-        dash,
-    },
+    T: conf.AttackTypes,
     shoot_angle: f32,
 ) !void {
-    if (Player.shooting_stats.?.timeout_end >= e.time.gameTime) return;
-    const strct = switch (T) {
-        .dash => inventory.equippedbar.current_weapon.weapon_dash,
-        .heavy => inventory.equippedbar.current_weapon.weapon_heavy,
-
-        else => inventory.equippedbar.current_weapon.weapon_light,
-    };
-
-    for (strct.projectile_array) |pa| {
-        const plus_angle: f32 = if (pa) |p| p else continue;
-
-        try projectiles.new(Player.transform.position, .{
-            .direction = shoot_angle + plus_angle,
-            .lifetime_end = e.time.gameTime +
-                strct.projectile_lifetime,
-            .scale = strct.projectile_scale,
-            .side = .player,
-            .weight = .heavy,
-            .speed = strct.projectile_speed,
-            .damage = Player.entity_stats.?.damage +
-                Player.entity_stats.?.damage +
-                inventory.equippedbar.get(.damage) *
-                strct.multiplier,
-            .health = strct.projectile_health,
-            .bleed_per_second = strct.projectile_bps,
-            .sprite = strct.sprite,
-
-            .owner = &Player,
-            .on_hit_effect = strct.projectile_on_hit_effect,
-            .on_hit_effect_strength = @as(
-                f32,
-                @floatFromInt(inventory.equippedbar.current_weapon.level),
-            ) *
-                strct.projectile_on_hit_strength_multiplier,
-        });
-    }
-
-    Player.shooting_stats.?.timeout_end = e.time.gameTime + (inventory.equippedbar.current_weapon.attack_speed * strct.attack_speed_modifier);
+    try projectiles.summonMultiple(
+        T,
+        &Player,
+        inventory.equippedbar.current_weapon.*,
+        inventory.equippedbar.get(.damage),
+        shoot_angle,
+        .player,
+    );
 }
 
 // ===================== [Events] =====================
@@ -214,11 +182,53 @@ pub fn awake() !void {
     e.camera.follow(&Player.transform.position);
 }
 
-pub fn init() !void {}
+pub fn init() !void {
+    health_display = try e.GUI.Text(
+        .{
+            .id = "player-health-display",
+            .style = .{
+                .font = .{
+                    .size = 22,
+                    .shadow = .{
+                        .color = e.Color.dark_green,
+                        .offset = e.Vec2(2, 2),
+                    },
+                },
+                .z_index = -1,
+                .color = e.Color.green,
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
+                .top = e.GUI.u("30x"),
+                .left = e.GUI.u("10w"),
+            },
+        },
+        "Health: 100",
+    );
+}
 
 pub fn update() !void {
     if (e.isKeyDown(.key_seven)) e.display.camera.zoom *= 0.99;
     if (e.isKeyDown(.key_eight)) e.display.camera.zoom *= 1.01;
+
+    if (health_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
+    }
+    const content = try std.fmt.allocPrint(
+        e.ALLOCATOR,
+        "Health: {d:.0}%",
+        .{Player.entity_stats.?.health / Player.entity_stats.?.max_health * 100},
+    );
+    defer e.ALLOCATOR.free(content);
+
+    const multipointer_content = try e.zlib.arrays.toManyItemPointerSentinel(
+        e.ALLOCATOR,
+        content,
+    );
+
+    health_display.contents = multipointer_content;
+    health_display.is_content_heap = true;
 
     if (e.input.ui_mode) return;
     hands.equip(inventory.equippedbar.current_weapon);
@@ -439,4 +449,8 @@ pub fn deinit() !void {
 
     e.entities.delete(Player.id);
     Player.freeRaylibStructs();
+
+    if (health_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
+    }
 }

@@ -11,6 +11,7 @@ const dashing = @import("dashing.zig");
 const projectiles = @import("projectiles.zig");
 
 const HAND_DISTANCE = 24;
+const HAND_ANGLE_SNAP_DEGREES = 12.5;
 
 var Player: ?*e.entities.Entity = null;
 
@@ -22,6 +23,7 @@ const EnemyStruct = struct {
     hands: ?weapons.Hands = null,
     // current_weapon: conf.Item = prefabs.legendaries.weapons.claymore,
     current_weapon: conf.Item = prefabs.epics.weapons.piercing_sword,
+    health_display: *e.GUI.GUIElement = undefined,
 };
 
 const manager = e.zlib.HeapManager(EnemyStruct, (struct {
@@ -64,6 +66,12 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         if (item.animator) |*animator| {
             animator.deinit();
         }
+
+        if (item.health_display.is_content_heap) {
+            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, item.health_display.contents.?);
+        }
+
+        try e.GUI.remove(item.health_display);
     }
 }).callback);
 
@@ -109,10 +117,22 @@ pub fn update() !void {
             continue;
         }
 
+        // ==========================================
+        //
+        //                   REMOVE
+        //
+        // ==========================================
+
         if (entity_ptr.entity_stats.?.health <= 0) {
             manager.removeFreeId(item);
             continue;
         }
+
+        // ==========================================
+        //
+        //                 INITALISE
+        //
+        // ==========================================
 
         if (!e.entities.exists(entity_ptr.id)) {
             try e.entities.register(entity_ptr);
@@ -196,7 +216,44 @@ pub fn update() !void {
 
                 try animator.chain(walk_right_anim);
             }
+
+            const health_display_id = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "enemy-{s}-health-display",
+                .{item.entity.id},
+            );
+
+            item.health_display = try e.GUI.Text(
+                .{
+                    .id = health_display_id,
+                    .style = .{
+                        .font = .{
+                            .size = 16,
+                            .shadow = .{
+                                .color = e.Color.dark_purple,
+                                .offset = e.Vec2(2, 2),
+                            },
+                        },
+                        .z_index = -1,
+                        .color = e.Color.red,
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .top = e.GUI.u("30x"),
+                        .left = e.GUI.u("10w"),
+                    },
+                },
+                "100",
+            );
+            item.health_display.heap_id = true;
         }
+
+        // ==========================================
+        //
+        //                  UPDATE
+        //
+        // ==========================================
 
         item.hands.?.equip(&(item.current_weapon));
         item.hands.?.update();
@@ -221,12 +278,12 @@ pub fn update() !void {
         const move_vec = distance_vec
             .normalize();
 
-        const angle = std.math.radiansToDegrees(
+        const angle = HAND_ANGLE_SNAP_DEGREES * @round(std.math.radiansToDegrees(
             std.math.atan2(
                 move_vec.y,
                 move_vec.x,
             ),
-        );
+        ) / HAND_ANGLE_SNAP_DEGREES);
 
         switch (action) {
             // Apply dash
@@ -316,6 +373,44 @@ pub fn update() !void {
             };
         }
         // entity_ptr.entity_stats.?.health -= 0.1;
+
+        const screen_pos = e.camera.worldPositionToScreenPosition(e.Vec2(
+            item.entity.transform.position.x,
+            item.entity.transform.position.y - item.entity.transform.scale.y,
+        ));
+
+        item.health_display.options.style.top = e.GUI.toUnit(screen_pos.y);
+
+        item.health_display.options.style.left = e.GUI.toUnit(screen_pos.x);
+
+        if (item.health_display.is_content_heap) {
+            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, item.health_display.contents.?);
+        }
+        const content = try std.fmt.allocPrint(
+            e.ALLOCATOR,
+            "{d:.0}%",
+            .{item.entity.entity_stats.?.health / item.entity.entity_stats.?.max_health * 100},
+        );
+        defer e.ALLOCATOR.free(content);
+
+        const multipointer_content = try e.zlib.arrays.toManyItemPointerSentinel(
+            e.ALLOCATOR,
+            content,
+        );
+
+        item.health_display.contents = multipointer_content;
+        item.health_display.is_content_heap = true;
+
+        item.health_display.options.style.width = e.GUI.toUnit(
+            e.loadf32(
+                std.mem.indexOfSentinel(
+                    u8,
+                    0,
+                    item.health_display.contents.?,
+                ),
+            ) *
+                item.health_display.options.style.font.size,
+        );
     }
 }
 
@@ -404,24 +499,25 @@ pub fn spawn() !void {
         },
     };
 
-    // const random = std.crypto.random.intRangeLessThanBiased(
-    //     u32,
-    //     0,
-    //     10,
-    // );
+    const random = std.crypto.random.intRangeLessThanBiased(
+        u32,
+        0,
+        10,
+    );
 
     try manager.append(
         .{
             .entity = New,
             .hand0 = Hand0,
             .hand1 = Hand1,
-            .current_weapon = prefabs.legendaries.weapons.trident,
-            // if (random > 8)
-            //     prefabs.legendaries.weapons.trident
-            // else if (random > 2)
-            //     prefabs.epics.weapons.piercing_sword
-            // else
-            //     prefabs.hands,
+            .current_weapon =
+            // prefabs.legendaries.weapons.trident,
+            if (random > 8)
+                prefabs.legendaries.weapons.trident
+            else if (random > 2)
+                prefabs.epics.weapons.piercing_sword
+            else
+                prefabs.hands,
         },
     );
 }

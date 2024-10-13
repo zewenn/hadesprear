@@ -49,7 +49,7 @@ font: struct {
     } = null,
 } = .{},
 
-z_index: usize = 0,
+z_index: i32 = 0,
 
 pub fn equals(self: *Self, other: Self) bool {
     if (!self.top.equals(other.top)) return false;

@@ -122,6 +122,17 @@ pub fn update() void {
     }
 }
 
+pub fn remove(element: *GUIElement) !void {
+    const items = try manager.items();
+    defer manager.alloc.free(items);
+
+    for (items) |item| {
+        if (!z.eql(element, item)) continue;
+
+        manager.removeFreeId(item);
+    }
+}
+
 pub fn deinit() !void {
     const items = try manager.items();
     defer manager.alloc.free(items);

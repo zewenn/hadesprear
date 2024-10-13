@@ -75,6 +75,7 @@ pub const EntityStats = struct {
     max_movement_speed: f32 = 1280,
 
     health: f32 = 100,
+    max_health: f32 = 100,
     damage: f32 = 20,
 
     crit_rate: f32 = 0,
@@ -164,7 +165,7 @@ pub fn mergeWeaponAttackStats(base: WeaponAttackTypeStats, new: WeaponAttackType
 pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.5,
+            .projectile_lifetime = 0.35,
         },
         stats,
     );
@@ -172,7 +173,7 @@ pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 1,
+            .projectile_lifetime = 0.55,
             .multiplier = 2,
             .attack_speed_modifier = 2,
         },
@@ -182,7 +183,7 @@ pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackDashStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 2,
+            .projectile_lifetime = 0.75,
             .multiplier = 1.25,
             .attack_speed_modifier = 1.5,
             .projectile_scale = .{
@@ -207,6 +208,12 @@ pub fn newItem(item: Item) Item {
 
     return res;
 }
+
+pub const AttackTypes = enum {
+    light,
+    heavy,
+    dash,
+};
 
 pub const Item = struct {
     /// If id is 0 the Item is a prefab and should not be modified without cloning

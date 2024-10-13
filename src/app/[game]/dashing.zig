@@ -34,6 +34,7 @@ pub fn update() !void {
             entity.entity_stats.?.is_dashing = false;
             entity.entity_stats.?.can_move = true;
             entity.entity_stats.?.is_invalnureable = false;
+            entity.display.tint = e.Color.white;
             continue;
         }
 
@@ -61,9 +62,12 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
     entity.entity_stats.?.can_move = false;
     entity.entity_stats.?.is_invalnureable = true;
 
+    // TODO: add sprites instead of changing tint
+    //       or maybe even just play an animation?
+    entity.display.tint = e.Color.yellow;
+
     entity.dash_modifiers.?.towards = e.Vec2(1, 0)
-        .rotate(std.math.degreesToRadians(towards))
-        .normalize();
+        .rotate(std.math.degreesToRadians(towards));
 
     entity.dash_modifiers.?.dash_end = e.time.gameTime + entity.dash_modifiers.?.dash_time;
 }

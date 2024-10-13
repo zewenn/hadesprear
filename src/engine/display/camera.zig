@@ -23,15 +23,15 @@ pub fn update() void {
 pub fn worldPositionToScreenPosition(world_position: rl.Vector2) rl.Vector2 {
     const x = GetX: {
         var _x: f32 = window.size.x / 2;
-        _x += world_position.x;
-        _x -= position.x;
+        _x += world_position.x * zoom;
+        _x -= position.x * zoom;
         break :GetX _x;
     };
 
     const y = GetX: {
         var _y: f32 = window.size.y / 2;
-        _y += world_position.y;
-        _y -= position.y;
+        _y += world_position.y * zoom;
+        _y -= position.y * zoom;
         break :GetX _y;
     };
 

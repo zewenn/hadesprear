@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
-const config = @import("../../config.zig");
+const conf = @import("../../config.zig");
 const e = @import("../../engine/engine.m.zig");
 
 // ===================== [Entity] =====================
@@ -20,10 +20,14 @@ pub const manager = e.zlib.HeapManager(e.entities.Entity, (struct {
         alloc.free(item.id);
     }
 }).callback);
+
 const PLAYER_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_player_light.png";
 const PLAYER_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_player_heavy.png";
 const ENEMY_PROJECTILE_LIGHT_SPRITE = "sprites/projectiles/projectile_enemy_light.png";
 const ENEMY_PROJECTILE_HEAVY_SPRITE = "sprites/projectiles/projectile_enemy_heavy.png";
+
+const ENEMY_ATTACK_TIMEOUT_MULTIPLIER: comptime_float = 5;
+const ENEMY_PROJECTILE_SPEED_DECREASE_MULTIPLIER: comptime_float = 1.05;
 
 pub fn awake() !void {
     manager.init(e.ALLOCATOR);
@@ -90,10 +94,12 @@ pub fn update() !void {
 
             projectile_data.health -= projectile_data.bleed_per_second * e.time.DeltaTime();
 
-            if (projectile_data.health > 1) {
-                other.entity_stats.?.health -= projectile_data.damage * 5 * e.time.DeltaTime();
-            } else {
-                other.entity_stats.?.health -= projectile_data.damage;
+            if (!other.entity_stats.?.is_invalnureable) {
+                if (projectile_data.health > 1) {
+                    other.entity_stats.?.health -= projectile_data.damage * 5 * e.time.DeltaTime();
+                } else {
+                    other.entity_stats.?.health -= projectile_data.damage;
+                }
             }
 
             if ((projectile_data.health <= 0 and other.entity_stats.?.health <= 0) or
@@ -126,7 +132,7 @@ pub fn deinit() !void {
     manager.deinit();
 }
 
-pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
+pub fn new(at: e.Vector2, data: conf.ProjectileData) !void {
     const id_o = e.uuid.urn.serialize(e.uuid.v7.new());
     // std.log.debug("id: {s}", .{id});
 
@@ -163,16 +169,12 @@ pub fn new(at: e.Vector2, data: config.ProjectileData) !void {
 }
 
 pub fn summonMultiple(
-    T: enum {
-        light,
-        heavy,
-        dash,
-    },
+    T: conf.AttackTypes,
     entity: *e.entities.Entity,
-    weapon: config.Item,
+    weapon: conf.Item,
     bonus_damage: f32,
     shoot_angle: f32,
-    side: config.ProjectileSide,
+    side: conf.ProjectileSide,
 ) !void {
     if (entity.shooting_stats.?.timeout_end >= e.time.gameTime) return;
     const strct = switch (T) {
@@ -192,7 +194,8 @@ pub fn summonMultiple(
             .scale = strct.projectile_scale,
             .side = side,
             .weight = .heavy,
-            .speed = strct.projectile_speed,
+            .speed = strct.projectile_speed /
+                (if (side == .enemy) @as(f32, ENEMY_PROJECTILE_SPEED_DECREASE_MULTIPLIER) else @as(f32, 1)),
             .damage = entity.entity_stats.?.damage +
                 entity.entity_stats.?.damage +
                 bonus_damage *
@@ -214,5 +217,5 @@ pub fn summonMultiple(
 
     entity.shooting_stats.?.timeout_end = e.time.gameTime +
         (weapon.attack_speed * strct.attack_speed_modifier) *
-        (if (side == .enemy) @as(f32, 1.5) else @as(f32, 1));
+        (if (side == .enemy) @as(f32, ENEMY_ATTACK_TIMEOUT_MULTIPLIER) else @as(f32, 1));
 }

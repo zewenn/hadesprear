@@ -165,7 +165,7 @@ pub fn mergeWeaponAttackStats(base: WeaponAttackTypeStats, new: WeaponAttackType
 pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.35,
+            .projectile_lifetime = 0.45,
         },
         stats,
     );
@@ -173,7 +173,7 @@ pub fn WeaponAttackLightStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.55,
+            .projectile_lifetime = 0.65,
             .multiplier = 2,
             .attack_speed_modifier = 2,
         },
@@ -183,7 +183,7 @@ pub fn WeaponAttackHeavyStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStat
 pub fn WeaponAttackDashStats(stats: WeaponAttackTypeStats) WeaponAttackTypeStats {
     return mergeWeaponAttackStats(
         .{
-            .projectile_lifetime = 0.75,
+            .projectile_lifetime = 0.85,
             .multiplier = 1.25,
             .attack_speed_modifier = 1.5,
             .projectile_scale = .{
@@ -266,7 +266,7 @@ pub const Item = struct {
 
     name: [*:0]const u8,
 
-    icon: []const u8,
-    weapon_sprite_left: []const u8,
-    weapon_sprite_right: []const u8,
+    icon: []const u8 = "sprites/missingno.png",
+    weapon_sprite_left: []const u8 = "sprites/missingno.png",
+    weapon_sprite_right: []const u8 = "sprites/missingno.png",
 };

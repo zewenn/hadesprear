@@ -76,10 +76,6 @@ pub const prefabs = struct {
                 .weapon_projectile_scale_light = e.Vec2(64, 64),
 
                 .name = "Epic Amethyst",
-
-                .icon = "sprites/entity/player/weapons/gloves/left.png",
-                .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-                .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
             };
         };
     };

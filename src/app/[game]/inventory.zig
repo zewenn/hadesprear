@@ -68,14 +68,21 @@ pub const equippedbar = struct {
         }
     }
 
-    pub fn get(T: conf.ItemStats) f32 {
-        return switch (T) {
-            .damage => current_weapon.damage +
-                if (ring) |r| r.damage else 0 +
-                if (amethyst) |r| r.damage else 0 +
-                if (wayfinder) |r| r.damage else 0,
-            else => 0,
+    pub fn get(comptime T: conf.ItemStats) f32 {
+        const fieldname: []const u8 = comptime switch (T) {
+            .damage => "damage",
+            .health => "health",
+            .crit_rate => "crit_rate",
+            .crit_damage => "crit_damage",
+            .movement_speed => "movement_speed",
+            .tenacity => "tenacity",
+            .dash_charges => "dash_charges",
         };
+
+        return @field(current_weapon, fieldname) +
+            if (ring) |i| @field(i, fieldname) else 0 +
+            if (amethyst) |i| @field(i, fieldname) else 0 +
+            if (wayfinder) |i| @field(i, fieldname) else 0;
     }
 };
 
@@ -112,7 +119,7 @@ const PREVIEW_2x2 = "sprites/gui/preview_2x2.png";
 const PREVIEW_EPIC_2x2 = "sprites/gui/preview_epic_2x2.png";
 const PREVIEW_LEGENDARY_2x2 = "sprites/gui/preview_legendary_2x2.png";
 
-const preview = struct {
+pub const preview = struct {
     var is_shown = false;
     var selected = false;
     var selected_item: ?*Item = null;
@@ -190,7 +197,7 @@ const preview = struct {
     }
 
     pub fn toNamedHeapString(elem: *GUI.GUIElement, string: []const u8, number: f32, percent: bool) !void {
-        const named_damage_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d}{s}", .{ string, number, if (percent) "%" else "" });
+        const named_damage_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d:.0}{s}", .{ string, number, if (percent) "%" else "" });
         defer e.ALLOCATOR.free(named_damage_string);
 
         elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_damage_string);

@@ -48,6 +48,15 @@ pub fn loadf32(v: anytype) f32 {
     };
 }
 
+pub fn loadusize(v: anytype) usize {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .Int, .ComptimeInt => @intCast(v),
+        .Float, .ComptimeFloat => @intFromFloat(@round(v)),
+        .Bool => @intFromBool(v),
+        else => 0,
+    };
+}
+
 pub fn Vec2(x: anytype, y: anytype) rl.Vector2 {
     return rl.Vector2.init(loadf32(x), loadf32(y));
 }

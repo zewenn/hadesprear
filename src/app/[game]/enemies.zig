@@ -279,6 +279,10 @@ pub fn update() !void {
         const normalised_distance_vec = distance_vec
             .normalize();
 
+        if (item.entity.dash_modifiers.?.recharge_end < e.time.gameTime) {
+            item.entity.dash_modifiers.?.charges_available = item.entity.dash_modifiers.?.charges;
+        }
+
         const angle = HAND_ANGLE_SNAP_DEGREES * @round(std.math.radiansToDegrees(
             std.math.atan2(
                 normalised_distance_vec.y,

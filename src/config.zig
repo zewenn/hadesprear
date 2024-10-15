@@ -114,8 +114,12 @@ pub const DashModifiers = struct {
     movement_speed_multiplier: f32 = 3,
     dash_time: f64 = 1,
     towards: rl.Vector2 = rl.Vector2.init(1, 0),
+    base_charges: usize = 2,
     charges: usize = 2,
     charges_available: usize = 2,
+
+    recharge_time: f64 = 1.5,
+    recharge_end: f64 = 0,
 
     dash_end: f64 = 0,
 };
@@ -134,6 +138,7 @@ pub const ItemStats = enum {
     crit_damage,
     movement_speed,
     tenacity,
+    dash_charges,
 };
 
 pub const on_hit_effects = enum {

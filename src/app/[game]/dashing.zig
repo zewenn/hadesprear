@@ -58,6 +58,13 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
     if (entity.entity_stats == null) return;
     if (entity.dash_modifiers == null) return;
 
+    if (entity.dash_modifiers.?.charges_available == 0) return;
+
+    entity.dash_modifiers.?.charges_available -= 1;
+    if (entity.dash_modifiers.?.recharge_end < e.time.gameTime) {
+        entity.dash_modifiers.?.recharge_end = e.time.gameTime + entity.dash_modifiers.?.recharge_time;
+    }
+
     entity.entity_stats.?.is_dashing = true;
     entity.entity_stats.?.can_move = false;
     entity.entity_stats.?.is_invalnureable = true;

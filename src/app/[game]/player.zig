@@ -74,6 +74,7 @@ var player_animator: e.Animator = undefined;
 var hands: weapons.Hands = undefined;
 
 var health_display: *e.GUI.GUIElement = undefined;
+var dash_charges_display: *e.GUI.GUIElement = undefined;
 
 // ===================== [Entity] =====================
 
@@ -206,6 +207,29 @@ pub fn init() !void {
         },
         "Health: 100",
     );
+    dash_charges_display = try e.GUI.Text(
+        .{
+            .id = "player-dash-charges-display",
+            .style = .{
+                .font = .{
+                    .size = 22,
+                    .shadow = .{
+                        .color = e.Color.dark_purple,
+                        .offset = e.Vec2(2, 2),
+                    },
+                },
+                .z_index = -1,
+                .color = e.Color.gray,
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
+                .top = e.GUI.u("60x"),
+                .left = e.GUI.u("10w"),
+            },
+        },
+        "Dashes: 0",
+    );
 }
 
 pub fn update() !void {
@@ -215,22 +239,37 @@ pub fn update() !void {
     if (health_display.is_content_heap) {
         e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
     }
-    const content = try std.fmt.allocPrint(
-        e.ALLOCATOR,
-        "Health: {d:.0}%",
-        .{Player.entity_stats.?.health / Player.entity_stats.?.max_health * 100},
-    );
-    defer e.ALLOCATOR.free(content);
 
-    const multipointer_content = try e.zlib.arrays.toManyItemPointerSentinel(
-        e.ALLOCATOR,
-        content,
+    try inventory.preview.toNamedHeapString(
+        health_display,
+        "HP",
+        Player.entity_stats.?.health / Player.entity_stats.?.max_health * 100,
+        true,
     );
 
-    health_display.contents = multipointer_content;
-    health_display.is_content_heap = true;
+    if (dash_charges_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(
+            e.ALLOCATOR,
+            dash_charges_display.contents.?,
+        );
+    }
+
+    try inventory.preview.toNamedHeapString(
+        dash_charges_display,
+        "Dashes",
+        @floatFromInt(Player.dash_modifiers.?.charges_available),
+        false,
+    );
 
     if (e.input.ui_mode) return;
+
+    Player.dash_modifiers.?.charges = Player.dash_modifiers.?.base_charges +
+        e.loadusize(inventory.equippedbar.get(.dash_charges));
+
+    if (Player.dash_modifiers.?.recharge_end < e.time.gameTime) {
+        Player.dash_modifiers.?.charges_available = Player.dash_modifiers.?.charges;
+    }
+
     hands.equip(inventory.equippedbar.current_weapon);
 
     const mouse_pos = e.input.mouse_position;
@@ -482,6 +521,16 @@ pub fn deinit() !void {
     Player.freeRaylibStructs();
 
     if (health_display.is_content_heap) {
-        e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
+        e.zlib.arrays.freeManyItemPointerSentinel(
+            e.ALLOCATOR,
+            health_display.contents.?,
+        );
+    }
+
+    if (dash_charges_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(
+            e.ALLOCATOR,
+            dash_charges_display.contents.?,
+        );
     }
 }

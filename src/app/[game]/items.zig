@@ -163,9 +163,9 @@ pub const prefabs = struct {
                     ),
                 },
 
-                .icon = "sprites/weapons/steel_sword_heavy.png",
+                .icon = "sprites/weapons/ruby_lg_sword.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/steel_sword_heavy.png",
+                .weapon_sprite_right = "sprites/weapons/ruby_lg_sword.png",
             });
 
             pub const trident = Item(.{

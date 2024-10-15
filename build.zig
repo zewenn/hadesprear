@@ -72,31 +72,6 @@ pub fn build(b: *std.Build) !void {
         _ = writer.write("\n};") catch unreachable;
 
         break :Filenames;
-
-        // const seg = getAssetsEntries(files_dir, &allocator);
-        // defer {
-        //     for (seg.list.items) |item| {
-        //         seg.alloc.free(item);
-        //     }
-        //     seg.list.deinit();
-        // }
-
-        // var writer = output_file.writer();
-        // writer.writeAll("") catch unreachable;
-        // _ = writer.write("pub const Filenames = [_][]const u8{\n") catch unreachable;
-        // for (seg.list.items, 0..seg.list.items.len) |item, i| {
-        //     if (i == 0) {
-        //         _ = writer.write("\t\"") catch unreachable;
-        //     } else {
-        //         _ = writer.write("\",\n\t\"") catch unreachable;
-        //     }
-        //     writer.print("{s}", .{item}) catch unreachable;
-        //     if (i == seg.list.items.len - 1) {
-        //         _ = writer.write("\"") catch unreachable;
-        //     }
-        // }
-        // _ = writer.write("\n};") catch unreachable;
-        // break :Filenames;
     }
 
     // Handling Scenes & Scripts

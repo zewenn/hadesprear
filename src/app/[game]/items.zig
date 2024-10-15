@@ -149,8 +149,9 @@ pub const prefabs = struct {
                 .weapon_light = .{
                     .projectile_array = conf.createProjectileArray(
                         5,
-                        [_]?f32{ -75, -32.5, 0, 32.5, 75 },
+                        [_]?f32{ -75, -37.5, 0, 37.5, 75 },
                     ),
+                    .projectile_on_hit_effect = .vamp,
                 },
                 .weapon_heavy = .{
                     .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
@@ -168,7 +169,7 @@ pub const prefabs = struct {
                 .weapon_sprite_right = "sprites/weapons/ruby_lg_sword.png",
             });
 
-            pub const trident = Item(.{
+            pub const staff = Item(.{
                 .T = .weapon,
                 .level = 10,
                 .weapon_type = .polearm,
@@ -176,9 +177,10 @@ pub const prefabs = struct {
                 .damage = 10,
                 .weapon_projectile_scale_light = e.Vec2(64, 64),
 
-                .name = "Trident",
+                .name = "Staff",
 
                 .attack_speed = 0.15,
+                .dash_charges = 2,
 
                 .weapon_light = .{
                     .projectile_array = [3]?f32{ -60, 0, 60 } ++ ([_]?f32{null} ** 13),
@@ -195,9 +197,9 @@ pub const prefabs = struct {
                     .projectile_speed = 720,
                 },
 
-                .icon = "sprites/weapons/fork.png",
+                .icon = "sprites/weapons/staff.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/fork.png",
+                .weapon_sprite_right = "sprites/weapons/staff.png",
             });
 
             pub const daggers = Item(.{
@@ -259,9 +261,9 @@ pub const prefabs = struct {
                     .projectile_speed = 720,
                 },
 
-                .icon = "sprites/weapons/claymore.png",
+                .icon = "sprites/weapons/fancy_claymore.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/claymore.png",
+                .weapon_sprite_right = "sprites/weapons/fancy_claymore.png",
             });
         };
     };

@@ -22,7 +22,6 @@ const EnemyStruct = struct {
     hand0: e.entities.Entity,
     hand1: e.entities.Entity,
     hands: ?weapons.Hands = null,
-    // current_weapon: conf.Item = prefabs.legendaries.weapons.claymore,
     current_weapon: conf.Item = prefabs.epics.weapons.piercing_sword,
     health_display: *e.GUI.GUIElement = undefined,
 };
@@ -395,7 +394,6 @@ pub fn update() !void {
                 break :GetRotation rotation + Hand1.transform.rotation.z + hands.right_base_rotation;
             };
         }
-        // entity_ptr.entity_stats.?.health -= 0.1;
 
         const screen_pos = e.camera.worldPositionToScreenPosition(e.Vec2(
             item.entity.transform.position.x,
@@ -536,7 +534,7 @@ pub fn spawn() !void {
             .current_weapon =
             // prefabs.legendaries.weapons.trident,
             if (random > 8)
-                prefabs.legendaries.weapons.trident
+                prefabs.legendaries.weapons.staff
             else if (random > 2)
                 prefabs.epics.weapons.piercing_sword
             else
@@ -699,7 +697,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
             .normal => usePrefab(prefabs.commons.weapons.tank_spreader),
         },
         .shaman => switch (subtype) {
-            .normal => usePrefab(prefabs.legendaries.weapons.trident),
+            .normal => usePrefab(prefabs.legendaries.weapons.staff),
         },
         .knight => switch (subtype) {
             .normal => usePrefab(prefabs.legendaries.weapons.claymore),

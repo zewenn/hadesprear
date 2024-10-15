@@ -36,7 +36,7 @@ pub inline fn applyOnHitEffect(
         .vamp => {
             use_timeout = false;
 
-            entity.entity_stats.?.health *= scaled_strength;
+            entity.entity_stats.?.health += scaled_strength / 10;
         },
         .energized => {
             use_timeout = true;

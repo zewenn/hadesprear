@@ -1727,7 +1727,7 @@ pub fn init() !void {
         usePrefab(prefabs.epics.amethysts.test_amethyst),
     );
     _ = pickUpSort(
-        usePrefab(prefabs.legendaries.weapons.trident),
+        usePrefab(prefabs.legendaries.weapons.staff),
     );
     _ = pickUpSort(
         usePrefab(prefabs.legendaries.weapons.daggers),

@@ -194,8 +194,7 @@ pub fn summonMultiple(
             .scale = strct.projectile_scale,
             .side = side,
             .weight = .heavy,
-            .speed = strct.projectile_speed /
-                (if (side == .enemy) @as(f32, ENEMY_PROJECTILE_SPEED_DECREASE_MULTIPLIER) else @as(f32, 1)),
+            .speed = strct.projectile_speed,
             .damage = entity.entity_stats.?.damage +
                 entity.entity_stats.?.damage +
                 bonus_damage *

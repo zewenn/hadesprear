@@ -23,6 +23,7 @@ pub const Entity = struct {
     projectile_data: ?ProjectileData = null,
 
     entity_stats: ?EntityStats = null,
+
     dash_modifiers: ?DashModifiers = null,
 
     pub fn freeRaylibStructs(self: *Self) void {
@@ -81,6 +82,8 @@ pub const EntityStats = struct {
 
     crit_rate: f32 = 0,
     crit_damage_multiplier: f32 = 2,
+
+    run_away_distance: f32 = 0,
 
     is_enemy: bool = false,
     range: f32 = 500,

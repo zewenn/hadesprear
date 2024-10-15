@@ -290,7 +290,8 @@ pub fn update() !void {
 
         switch (action) {
             // Apply dash
-            1 => {
+            1 => Dash: {
+                if (!item.entity.entity_stats.?.can_dash) break :Dash;
                 const direction: f32 = angle + @as(
                     f32,
                     @floatFromInt(
@@ -305,16 +306,18 @@ pub fn update() !void {
                     entity_ptr,
                     (direction),
                 );
+                break :Dash;
             },
             else => {},
         }
-
-        if (entity_ptr.entity_stats.?.can_move and distance >= item.entity.entity_stats.?.range) {
-            entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
-            entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
-        } else if (distance < item.entity.entity_stats.?.range) {
-            entity_ptr.transform.position.x -= move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
-            entity_ptr.transform.position.y -= move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+        if (entity_ptr.entity_stats.?.can_move) {
+            if (distance >= item.entity.entity_stats.?.run_away_distance) {
+                entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+                entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            } else {
+                entity_ptr.transform.position.x -= move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+                entity_ptr.transform.position.y -= move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            }
         }
 
         if (entity_ptr.shooting_stats.?.timeout_end < e.time.gameTime and
@@ -323,11 +326,7 @@ pub fn update() !void {
             switch (item.entity.entity_stats.?.enemy_archetype) {
                 .shaman => {
                     for (0..3) |_| {
-                        try spawnArchetype(
-                            .minion,
-                            item.entity.entity_stats.?.enemy_subtype,
-                            item.entity.transform.position
-                        );
+                        try spawnArchetype(.minion, item.entity.entity_stats.?.enemy_subtype, item.entity.transform.position);
                         entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + item.current_weapon.attack_speed;
                     }
                 },
@@ -593,15 +592,11 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
                 .minion, .brute, .knight => true,
                 else => false,
             },
-
             .health = max_health,
             .max_health = max_health,
-
             .movement_speed = move_speed,
-
             .enemy_archetype = archetype,
             .enemy_subtype = subtype,
-
             .range = switch (archetype) {
                 .minion => 200,
                 .brute => 250,
@@ -609,6 +604,13 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
                 .tank => 450,
                 .shaman => 500,
                 .knight => 350,
+            },
+            .run_away_distance = switch (archetype) {
+                .angler => 400,
+                .tank => 200,
+                .shaman => 450,
+
+                else => 0,
             },
         },
         .dash_modifiers = .{
@@ -704,7 +706,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
         .minion => 1,
         .brute => 1.25,
         .angler => 10,
-        .tank => 4,
+        .tank => 3,
         .shaman => 7.5,
         .knight => 2,
     };
@@ -713,7 +715,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
         .brute => 3,
         .angler => 1,
         .tank => 5,
-        .shaman => 40,
+        .shaman => 80,
         .knight => 2,
     });
 

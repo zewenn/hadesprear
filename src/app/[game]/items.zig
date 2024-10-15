@@ -49,6 +49,7 @@ pub const prefabs = struct {
                 .rarity = .common,
                 .weapon_type = .polearm,
                 .damage = 0.025,
+                .attack_speed = 1,
 
                 .name = "Angler Spear",
 
@@ -68,23 +69,25 @@ pub const prefabs = struct {
                 .rarity = .common,
                 .weapon_type = .sword,
                 .damage = 0.0025,
+                .attack_speed = 1,
 
                 .name = "Tank Spreader",
 
                 .weapon_light = .{
+                    .projectile_lifetime = 0.25,
                     .projectile_speed = 720,
                     .projectile_array = conf.createProjectileArray(
                         9,
                         [_]?f32{
-                            -50,
-                            -37.5,
-                            -25,
-                            -12.5,
+                            -20,
+                            -15,
+                            -10,
+                            -5,
                             0,
-                            12.5,
-                            25,
-                            37.5,
-                            50,
+                            5,
+                            10,
+                            15,
+                            20,
                         },
                     ),
                 },
@@ -144,11 +147,20 @@ pub const prefabs = struct {
 
                 .name = "Legendary Sword",
                 .weapon_light = .{
-                    .projectile_array = [5]?f32{ -75, -45, 0, 45, 75 } ++ ([_]?f32{null} ** 11),
+                    .projectile_array = conf.createProjectileArray(
+                        5,
+                        [_]?f32{ -75, -32.5, 0, 32.5, 75 },
+                    ),
                 },
                 .weapon_heavy = .{
                     .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
                     .sprite = "sprites/projectiles/player/generic/heavy.png",
+                },
+                .weapon_dash = .{
+                    .projectile_array = conf.createProjectileArray(
+                        3,
+                        [_]?f32{ -30, 0, 30 },
+                    ),
                 },
 
                 .icon = "sprites/weapons/steel_sword_heavy.png",

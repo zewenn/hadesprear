@@ -197,7 +197,8 @@ pub fn summonMultiple(
             .speed = strct.projectile_speed,
             .damage = entity.entity_stats.?.damage +
                 entity.entity_stats.?.damage +
-                bonus_damage *
+                bonus_damage +
+                weapon.damage *
                 strct.multiplier,
             .health = strct.projectile_health,
             .bleed_per_second = strct.projectile_bps,
@@ -215,5 +216,6 @@ pub fn summonMultiple(
     }
 
     entity.shooting_stats.?.timeout_end = e.time.gameTime +
-        (weapon.attack_speed * strct.attack_speed_modifier);
+        weapon.attack_speed *
+        strct.attack_speed_modifier;
 }

@@ -75,10 +75,28 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
     }
 }).callback);
 
-const MELEE_WALK_LEFT_SPRITE_0 = "sprites/entity/enemies/melee/left_0.png";
-const MELEE_WALK_LEFT_SPRITE_1 = "sprites/entity/enemies/melee/left_1.png";
-const MELEE_WALK_RIGHT_SPRITE_0 = "sprites/entity/enemies/melee/right_0.png";
-const MELEE_WALK_RIGHT_SPRITE_1 = "sprites/entity/enemies/melee/right_1.png";
+const MELEE_LEFT_0 = "sprites/entity/enemies/melee/left_0.png";
+const MELEE_LEFT_1 = "sprites/entity/enemies/melee/left_1.png";
+const MELEE_RIGHT_0 = "sprites/entity/enemies/melee/right_0.png";
+const MELEE_RIGHT_1 = "sprites/entity/enemies/melee/right_1.png";
+
+const BRUTE_LEFT_0 = "sprites/entity/enemies/brute/left_0.png";
+const BRUTE_LEFT_1 = "sprites/entity/enemies/brute/left_1.png";
+const BRUTE_RIGHT_0 = "sprites/entity/enemies/brute/right_0.png";
+const BRUTE_RIGHT_1 = "sprites/entity/enemies/brute/right_1.png";
+
+const MINION_LEFT_0 = "sprites/entity/enemies/minion/left_0.png";
+const MINION_LEFT_1 = "sprites/entity/enemies/minion/left_1.png";
+const MINION_RIGHT_0 = "sprites/entity/enemies/minion/right_0.png";
+const MINION_RIGHT_1 = "sprites/entity/enemies/minion/right_1.png";
+
+const ANGLER_LEFT_0 = "sprites/entity/enemies/angler/left.png";
+const ANGLER_RIGHT_0 = "sprites/entity/enemies/angler/right.png";
+
+const TANK_LEFT_0 = "sprites/entity/enemies/tank/left_0.png";
+const TANK_LEFT_1 = "sprites/entity/enemies/tank/left_1.png";
+const TANK_RIGHT_0 = "sprites/entity/enemies/tank/right_0.png";
+const TANK_RIGHT_1 = "sprites/entity/enemies/tank/right_1.png";
 
 // ===================== [Entity] =====================
 
@@ -164,21 +182,39 @@ pub fn update() !void {
                     0,
                     .{
                         .rotation = 0,
-                        .sprite = MELEE_WALK_LEFT_SPRITE_0,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_LEFT_0,
+                            .brute => BRUTE_LEFT_0,
+                            .angler => ANGLER_LEFT_0,
+                            .tank => TANK_LEFT_0,
+                            else => MELEE_LEFT_0,
+                        },
                     },
                 );
                 walk_left_anim.chain(
                     50,
                     .{
                         .rotation = -5,
-                        .sprite = MELEE_WALK_LEFT_SPRITE_1,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_LEFT_1,
+                            .brute => BRUTE_LEFT_1,
+                            .angler => ANGLER_LEFT_0,
+                            .tank => TANK_LEFT_1,
+                            else => MELEE_LEFT_1,
+                        },
                     },
                 );
                 walk_left_anim.chain(
                     100,
                     .{
                         .rotation = 0,
-                        .sprite = MELEE_WALK_LEFT_SPRITE_0,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_LEFT_0,
+                            .brute => BRUTE_LEFT_0,
+                            .angler => ANGLER_LEFT_0,
+                            .tank => TANK_LEFT_0,
+                            else => MELEE_LEFT_0,
+                        },
                     },
                 );
 
@@ -196,21 +232,39 @@ pub fn update() !void {
                     0,
                     .{
                         .rotation = 0,
-                        .sprite = MELEE_WALK_RIGHT_SPRITE_0,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_RIGHT_0,
+                            .brute => BRUTE_RIGHT_0,
+                            .angler => ANGLER_RIGHT_0,
+                            .tank => TANK_RIGHT_0,
+                            else => MELEE_RIGHT_0,
+                        },
                     },
                 );
                 walk_right_anim.chain(
                     50,
                     .{
                         .rotation = 5,
-                        .sprite = MELEE_WALK_RIGHT_SPRITE_1,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_RIGHT_1,
+                            .brute => BRUTE_RIGHT_1,
+                            .angler => ANGLER_RIGHT_0,
+                            .tank => TANK_RIGHT_1,
+                            else => MELEE_RIGHT_1,
+                        },
                     },
                 );
                 walk_right_anim.chain(
                     100,
                     .{
                         .rotation = 0,
-                        .sprite = MELEE_WALK_RIGHT_SPRITE_0,
+                        .sprite = switch (item.entity.entity_stats.?.enemy_archetype) {
+                            .minion => MINION_RIGHT_0,
+                            .brute => BRUTE_RIGHT_0,
+                            .angler => ANGLER_RIGHT_0,
+                            .tank => TANK_RIGHT_0,
+                            else => MELEE_RIGHT_0,
+                        },
                     },
                 );
 
@@ -260,9 +314,6 @@ pub fn update() !void {
 
         var animator = &(item.animator.?);
         animator.update();
-
-        if (!animator.isPlaying("walk_right"))
-            try animator.play("walk_right");
 
         const action = std.crypto.random.intRangeLessThanBiased(
             u32,
@@ -320,6 +371,21 @@ pub fn update() !void {
             } else {
                 entity_ptr.transform.position.x -= move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
                 entity_ptr.transform.position.y -= move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
+            }
+
+            switch (move_vec.x >= 0) {
+                true => {
+                    if (!animator.isPlaying("walk_right")) {
+                        animator.stop("walk_left");
+                        try animator.play("walk_right");
+                    }
+                },
+                false => {
+                    if (!animator.isPlaying("walk_left")) {
+                        animator.stop("walk_right");
+                        try animator.play("walk_left");
+                    }
+                },
             }
         }
 
@@ -445,110 +511,11 @@ pub fn deinit() !void {
     manager.deinit();
 }
 
-pub fn spawn() !void {
-    const id_o = e.uuid.urn.serialize(e.uuid.v7.new());
-    // std.log.debug("id: {s}", .{id});
-
-    const id = try e.ALLOCATOR.alloc(u8, 36);
-    std.mem.copyForwards(u8, id, &id_o);
-
-    const New = e.entities.Entity{
-        .id = id,
-        .tags = "enemy",
-        .transform = .{
-            .rotation = e.Vector3.init(0, 0, 0),
-        },
-        .display = .{
-            .scaling = .pixelate,
-            .sprite = MELEE_WALK_LEFT_SPRITE_0,
-        },
-        .entity_stats = .{
-            .is_enemy = true,
-            .can_move = true,
-        },
-        .dash_modifiers = .{
-            .dash_time = 0.25,
-        },
-        .collider = .{
-            .dynamic = true,
-            .rect = e.Rectangle.init(
-                0,
-                0,
-                64,
-                64,
-            ),
-            .weight = 0.95,
-        },
-        .shooting_stats = .{
-            .damage = 10,
-            .timeout = 0.55,
-        },
-    };
-
-    const hand0_id = try std.fmt.allocPrint(
-        e.ALLOCATOR,
-        "hand0-{s}",
-        .{id},
-    );
-    const hand1_id = try std.fmt.allocPrint(
-        e.ALLOCATOR,
-        "hand1-{s}",
-        .{id},
-    );
-
-    const Hand0 = e.entities.Entity{
-        .id = hand0_id,
-        .tags = "hand",
-        .transform = e.entities.Transform{
-            .scale = e.Vec2(48, 48),
-        },
-        .display = .{
-            .scaling = .pixelate,
-            .sprite = e.MISSINGNO,
-        },
-    };
-
-    const Hand1 = e.entities.Entity{
-        .id = hand1_id,
-        .tags = "hand",
-        .transform = e.entities.Transform{
-            .scale = e.Vec2(96, 256),
-        },
-        .display = .{
-            .scaling = .pixelate,
-            .sprite = e.MISSINGNO,
-        },
-    };
-
-    const random = std.crypto.random.intRangeLessThanBiased(
-        u32,
-        0,
-        10,
-    );
-
-    try manager.append(
-        .{
-            .entity = New,
-            .hand0 = Hand0,
-            .hand1 = Hand1,
-            .current_weapon =
-            // prefabs.legendaries.weapons.trident,
-            if (random > 8)
-                prefabs.legendaries.weapons.staff
-            else if (random > 2)
-                prefabs.epics.weapons.piercing_sword
-            else
-                prefabs.hands,
-        },
-    );
-}
-
 pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtypes, at: e.Vector2) !void {
     const id = try e.UUIDV7();
 
     const scale_and_collider = switch (archetype) {
         .minion => e.Vec2(48, 48),
-        .brute => e.Vec2(80, 80),
         .tank => e.Vec2(128, 128),
         .shaman => e.Vec2(80, 80),
         .knight => e.Vec2(64, 128),
@@ -584,7 +551,7 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
         .display = .{
             .scaling = .pixelate,
             .sprite = switch (archetype) {
-                else => MELEE_WALK_LEFT_SPRITE_0,
+                else => MELEE_LEFT_0,
             },
         },
         .entity_stats = .{
@@ -608,11 +575,16 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
                 .knight => 350,
             },
             .run_away_distance = switch (archetype) {
-                .angler => 400,
-                .tank => 200,
-                .shaman => 450,
+                .angler => 700,
+                .tank => 300,
+                .shaman => 650,
 
-                else => 0,
+                else => 200,
+            },
+
+            .damage = switch (archetype) {
+                .knight => 10,
+                else => 1,
             },
         },
         .dash_modifiers = .{
@@ -707,7 +679,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
     const lifetime_scale_amount: f32 = switch (archetype) {
         .minion => 1,
         .brute => 1.25,
-        .angler => 10,
+        .angler => 20,
         .tank => 3,
         .shaman => 7.5,
         .knight => 2,
@@ -717,7 +689,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
         .brute => 3,
         .angler => 1,
         .tank => 5,
-        .shaman => 80,
+        .shaman => 40,
         .knight => 2,
     });
 
@@ -726,6 +698,8 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
     weapon.weapon_dash.projectile_lifetime *= lifetime_scale_amount;
 
     weapon.attack_speed *= attack_speed_scale_amount;
+
+    weapon.weapon_light.sprite = "sprites/projectiles/enemy/generic/light.png";
 
     return weapon;
 }

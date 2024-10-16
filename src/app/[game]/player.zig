@@ -304,7 +304,11 @@ pub fn update() !void {
         if (e.isKeyPressed(.key_f)) {
             if (e.isKeyDown(.key_zero)) {
                 for (0..10) |_| {
-                    try enemies.spawn();
+                    try enemies.spawnArchetype(
+                        .brute,
+                        .normal,
+                        e.Vec2(0, 0),
+                    );
                 }
             }
             if (e.isKeyDown(.key_one)) {

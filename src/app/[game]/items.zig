@@ -61,14 +61,14 @@ pub const prefabs = struct {
                     ),
                 },
 
-                .icon = "sprites/weapons/fork.png",
-                .weapon_sprite_right = "sprites/weapons/fork.png",
+                .icon = "sprites/weapons/normal_polearm.png",
+                .weapon_sprite_right = "sprites/weapons/normal_polearm.png",
             });
             pub const tank_spreader = Item(.{
                 .T = .weapon,
                 .rarity = .common,
                 .weapon_type = .sword,
-                .damage = 0.0025,
+                .damage = 5,
                 .attack_speed = 1,
 
                 .name = "Tank Spreader",
@@ -115,9 +115,9 @@ pub const prefabs = struct {
                     .sprite = "sprites/projectiles/player/generic/heavy.png",
                 },
 
-                .icon = "sprites/weapons/steel_sword.png",
+                .icon = "sprites/weapons/normal_sword.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/steel_sword.png",
+                .weapon_sprite_right = "sprites/weapons/normal_sword.png",
             });
         };
         pub const amethysts = struct {
@@ -143,7 +143,7 @@ pub const prefabs = struct {
 
                 .level = 999,
 
-                .attack_speed = 0.2,
+                .attack_speed = 0.25,
 
                 .name = "Legendary Sword",
                 .weapon_light = .{
@@ -162,11 +162,12 @@ pub const prefabs = struct {
                         3,
                         [_]?f32{ -30, 0, 30 },
                     ),
+                    .sprite = "sprites/projectiles/player/generic/dash.png",
                 },
 
-                .icon = "sprites/weapons/ruby_lg_sword.png",
+                .icon = "sprites/weapons/normal_sword.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/ruby_lg_sword.png",
+                .weapon_sprite_right = "sprites/weapons/normal_sword.png",
             });
 
             pub const staff = Item(.{
@@ -179,7 +180,7 @@ pub const prefabs = struct {
 
                 .name = "Staff",
 
-                .attack_speed = 0.15,
+                .attack_speed = 0.215,
                 .dash_charges = 2,
 
                 .weapon_light = .{
@@ -197,9 +198,9 @@ pub const prefabs = struct {
                     .projectile_speed = 720,
                 },
 
-                .icon = "sprites/weapons/staff.png",
+                .icon = "sprites/weapons/normal_polearm.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/staff.png",
+                .weapon_sprite_right = "sprites/weapons/normal_polearm.png",
             });
 
             pub const daggers = Item(.{
@@ -221,9 +222,9 @@ pub const prefabs = struct {
                     .sprite = "sprites/projectiles/player/generic/heavy.png",
                 },
 
-                .icon = "sprites/weapons/dagger.png",
-                .weapon_sprite_left = "sprites/weapons/dagger.png",
-                .weapon_sprite_right = "sprites/weapons/dagger.png",
+                .icon = "sprites/weapons/normal_dagger.png",
+                .weapon_sprite_left = "sprites/weapons/normal_dagger.png",
+                .weapon_sprite_right = "sprites/weapons/normal_dagger.png",
             });
 
             pub const claymore = Item(.{
@@ -259,11 +260,12 @@ pub const prefabs = struct {
                     .projectile_scale = e.Vec2(385, 128),
                     .attack_speed_modifier = 2,
                     .projectile_speed = 720,
+                    .sprite = "sprites/projectiles/player/generic/dash.png",
                 },
 
-                .icon = "sprites/weapons/fancy_claymore.png",
+                .icon = "sprites/weapons/normal_claymore.png",
                 .weapon_sprite_left = e.MISSINGNO,
-                .weapon_sprite_right = "sprites/weapons/fancy_claymore.png",
+                .weapon_sprite_right = "sprites/weapons/normal_claymore.png",
             });
         };
     };

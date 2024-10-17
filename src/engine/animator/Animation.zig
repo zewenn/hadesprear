@@ -2,6 +2,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const Keyframe = @import("Keyframe.zig");
 const Number = @import("interpolation.zig").Number;
+const components = @import("../entities/components.zig");
 
 const time = @import("../time.m.zig");
 const z = @import("../z/z.m.zig");
@@ -131,7 +132,7 @@ pub fn next(self: *Self) void {
     }
 }
 
-pub fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, percent: Number) Keyframe {
+pub inline fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, percent: Number) Keyframe {
     var new_kf = Keyframe{};
 
     if (kf1.x) |v1| {
@@ -190,7 +191,194 @@ pub fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, percent: 
 
     if (kf1.tint) |v1| {
         if (kf2.tint) |v2| {
-            new_kf.tint = if (percent > 0.5) v2 else v1;
+            // new_kf.tint = if (percent > 0.5) v2 else v1;
+            new_kf.tint = .{
+                .r = @intFromFloat(self.timing_fn(@floatFromInt(v1.r), @floatFromInt(v2.r), percent)),
+                .g = @intFromFloat(self.timing_fn(@floatFromInt(v1.g), @floatFromInt(v2.g), percent)),
+                .b = @intFromFloat(self.timing_fn(@floatFromInt(v1.b), @floatFromInt(v2.b), percent)),
+                .a = @intFromFloat(self.timing_fn(@floatFromInt(v1.a), @floatFromInt(v2.a), percent)),
+            };
+        }
+    }
+
+    // DUMMY SHIT
+    {
+        // f32
+
+        if (kf1.d1f23) |v1| {
+            if (kf2.d1f23) |v2| {
+                new_kf.d1f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d2f23) |v1| {
+            if (kf2.d2f23) |v2| {
+                new_kf.d2f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d3f23) |v1| {
+            if (kf2.d3f23) |v2| {
+                new_kf.d3f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d4f23) |v1| {
+            if (kf2.d4f23) |v2| {
+                new_kf.d4f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d5f23) |v1| {
+            if (kf2.d5f23) |v2| {
+                new_kf.d5f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d6f23) |v1| {
+            if (kf2.d6f23) |v2| {
+                new_kf.d6f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d7f23) |v1| {
+            if (kf2.d7f23) |v2| {
+                new_kf.d7f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        if (kf1.d8f23) |v1| {
+            if (kf2.d8f23) |v2| {
+                new_kf.d8f23 = self.timing_fn(v1, v2, percent);
+            }
+        }
+
+        // u8
+
+        if (kf1.d1u8) |v1| {
+            if (kf2.d1u8) |v2| {
+                new_kf.d1u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d2u8) |v1| {
+            if (kf2.d2u8) |v2| {
+                new_kf.d2u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d3u8) |v1| {
+            if (kf2.d3u8) |v2| {
+                new_kf.d3u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d4u8) |v1| {
+            if (kf2.d4u8) |v2| {
+                new_kf.d4u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d5u8) |v1| {
+            if (kf2.d5u8) |v2| {
+                new_kf.d5u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d6u8) |v1| {
+            if (kf2.d6u8) |v2| {
+                new_kf.d6u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d7u8) |v1| {
+            if (kf2.d7u8) |v2| {
+                new_kf.d7u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        if (kf1.d8u8) |v1| {
+            if (kf2.d8u8) |v2| {
+                new_kf.d8u8 = @intFromFloat(@round(self.timing_fn(
+                    @floatFromInt(v1),
+                    @floatFromInt(v2),
+                    percent,
+                )));
+            }
+        }
+
+        // Color
+
+        if (kf1.d1Color) |v1| {
+            if (kf2.d1Color) |v2| {
+                new_kf.d1Color = .{
+                    .r = @intFromFloat(self.timing_fn(@floatFromInt(v1.r), @floatFromInt(v2.r), percent)),
+                    .g = @intFromFloat(self.timing_fn(@floatFromInt(v1.g), @floatFromInt(v2.g), percent)),
+                    .b = @intFromFloat(self.timing_fn(@floatFromInt(v1.b), @floatFromInt(v2.b), percent)),
+                    .a = @intFromFloat(self.timing_fn(@floatFromInt(v1.a), @floatFromInt(v2.a), percent)),
+                };
+            }
+        }
+
+        if (kf1.d2Color) |v1| {
+            if (kf2.d2Color) |v2| {
+                new_kf.d2Color = .{
+                    .r = @intFromFloat(self.timing_fn(@floatFromInt(v1.r), @floatFromInt(v2.r), percent)),
+                    .g = @intFromFloat(self.timing_fn(@floatFromInt(v1.g), @floatFromInt(v2.g), percent)),
+                    .b = @intFromFloat(self.timing_fn(@floatFromInt(v1.b), @floatFromInt(v2.b), percent)),
+                    .a = @intFromFloat(self.timing_fn(@floatFromInt(v1.a), @floatFromInt(v2.a), percent)),
+                };
+            }
+        }
+
+        if (kf1.d3Color) |v1| {
+            if (kf2.d3Color) |v2| {
+                new_kf.d3Color = .{
+                    .r = @intFromFloat(self.timing_fn(@floatFromInt(v1.r), @floatFromInt(v2.r), percent)),
+                    .g = @intFromFloat(self.timing_fn(@floatFromInt(v1.g), @floatFromInt(v2.g), percent)),
+                    .b = @intFromFloat(self.timing_fn(@floatFromInt(v1.b), @floatFromInt(v2.b), percent)),
+                    .a = @intFromFloat(self.timing_fn(@floatFromInt(v1.a), @floatFromInt(v2.a), percent)),
+                };
+            }
+        }
+
+        if (kf1.d4Color) |v1| {
+            if (kf2.d4Color) |v2| {
+                new_kf.d4Color = .{
+                    .r = @intFromFloat(self.timing_fn(@floatFromInt(v1.r), @floatFromInt(v2.r), percent)),
+                    .g = @intFromFloat(self.timing_fn(@floatFromInt(v1.g), @floatFromInt(v2.g), percent)),
+                    .b = @intFromFloat(self.timing_fn(@floatFromInt(v1.b), @floatFromInt(v2.b), percent)),
+                    .a = @intFromFloat(self.timing_fn(@floatFromInt(v1.a), @floatFromInt(v2.a), percent)),
+                };
+            }
         }
     }
 

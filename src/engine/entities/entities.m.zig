@@ -12,6 +12,7 @@ pub const Display = components.Display;
 pub const Collider = components.Collider;
 pub const CachedDisplay = components.CachedDisplay;
 pub const RectangleVertices = components.RectangleVertices;
+pub const DummyData = components.DummyData;
 
 const EntityTypeError = error{
     TypeMustBeStruct,
@@ -66,6 +67,7 @@ pub fn make(comptime T: type) type {
         pub const Collider = components.Collider;
         pub const CachedDisplay = components.CachedDisplay;
         pub const RectangleVertices = components.RectangleVertices;
+        pub const DummyData = components.DummyData;
 
         const EntityArrayType = std.ArrayList(*Entity);
 

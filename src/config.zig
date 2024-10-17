@@ -16,6 +16,7 @@ pub const Entity = struct {
     collider: ?entities_module.Collider = null,
     cached_display: ?entities_module.CachedDisplay = null,
     cached_collider: ?entities_module.RectangleVertices = null,
+    dummy_data: entities_module.DummyData = .{},
 
     shooting_stats: ?ShootingStats = null,
 
@@ -35,6 +36,20 @@ pub const Entity = struct {
                 rl.unloadTexture(texture);
             }
         }
+    }
+
+    pub fn dummy() Self {
+        return Self{
+            .id = "dummy",
+            .tags = "",
+            .transform = .{ .scale = .{
+                .x = 0,
+                .y = 0,
+            } },
+            .display = .{
+                .sprite = "sprites/missingno.png",
+            },
+        };
     }
 };
 

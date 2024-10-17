@@ -26,6 +26,9 @@ pub var HandsWeapon: Item = undefined;
 pub var bag: [bag_size]?conf.Item = [_]?conf.Item{null} ** bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
 
+pub var animation_mapping_dummy: e.entities.Entity = undefined;
+pub var dummy_animator: e.Animator = undefined;
+
 pub const equippedbar = struct {
     pub var current_weapon: *Item = &HandsWeapon;
     pub var ring: ?*Item = null;
@@ -900,14 +903,17 @@ inline fn PageButton(
 
 pub fn show() void {
     GUI.BM3D.setLayer(1);
-    INVENTORY_GUI.options.style.top = u("0%");
+    // INVENTORY_GUI.options.style.top = u("0%");
+    dummy_animator.play("slide_down") catch {};
+
     e.input.ui_mode = true;
     shown = true;
 }
 
 pub fn hide() void {
     GUI.BM3D.resetLayer();
-    INVENTORY_GUI.options.style.top = u("-100%");
+    dummy_animator.play("slide_up") catch {};
+
     e.input.ui_mode = false;
     shown = false;
 }
@@ -917,6 +923,78 @@ pub fn toggle() void {
 }
 
 pub fn awake() !void {
+    animation_mapping_dummy = e.entities.Entity.dummy();
+    dummy_animator = e.Animator.init(&e.ALLOCATOR, &animation_mapping_dummy);
+    {
+        var slide_down = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            "slide_down",
+            e.Animator.interpolation.ease_in_out,
+            0.25,
+        );
+        {
+            slide_down.chain(
+                0,
+                .{
+                    .y = -100,
+                    .tint = .{
+                        .r = 0,
+                        .g = 0,
+                        .b = 0,
+                        .a = 0,
+                    },
+                },
+            );
+            slide_down.chain(
+                1,
+                .{
+                    .y = 0,
+                    .tint = .{
+                        .r = 0,
+                        .g = 0,
+                        .b = 0,
+                        .a = @intFromFloat(@round(@as(f32, 255) * @as(f32, 0.75))),
+                    },
+                },
+            );
+        }
+        try dummy_animator.chain(slide_down);
+
+        var slide_up = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            "slide_up",
+            e.Animator.interpolation.ease_in_out,
+            0.25,
+        );
+        {
+            slide_up.chain(
+                0,
+                .{
+                    .y = 0,
+                    .tint = .{
+                        .r = 0,
+                        .g = 0,
+                        .b = 0,
+                        .a = @intFromFloat(@round(@as(f32, 255) * @as(f32, 0.85))),
+                    },
+                },
+            );
+            slide_up.chain(
+                1,
+                .{
+                    .y = -100,
+                    .tint = .{
+                        .r = 0,
+                        .g = 0,
+                        .b = 0,
+                        .a = 0,
+                    },
+                },
+            );
+        }
+        try dummy_animator.chain(slide_up);
+    }
+
     GUI.BM3D.setLayer(1);
     HandsWeapon = usePrefab(prefabs.hands);
     // e.input.ui_mode = true;
@@ -1715,7 +1793,7 @@ pub fn awake() !void {
     delete_button.options.style.top = u("50%");
     delete_button.options.style.left = u("50%");
 
-    GUI.BM3D.resetLayer();
+    hide();
 }
 
 pub fn init() !void {
@@ -1748,6 +1826,13 @@ pub fn init() !void {
 pub fn update() !void {
     if (e.isKeyPressed(.key_i) or e.isKeyPressed(.key_tab)) toggle();
     if (e.isKeyPressed(.key_escape) and shown) hide();
+
+    dummy_animator.update();
+
+    INVENTORY_GUI.options.style.top = .{
+        .value = animation_mapping_dummy.transform.position.y,
+        .unit = .percent,
+    };
     if (!e.input.ui_mode) return;
 
     if ((e.isMouseButtonPressed(.mouse_button_left) or
@@ -1785,4 +1870,6 @@ pub fn deinit() !void {
     e.ALLOCATOR.free(slots);
     e.ALLOCATOR.free(sorted_bag);
     preview.free();
+    dummy_animator.deinit();
+    animation_mapping_dummy.freeRaylibStructs();
 }

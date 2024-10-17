@@ -16,6 +16,7 @@ const Self = @This();
 entity: *entities.Entity,
 transform: *entities.Transform,
 display: *entities.Display,
+dummy: *entities.DummyData,
 
 animations: std.StringHashMap(Animation),
 playing: std.ArrayList(*Animation),
@@ -28,6 +29,7 @@ pub fn init(allocator: *Allocator, entity: *entities.Entity) Self {
         .entity = entity,
         .transform = &entity.transform,
         .display = &entity.display,
+        .dummy = &entity.dummy_data,
         .animations = std.StringHashMap(Animation).init(allocator.*),
         .playing = std.ArrayList(*Animation).init(allocator.*),
     };
@@ -55,6 +57,8 @@ pub fn play(self: *Self, id: []const u8) !void {
         animation.current_frame = 0;
         animation.last_keyframe_at = time.gameTime;
         animation.next_keyframe_at = time.gameTime + animation.transition_time_ms_per_kf;
+    } else {
+        std.log.err("Animation does not exist: {s}", .{id});
     }
 }
 
@@ -124,6 +128,89 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
     if (kf.tint) |v| {
         self.display.tint = v;
+    }
+
+    // Dummy
+    {
+        if (kf.d1f23) |v| {
+            self.dummy.d1f23 = v;
+        }
+
+        if (kf.d2f23) |v| {
+            self.dummy.d2f23 = v;
+        }
+
+        if (kf.d3f23) |v| {
+            self.dummy.d3f23 = v;
+        }
+
+        if (kf.d4f23) |v| {
+            self.dummy.d4f23 = v;
+        }
+
+        if (kf.d5f23) |v| {
+            self.dummy.d5f23 = v;
+        }
+
+        if (kf.d6f23) |v| {
+            self.dummy.d6f23 = v;
+        }
+
+        if (kf.d7f23) |v| {
+            self.dummy.d7f23 = v;
+        }
+
+        if (kf.d8f23) |v| {
+            self.dummy.d8f23 = v;
+        }
+
+        if (kf.d1u8) |v| {
+            self.dummy.d1u8 = v;
+        }
+
+        if (kf.d2u8) |v| {
+            self.dummy.d2u8 = v;
+        }
+
+        if (kf.d3u8) |v| {
+            self.dummy.d3u8 = v;
+        }
+
+        if (kf.d4u8) |v| {
+            self.dummy.d4u8 = v;
+        }
+
+        if (kf.d5u8) |v| {
+            self.dummy.d5u8 = v;
+        }
+
+        if (kf.d6u8) |v| {
+            self.dummy.d6u8 = v;
+        }
+
+        if (kf.d7u8) |v| {
+            self.dummy.d7u8 = v;
+        }
+
+        if (kf.d8u8) |v| {
+            self.dummy.d8u8 = v;
+        }
+
+        if (kf.d1Color) |v| {
+            self.dummy.d1Color = v;
+        }
+
+        if (kf.d2Color) |v| {
+            self.dummy.d2Color = v;
+        }
+
+        if (kf.d3Color) |v| {
+            self.dummy.d3Color = v;
+        }
+
+        if (kf.d4Color) |v| {
+            self.dummy.d4Color = v;
+        }
     }
 }
 

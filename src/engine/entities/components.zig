@@ -245,3 +245,28 @@ pub const RectangleVertices = struct {
         }
     }
 };
+
+pub const DummyData = struct {
+    d1f23: f32 = 0,
+    d2f23: f32 = 0,
+    d3f23: f32 = 0,
+    d4f23: f32 = 0,
+    d5f23: f32 = 0,
+    d6f23: f32 = 0,
+    d7f23: f32 = 0,
+    d8f23: f32 = 0,
+
+    d1u8: u8 = 0,
+    d2u8: u8 = 0,
+    d3u8: u8 = 0,
+    d4u8: u8 = 0,
+    d5u8: u8 = 0,
+    d6u8: u8 = 0,
+    d7u8: u8 = 0,
+    d8u8: u8 = 0,
+
+    d1Color: rl.Color = rl.Color.init(0, 0, 0, 255),
+    d2Color: rl.Color = rl.Color.init(0, 0, 0, 255),
+    d3Color: rl.Color = rl.Color.init(0, 0, 0, 255),
+    d4Color: rl.Color = rl.Color.init(0, 0, 0, 255),
+};

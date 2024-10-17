@@ -30,6 +30,14 @@
 			"\tres.$1 = new.$1;",
 		]
 	},
+	"nkf": {
+		"prefix": "nkf",
+		"body": [
+			"if (kf.$1) |v| {",
+			"\tself.dummy.$1 = v;",
+			"}\n\n",
+		]
+	},
 	"import raylib": {
 		"prefix": "irl",
 		"body": "const rl = @import(\"raylib\");",

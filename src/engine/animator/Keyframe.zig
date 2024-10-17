@@ -26,3 +26,28 @@ height: ?f32 = null,
 sprite: ?[]const u8 = null,
 scaling: ?entities.Display.scalings = null,
 tint: ?rl.Color = null,
+
+// DUMMY
+
+d1f23: ?f32 = null,
+d2f23: ?f32 = null,
+d3f23: ?f32 = null,
+d4f23: ?f32 = null,
+d5f23: ?f32 = null,
+d6f23: ?f32 = null,
+d7f23: ?f32 = null,
+d8f23: ?f32 = null,
+
+d1u8: ?u8 = null,
+d2u8: ?u8 = null,
+d3u8: ?u8 = null,
+d4u8: ?u8 = null,
+d5u8: ?u8 = null,
+d6u8: ?u8 = null,
+d7u8: ?u8 = null,
+d8u8: ?u8 = null,
+
+d1Color: ?rl.Color = null,
+d2Color: ?rl.Color = null,
+d3Color: ?rl.Color = null,
+d4Color: ?rl.Color = null,

@@ -31,9 +31,11 @@ pub const Entity = struct {
         if (self.cached_display) |cached| {
             if (cached.img) |image| {
                 rl.unloadImage(image);
+                self.cached_display.?.img = null;
             }
             if (cached.texture) |texture| {
                 rl.unloadTexture(texture);
+                self.cached_display.?.texture = null;
             }
         }
     }
@@ -81,7 +83,6 @@ pub const ProjectileData = struct {
 };
 
 pub const ShootingStats = struct {
-    damage: f32 = 20,
     timeout: f64 = 0.1,
     timeout_end: f64 = 0,
     projectile_lifetime: f64 = 2,

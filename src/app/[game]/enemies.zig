@@ -33,9 +33,12 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         }
 
         e.entities.delete(item.hand0.id);
+        item.hand0.freeRaylibStructs();
         alloc.free(item.hand0.id);
 
+
         e.entities.delete(item.hand1.id);
+        item.hand1.freeRaylibStructs();
         alloc.free(item.hand1.id);
 
         const onhis_items = try weapons.manager.items();
@@ -61,6 +64,7 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         }
 
         e.entities.delete(item.entity.id);
+        item.entity.freeRaylibStructs();
         alloc.free(item.entity.id);
 
         if (item.animator) |*animator| {
@@ -609,7 +613,6 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
             .weight = 0.95,
         },
         .shooting_stats = .{
-            .damage = 10,
             .timeout = 0.55,
         },
     };

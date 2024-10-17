@@ -17,6 +17,7 @@ const weapons = @import("weapons.zig");
 pub const manager = e.zlib.HeapManager(e.entities.Entity, (struct {
     pub fn callback(alloc: Allocator, item: *e.entities.Entity) !void {
         e.entities.delete(item.id);
+        item.freeRaylibStructs();
         alloc.free(item.id);
     }
 }).callback);

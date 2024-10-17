@@ -51,15 +51,15 @@ pub fn chain(self: *Self, anim: Animation) !void {
 
 pub fn play(self: *Self, id: []const u8) !void {
     const anim = self.animations.getPtr(id);
-    if (anim) |animation| {
-        try self.playing.append(animation);
-        animation.playing = true;
-        animation.current_frame = 0;
-        animation.last_keyframe_at = time.gameTime;
-        animation.next_keyframe_at = time.gameTime + animation.transition_time_ms_per_kf;
-    } else {
-        std.log.err("Animation does not exist: {s}", .{id});
-    }
+
+    const animation: *Animation = if (anim) |a| a else return;
+
+    try self.playing.append(animation);
+
+    animation.playing = true;
+    animation.current_frame = 0;
+    animation.last_keyframe_at = time.gameTime;
+    animation.next_keyframe_at = time.gameTime + animation.transition_time_ms_per_kf;
 }
 
 pub fn isPlaying(self: *Self, id: []const u8) bool {

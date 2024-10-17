@@ -70,6 +70,7 @@ pub const prefabs = struct {
                 .weapon_type = .sword,
                 .damage = 5,
                 .attack_speed = 1,
+                .level = 10,
 
                 .name = "Tank Spreader",
 
@@ -90,6 +91,7 @@ pub const prefabs = struct {
                             20,
                         },
                     ),
+                    .projectile_on_hit_effect = .vamp,
                 },
 
                 .icon = "sprites/weapons/steel_sword.png",
@@ -182,7 +184,7 @@ pub const prefabs = struct {
                 .damage = 10,
                 .weapon_projectile_scale_light = e.Vec2(64, 64),
 
-                .level = 999,
+                .level = 10,
 
                 .attack_speed = 0.25,
 

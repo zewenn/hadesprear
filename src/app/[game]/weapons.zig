@@ -4,6 +4,8 @@ const Allocator = @import("std").mem.Allocator;
 
 const e = @import("../../engine/engine.m.zig");
 
+const balancing = @import("balancing.zig");
+
 pub const OnHit = struct {
     entity: *e.entities.Entity,
     T: conf.OnHitEffects,
@@ -27,7 +29,7 @@ pub inline fn applyOnHitEffect(
 
     const applied_onhit_effects = &(entity.applied_onhit_effects.?);
 
-    const scaled_strength: f32 = (-(1 / (strength + 1)) + 1) * 10;
+    const scaled_strength: f32 = balancing.powerScaleCurve(strength);
     var use_timeout: bool = true;
 
     var new: f32 = 0;
@@ -39,7 +41,7 @@ pub inline fn applyOnHitEffect(
         .vamp => {
             use_timeout = false;
 
-            entity.entity_stats.?.health += scaled_strength / 10;
+            entity.entity_stats.?.health += scaled_strength;
         },
         .energized => {
             use_timeout = true;

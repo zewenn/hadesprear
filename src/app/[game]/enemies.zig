@@ -40,18 +40,6 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         item.hand1.deinit();
         alloc.free(item.hand1.id);
 
-        const onhis_items = try weapons.manager.items();
-        defer weapons.manager.alloc.free(onhis_items);
-
-        var removed: usize = 0;
-        for (onhis_items) |onhit| {
-            if (@intFromPtr(onhit.entity) != @intFromPtr(&item.entity)) continue;
-
-            removed += 1;
-
-            weapons.manager.remove(onhit);
-        }
-
         const porj_items = try projectiles.manager.items();
         defer projectiles.manager.alloc.free(porj_items);
 

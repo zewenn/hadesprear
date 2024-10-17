@@ -374,14 +374,6 @@ pub fn update() !void {
             );
         }
     }
-
-    rl.drawRectangle(
-        @intFromFloat(input.mouse_position.x - 5),
-        @intFromFloat(input.mouse_position.y - 5),
-        5,
-        5,
-        rl.Color.black,
-    );
 }
 
 fn drawTetxure(

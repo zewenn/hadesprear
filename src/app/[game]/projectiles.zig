@@ -203,7 +203,7 @@ pub fn summonMultiple(
             .sprite = strct.sprite,
 
             .owner = entity,
-            .on_hit_effect = if (side == .player) strct.projectile_on_hit_effect else .none,
+            .on_hit_effect = strct.projectile_on_hit_effect,
             // .on_hit_effect = if (side == .player) strct.projectile_on_hit_effect else .none,
             .on_hit_effect_strength = @as(
                 f32,

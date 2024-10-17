@@ -236,6 +236,13 @@ pub fn update() !void {
     if (e.isKeyDown(.key_seven)) e.display.camera.zoom *= 0.99;
     if (e.isKeyDown(.key_eight)) e.display.camera.zoom *= 1.01;
 
+    Player.entity_stats.?.health = e.zlib.math.clamp(
+        f32,
+        Player.entity_stats.?.health,
+        0,
+        Player.entity_stats.?.max_health,
+    );
+
     if (health_display.is_content_heap) {
         e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
     }

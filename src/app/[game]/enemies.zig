@@ -395,7 +395,11 @@ pub fn update() !void {
             switch (item.entity.entity_stats.?.enemy_archetype) {
                 .shaman => {
                     for (0..3) |_| {
-                        try spawnArchetype(.minion, item.entity.entity_stats.?.enemy_subtype, item.entity.transform.position);
+                        try spawnArchetype(
+                            .minion,
+                            item.entity.entity_stats.?.enemy_subtype,
+                            item.entity.transform.position,
+                        );
                         entity_ptr.shooting_stats.?.timeout_end = e.time.gameTime + item.current_weapon.attack_speed;
                     }
                 },

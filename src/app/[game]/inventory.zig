@@ -595,7 +595,7 @@ pub fn logSortedBag() void {
 }
 
 pub fn autoSelect() !void {
-    const button = GUI.hovered_button.?;
+    const button: *GUI.GUIElement = if (GUI.hovered_button) |x| x else return;
 
     if (button.button_interface_ptr == null) return;
 
@@ -899,12 +899,14 @@ inline fn PageButton(
 }
 
 pub fn show() void {
+    GUI.BM3D.setLayer(1);
     INVENTORY_GUI.options.style.top = u("0%");
     e.input.ui_mode = true;
     shown = true;
 }
 
 pub fn hide() void {
+    GUI.BM3D.resetLayer();
     INVENTORY_GUI.options.style.top = u("-100%");
     e.input.ui_mode = false;
     shown = false;
@@ -915,6 +917,7 @@ pub fn toggle() void {
 }
 
 pub fn awake() !void {
+    GUI.BM3D.setLayer(1);
     HandsWeapon = usePrefab(prefabs.hands);
     // e.input.ui_mode = true;
 
@@ -1711,6 +1714,8 @@ pub fn awake() !void {
     };
     delete_button.options.style.top = u("50%");
     delete_button.options.style.left = u("50%");
+
+    GUI.BM3D.resetLayer();
 }
 
 pub fn init() !void {

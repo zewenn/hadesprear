@@ -410,6 +410,10 @@ pub fn update() !void {
                     );
 
                     try item.hands.?.play(.light);
+
+                    if (item.entity.entity_stats.?.enemy_archetype == .knight) {
+                        item.entity.entity_stats.?.is_invalnureable = !item.entity.entity_stats.?.is_invalnureable;
+                    }
                 },
             }
         }
@@ -672,7 +676,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
             .normal => usePrefab(prefabs.legendaries.weapons.staff),
         },
         .knight => switch (subtype) {
-            .normal => usePrefab(prefabs.legendaries.weapons.claymore),
+            .normal => usePrefab(prefabs.commons.weapons.knights_claymore),
         },
     };
 

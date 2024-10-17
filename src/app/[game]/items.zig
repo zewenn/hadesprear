@@ -37,9 +37,9 @@ pub const prefabs = struct {
 
         .attack_speed = 0.25,
 
-        .icon = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_left = "sprites/entity/player/weapons/gloves/left.png",
-        .weapon_sprite_right = "sprites/entity/player/weapons/gloves/right.png",
+        .icon = "sprites/weapons/gloves/left.png",
+        .weapon_sprite_left = "sprites/weapons/gloves/left.png",
+        .weapon_sprite_right = "sprites/weapons/gloves/right.png",
     });
 
     pub const commons = struct {
@@ -48,7 +48,7 @@ pub const prefabs = struct {
                 .T = .weapon,
                 .rarity = .common,
                 .weapon_type = .polearm,
-                .damage = 0.025,
+                .damage = 5,
                 .attack_speed = 1,
 
                 .name = "Angler Spear",
@@ -94,6 +94,47 @@ pub const prefabs = struct {
 
                 .icon = "sprites/weapons/steel_sword.png",
                 .weapon_sprite_right = "sprites/weapons/steel_sword.png",
+            });
+
+            pub const knights_claymore = Item(.{
+                .T = .weapon,
+                .weapon_type = .claymore,
+                .rarity = .common,
+                .damage = 20,
+                .weapon_projectile_scale_light = e.Vec2(64, 128),
+
+                .name = "Claymore",
+                .attack_speed = 1,
+
+                .weapon_light = .{
+                    .projectile_array = [4]?f32{ -180, -90, 0, 90 } ++ ([_]?f32{null} ** 12),
+                    .projectile_health = 2000,
+                    .projectile_scale = e.Vec2(128, 64),
+                    // .projectile_on_hit_effect = .stengthen,
+                },
+                .weapon_heavy = .{
+                    .projectile_array = conf.createProjectileArray(
+                        8,
+                        [_]?f32{ -180, -135, -90, -45, 0, 45, 90, 135 },
+                    ),
+                    .projectile_health = 5000,
+                    .projectile_scale = e.Vec2(256, 128),
+                    .attack_speed_modifier = 2.5,
+                    .sprite = "sprites/projectiles/player/generic/heavy.png",
+                    // .projectile_on_hit_effect = .stengthen,
+                },
+                .weapon_dash = .{
+                    .projectile_array = [1]?f32{0} ++ ([_]?f32{null} ** 15),
+                    .projectile_health = 3500,
+                    .projectile_scale = e.Vec2(385, 128),
+                    .attack_speed_modifier = 2,
+                    .projectile_speed = 720,
+                    .sprite = "sprites/projectiles/player/generic/dash.png",
+                },
+
+                .icon = "sprites/weapons/normal_claymore.png",
+                .weapon_sprite_left = e.MISSINGNO,
+                .weapon_sprite_right = "sprites/weapons/normal_claymore.png",
             });
         };
     };
@@ -154,7 +195,7 @@ pub const prefabs = struct {
                     .projectile_on_hit_effect = .vamp,
                 },
                 .weapon_heavy = .{
-                    .projectile_array = [5]?f32{ -25, -15, 0, 15, 25 } ++ ([_]?f32{null} ** 11),
+                    .projectile_array = [5]?f32{ -25, -12.5, 0, 12.5, 25 } ++ ([_]?f32{null} ** 11),
                     .sprite = "sprites/projectiles/player/generic/heavy.png",
                 },
                 .weapon_dash = .{

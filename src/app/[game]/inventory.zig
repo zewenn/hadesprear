@@ -582,7 +582,7 @@ pub fn updateGUI() !void {
         button.options.hover.background.image = "sprites/gui/slot_highlight.png";
     }
 
-    if (e.input.input_mode == .Keyboard) try autoSelect();
+    // if (e.input.input_mode == .Keyboard) try autoSelect();
 }
 
 pub fn logSortedBag() void {
@@ -605,7 +605,10 @@ pub fn autoSelect() !void {
     if (std.mem.containsAtLeast(u8, button.options.id, 1, "slot") or
         std.mem.containsAtLeast(u8, button.options.id, 1, "equipped"))
     {
+        const dm_original = delete_mode;
+        delete_mode = false;
         try button.button_interface_ptr.?.callback_fn();
+        delete_mode = dm_original;
     }
 }
 

@@ -1798,7 +1798,7 @@ pub fn awake() !void {
     delete_button.options.style.top = u("50%");
     delete_button.options.style.left = u("50%");
 
-    hide();
+    animation_mapping_dummy.transform.position.y = -100;
 }
 
 pub fn init() !void {
@@ -1875,6 +1875,7 @@ pub fn deinit() !void {
     e.ALLOCATOR.free(slots);
     e.ALLOCATOR.free(sorted_bag);
     preview.free();
+
     dummy_animator.deinit();
-    animation_mapping_dummy.freeRaylibStructs();
+    animation_mapping_dummy.deinit();
 }

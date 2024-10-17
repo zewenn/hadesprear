@@ -1,4 +1,6 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
+const HeapManager = @import("engine/z/heapmanager.zig").HeapManager;
 
 const entities_module = @import("./engine/entities/entities.m.zig");
 const rl = @import("raylib");
@@ -27,7 +29,12 @@ pub const Entity = struct {
 
     dash_modifiers: ?DashModifiers = null,
 
-    pub fn freeRaylibStructs(self: *Self) void {
+    applied_onhit_effects: ?std.ArrayList(OnHitApplied) = null,
+
+    /// This will resolve all allocations that can 
+    /// happen within an entity
+    /// From raylib stuff to the on hit effects.
+    pub fn deinit(self: *Self) void {
         if (self.cached_display) |cached| {
             if (cached.img) |image| {
                 rl.unloadImage(image);
@@ -37,6 +44,9 @@ pub const Entity = struct {
                 rl.unloadTexture(texture);
                 self.cached_display.?.texture = null;
             }
+        }
+        if (self.applied_onhit_effects) |*list| {
+            list.deinit();
         }
     }
 
@@ -78,7 +88,7 @@ pub const ProjectileData = struct {
     bleed_per_second: f32 = 100,
 
     owner: ?*Entity = null,
-    on_hit_effect: on_hit_effects = .none,
+    on_hit_effect: OnHitEffects = .none,
     on_hit_effect_strength: f32 = 0,
 };
 
@@ -89,6 +99,8 @@ pub const ShootingStats = struct {
 };
 
 pub const EntityStats = struct {
+    const Self = @This();
+
     movement_speed: f32 = 335,
     max_movement_speed: f32 = 1280,
 
@@ -157,11 +169,17 @@ pub const ItemStats = enum {
     dash_charges,
 };
 
-pub const on_hit_effects = enum {
+pub const OnHitEffects = enum {
     none,
     energized,
     vamp,
     stengthen,
+};
+
+pub const OnHitApplied = struct {
+    type: OnHitEffects,
+    delta: f32,
+    end_time: f64,
 };
 
 pub const WeaponAttackTypeStats = struct {
@@ -178,7 +196,7 @@ pub const WeaponAttackTypeStats = struct {
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
 
-    projectile_on_hit_effect: on_hit_effects = .none,
+    projectile_on_hit_effect: OnHitEffects = .none,
     projectile_on_hit_strength_multiplier: f32 = 1,
 
     multiplier: f32 = 1,

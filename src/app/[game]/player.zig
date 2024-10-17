@@ -529,7 +529,7 @@ pub fn deinit() !void {
     hands.deinit();
 
     e.entities.delete(Player.id);
-    Player.freeRaylibStructs();
+    Player.deinit();
 
     if (health_display.is_content_heap) {
         e.zlib.arrays.freeManyItemPointerSentinel(

@@ -33,12 +33,11 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         }
 
         e.entities.delete(item.hand0.id);
-        item.hand0.freeRaylibStructs();
+        item.hand0.deinit();
         alloc.free(item.hand0.id);
 
-
         e.entities.delete(item.hand1.id);
-        item.hand1.freeRaylibStructs();
+        item.hand1.deinit();
         alloc.free(item.hand1.id);
 
         const onhis_items = try weapons.manager.items();
@@ -64,7 +63,7 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
         }
 
         e.entities.delete(item.entity.id);
-        item.entity.freeRaylibStructs();
+        item.entity.deinit();
         alloc.free(item.entity.id);
 
         if (item.animator) |*animator| {

@@ -6,12 +6,10 @@ const e = @import("../../engine/engine.m.zig");
 
 pub const OnHit = struct {
     entity: *e.entities.Entity,
-    T: conf.on_hit_effects,
+    T: conf.OnHitEffects,
     delta: f32,
     end_time: f64,
 };
-
-pub const manager = e.zlib.HeapManager(OnHit, null);
 
 fn calculateStrength(base: f32) f32 {
     return (-(1 / (base + 1)) + 1) * 2;
@@ -19,12 +17,17 @@ fn calculateStrength(base: f32) f32 {
 
 pub inline fn applyOnHitEffect(
     entity: *e.entities.Entity,
-    effect: conf.on_hit_effects,
+    effect: conf.OnHitEffects,
     strength: f32,
 ) void {
-    const scaled_strength: f32 = (-(1 / (strength + 1)) + 1) * 10;
     if (entity.entity_stats == null) return;
+    if (entity.applied_onhit_effects == null) {
+        entity.applied_onhit_effects = std.ArrayList(conf.OnHitApplied).init(e.ALLOCATOR);
+    }
 
+    const applied_onhit_effects = &(entity.applied_onhit_effects.?);
+
+    const scaled_strength: f32 = (-(1 / (strength + 1)) + 1) * 10;
     var use_timeout: bool = true;
 
     var new: f32 = 0;
@@ -63,11 +66,10 @@ pub inline fn applyOnHitEffect(
 
     delta = new - old;
 
-    manager.append(.{
-        .entity = entity,
+    applied_onhit_effects.append(.{
+        .type = effect,
         .delta = delta,
-        .T = effect,
-        .end_time = e.time.gameTime + std.math.clamp(strength / 3, 0, 15),
+        .end_time = e.time.gameTime + e.zlib.math.clamp(f64, strength / 3, 0, 15),
     }) catch {};
 }
 
@@ -855,33 +857,41 @@ pub const Hands = struct {
     }
 };
 
-pub fn awake() !void {
-    manager.init(e.ALLOCATOR);
-}
+pub fn awake() !void {}
 
 pub fn init() !void {}
 
 pub fn update() !void {
-    const items = try manager.items();
-    defer manager.alloc.free(items);
+    const entities = try e.entities.all();
+    defer e.entities.alloc.free(entities);
 
-    for (items) |item| {
-        if (item.end_time >= e.time.gameTime) continue;
+    for (entities) |entity| {
+        if (entity.applied_onhit_effects == null) continue;
 
-        switch (item.T) {
-            .energized => {
-                item.entity.entity_stats.?.movement_speed -= item.delta;
-            },
-            .stengthen => {
-                item.entity.entity_stats.?.damage -= item.delta;
-            },
-            else => {},
+        const applied_onhit_effects = &(entity.applied_onhit_effects.?);
+        const items = try @constCast(&(try applied_onhit_effects.clone())).toOwnedSlice();
+        defer e.ALLOCATOR.free(items);
+
+        for (items) |item| {
+            if (item.end_time >= e.time.gameTime) continue;
+
+            switch (item.type) {
+                .energized => {
+                    entity.entity_stats.?.movement_speed -= item.delta;
+                },
+                .stengthen => {
+                    entity.entity_stats.?.damage -= item.delta;
+                },
+                else => {},
+            }
+
+            for (applied_onhit_effects.items, 0..) |item2, index| {
+                if (!std.meta.eql(item, item2)) continue;
+                _ = applied_onhit_effects.swapRemove(index);
+                break;
+            }
         }
-
-        manager.remove(item);
     }
 }
 
-pub fn deinit() !void {
-    manager.deinit();
-}
+pub fn deinit() !void {}

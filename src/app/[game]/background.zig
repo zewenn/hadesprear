@@ -32,5 +32,5 @@ pub fn init() !void {}
 pub fn update() !void {}
 
 pub fn deinit() !void {
-    Background.freeRaylibStructs();
+    Background.deinit();
 }

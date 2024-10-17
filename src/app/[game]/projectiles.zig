@@ -91,7 +91,6 @@ pub fn update() !void {
             if (!e.collision.collides(entity_ptr, other)) {
                 continue;
             }
-
             projectile_data.health -= projectile_data.bleed_per_second * e.time.DeltaTime();
 
             if (!other.entity_stats.?.is_invalnureable) {
@@ -102,9 +101,7 @@ pub fn update() !void {
                 }
             }
 
-            if ((projectile_data.health <= 0 and other.entity_stats.?.health <= 0) or
-                other.entity_stats.?.health <= 0)
-            {
+            if (projectile_data.health <= 0 or other.entity_stats.?.health <= 0) {
                 if (projectile_data.owner) |owner| {
                     weapons.applyOnHitEffect(
                         owner,

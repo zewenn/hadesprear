@@ -922,6 +922,8 @@ pub fn hide() void {
 }
 
 pub fn toggle() void {
+    dummy_animator.stop("slide_up");
+    dummy_animator.stop("slide_down");
     if (shown) hide() else show();
 }
 

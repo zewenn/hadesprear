@@ -635,14 +635,14 @@ pub const Hands = struct {
                     },
                 );
                 heavy.chain(
-                    1,
+                    2,
                     .{
                         .rotation = -720,
                         .ry = 64,
                     },
                 );
                 heavy.chain(
-                    2,
+                    3,
                     .{
                         .rotation = -720,
                         .ry = 0,

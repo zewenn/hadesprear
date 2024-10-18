@@ -58,6 +58,10 @@ fn backwardsComp(_: void, a: u8, b: u8) bool {
 }
 
 pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
+    if (self.keyframes.get(percent) != null) z.panicWithArgs(
+        "Animation \"{s}\" already has key \"{d}\" but the program tried to set it again.",
+        .{ self.id, percent },
+    );
     self.keyframes.put(percent, kf) catch z.panic("Couldn't add key-keyframe pair");
     self.keys.append(percent) catch z.panic("Couldn't add key to keylist");
 

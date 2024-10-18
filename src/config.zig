@@ -29,6 +29,7 @@ pub const Entity = struct {
 
     dash_modifiers: ?DashModifiers = null,
     effect_shower_stats: ?EffectShowerStats = null,
+    effects_shown: EffectsShown = .{},
 
     applied_onhit_effects: ?std.ArrayList(OnHitApplied) = null,
 
@@ -136,6 +137,26 @@ pub const EntityStats = struct {
 
     enemy_archetype: EnemyArchetypes = .minion,
     enemy_subtype: EnemySubtypes = .normal,
+};
+
+pub const Effects = enum {
+    slowed,
+    rooted,
+    stunned,
+    asleep,
+    invulnerable,
+    healing,
+    energised,
+};
+
+pub const EffectsShown = struct {
+    slowed: bool = false,
+    rooted: bool = false,
+    stunned: bool = false,
+    asleep: bool = false,
+    healing: bool = false,
+    invulnerable: bool = false,
+    energised: bool = false,
 };
 
 pub const EnemyArchetypes = enum {

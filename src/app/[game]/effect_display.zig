@@ -36,7 +36,7 @@ pub fn update() !void {
 
     EntityLoop: for (entities) |entity| {
         const estats: *conf.EntityStats = if (entity.entity_stats) |*t| t else continue;
-
+    
         if (!(estats.is_invalnureable or
             estats.is_slowed or
             estats.is_rooted or
@@ -151,6 +151,40 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             );
         }
         try Animator.chain(invlunerable_anim);
+
+        var healing_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            "healing_anim",
+            e.Animator.interpolation.lerp,
+            0.45,
+        );
+        {
+            healing_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/healing/anim_0.png",
+                },
+            );
+            healing_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/healing/anim_1.png",
+                },
+            );
+            healing_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/healing/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(healing_anim);
     }
 
     NewPtr.animator = Animator;
@@ -203,6 +237,12 @@ fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void 
     if (istats.is_invalnureable) {
         if (!animator.isPlaying("invulnerable_anim")) {
             try animator.play("invulnerable_anim");
+        }
+        // item.display.sprite = "sprites/effects/invulnerable/anim_0.png";
+    }
+    else if (istats.is_healing) {
+        if (!animator.isPlaying("healing_anim")) {
+            try animator.play("healing_anim");
         }
         // item.display.sprite = "sprites/effects/invulnerable/anim_0.png";
     }

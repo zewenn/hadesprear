@@ -97,7 +97,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             &e.ALLOCATOR,
             "invulnerable_anim",
             e.Animator.interpolation.lerp,
-            0.35,
+            0.45,
         );
         {
             invlunerable_anim.chain(
@@ -112,7 +112,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
                 1,
                 .{
                     // Used to modify position.y
-                    .d1f32 = -12,
+                    .d1f32 = -8,
                     .sprite = "sprites/effects/invulnerable/anim_1.png",
                 },
             );
@@ -120,7 +120,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
                 2,
                 .{
                     // Used to modify position.y
-                    .d1f32 = 0,
+                    .d1f32 = -16,
                     .sprite = "sprites/effects/invulnerable/anim_2.png",
                 },
             );
@@ -128,7 +128,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
                 3,
                 .{
                     // Used to modify position.y
-                    .d1f32 = 12,
+                    .d1f32 = 0,
                     .sprite = "sprites/effects/invulnerable/anim_3.png",
                 },
             );
@@ -137,8 +137,16 @@ pub fn new(entity_id: []const u8) !*EffectShower {
                 4,
                 .{
                     // Used to modify position.y
-                    .d1f32 = 0,
+                    .d1f32 = 8,
                     .sprite = "sprites/effects/invulnerable/anim_4.png",
+                },
+            );
+            invlunerable_anim.chain(
+                5,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/invulnerable/anim_5.png",
                 },
             );
         }

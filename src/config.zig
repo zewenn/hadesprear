@@ -28,10 +28,11 @@ pub const Entity = struct {
     entity_stats: ?EntityStats = null,
 
     dash_modifiers: ?DashModifiers = null,
+    effect_shower_stats: ?EffectShowerStats = null,
 
     applied_onhit_effects: ?std.ArrayList(OnHitApplied) = null,
 
-    /// This will resolve all allocations that can 
+    /// This will resolve all allocations that can
     /// happen within an entity
     /// From raylib stuff to the on hit effects.
     pub fn deinit(self: *Self) void {
@@ -70,6 +71,11 @@ pub const entities = entities_module.make(Entity);
 pub const ProjectileSide = enum {
     player,
     enemy,
+};
+
+pub const EffectShowerStats = struct {
+    bound_entity_id: []const u8,
+    keep_alive: bool = false,
 };
 
 pub const ProjectileData = struct {
@@ -120,6 +126,13 @@ pub const EntityStats = struct {
     can_dash: bool = true,
     is_dashing: bool = false,
     is_invalnureable: bool = false,
+
+    is_slowed: bool = false,
+    is_rooted: bool = false,
+    is_stunned: bool = false,
+    is_asleep: bool = false,
+
+    is_healing: bool = false,
 
     enemy_archetype: EnemyArchetypes = .minion,
     enemy_subtype: EnemySubtypes = .normal,

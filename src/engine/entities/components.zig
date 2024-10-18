@@ -247,14 +247,14 @@ pub const RectangleVertices = struct {
 };
 
 pub const DummyData = struct {
-    d1f23: f32 = 0,
-    d2f23: f32 = 0,
-    d3f23: f32 = 0,
-    d4f23: f32 = 0,
-    d5f23: f32 = 0,
-    d6f23: f32 = 0,
-    d7f23: f32 = 0,
-    d8f23: f32 = 0,
+    d1f32: f32 = 0,
+    d2f32: f32 = 0,
+    d3f32: f32 = 0,
+    d4f32: f32 = 0,
+    d5f32: f32 = 0,
+    d6f32: f32 = 0,
+    d7f32: f32 = 0,
+    d8f32: f32 = 0,
 
     d1u8: u8 = 0,
     d2u8: u8 = 0,

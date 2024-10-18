@@ -29,6 +29,15 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
             try array.append(ptr);
         }
 
+        pub fn appendReturn(item: T) !*T {
+            if (!initalised) @panic("Manager was not initalised!");
+            const ptr = try alloc.create(T);
+            ptr.* = item;
+
+            try array.append(ptr);
+            return array.items[len() - 1];
+        }
+
         pub fn remove(item: *T) void {
             if (!initalised) @panic("Manager was not initalised!");
             for (array.items, 0..) |it, index| {

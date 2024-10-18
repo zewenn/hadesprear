@@ -29,14 +29,14 @@ tint: ?rl.Color = null,
 
 // DUMMY
 
-d1f23: ?f32 = null,
-d2f23: ?f32 = null,
-d3f23: ?f32 = null,
-d4f23: ?f32 = null,
-d5f23: ?f32 = null,
-d6f23: ?f32 = null,
-d7f23: ?f32 = null,
-d8f23: ?f32 = null,
+d1f32: ?f32 = null,
+d2f32: ?f32 = null,
+d3f32: ?f32 = null,
+d4f32: ?f32 = null,
+d5f32: ?f32 = null,
+d6f32: ?f32 = null,
+d7f32: ?f32 = null,
+d8f32: ?f32 = null,
 
 d1u8: ?u8 = null,
 d2u8: ?u8 = null,

@@ -205,51 +205,51 @@ pub inline fn interpolateKeyframes(self: *Self, kf1: Keyframe, kf2: Keyframe, pe
     {
         // f32
 
-        if (kf1.d1f23) |v1| {
-            if (kf2.d1f23) |v2| {
-                new_kf.d1f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d1f32) |v1| {
+            if (kf2.d1f32) |v2| {
+                new_kf.d1f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d2f23) |v1| {
-            if (kf2.d2f23) |v2| {
-                new_kf.d2f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d2f32) |v1| {
+            if (kf2.d2f32) |v2| {
+                new_kf.d2f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d3f23) |v1| {
-            if (kf2.d3f23) |v2| {
-                new_kf.d3f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d3f32) |v1| {
+            if (kf2.d3f32) |v2| {
+                new_kf.d3f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d4f23) |v1| {
-            if (kf2.d4f23) |v2| {
-                new_kf.d4f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d4f32) |v1| {
+            if (kf2.d4f32) |v2| {
+                new_kf.d4f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d5f23) |v1| {
-            if (kf2.d5f23) |v2| {
-                new_kf.d5f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d5f32) |v1| {
+            if (kf2.d5f32) |v2| {
+                new_kf.d5f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d6f23) |v1| {
-            if (kf2.d6f23) |v2| {
-                new_kf.d6f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d6f32) |v1| {
+            if (kf2.d6f32) |v2| {
+                new_kf.d6f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d7f23) |v1| {
-            if (kf2.d7f23) |v2| {
-                new_kf.d7f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d7f32) |v1| {
+            if (kf2.d7f32) |v2| {
+                new_kf.d7f32 = self.timing_fn(v1, v2, percent);
             }
         }
 
-        if (kf1.d8f23) |v1| {
-            if (kf2.d8f23) |v2| {
-                new_kf.d8f23 = self.timing_fn(v1, v2, percent);
+        if (kf1.d8f32) |v1| {
+            if (kf2.d8f32) |v2| {
+                new_kf.d8f32 = self.timing_fn(v1, v2, percent);
             }
         }
 

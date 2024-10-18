@@ -29,6 +29,7 @@ pub var ALLOCATOR: Allocator = undefined;
 
 pub const entities = @import("../config.zig").entities;
 pub const components = @import("./entities/components.zig");
+pub const Entity = entities.Entity;
 
 pub inline fn compile() !void {
     try assets.compile();

@@ -132,36 +132,36 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
     // Dummy
     {
-        if (kf.d1f23) |v| {
-            self.dummy.d1f23 = v;
+        if (kf.d1f32) |v| {
+            self.dummy.d1f32 = v;
         }
 
-        if (kf.d2f23) |v| {
-            self.dummy.d2f23 = v;
+        if (kf.d2f32) |v| {
+            self.dummy.d2f32 = v;
         }
 
-        if (kf.d3f23) |v| {
-            self.dummy.d3f23 = v;
+        if (kf.d3f32) |v| {
+            self.dummy.d3f32 = v;
         }
 
-        if (kf.d4f23) |v| {
-            self.dummy.d4f23 = v;
+        if (kf.d4f32) |v| {
+            self.dummy.d4f32 = v;
         }
 
-        if (kf.d5f23) |v| {
-            self.dummy.d5f23 = v;
+        if (kf.d5f32) |v| {
+            self.dummy.d5f32 = v;
         }
 
-        if (kf.d6f23) |v| {
-            self.dummy.d6f23 = v;
+        if (kf.d6f32) |v| {
+            self.dummy.d6f32 = v;
         }
 
-        if (kf.d7f23) |v| {
-            self.dummy.d7f23 = v;
+        if (kf.d7f32) |v| {
+            self.dummy.d7f32 = v;
         }
 
-        if (kf.d8f23) |v| {
-            self.dummy.d8f23 = v;
+        if (kf.d8f32) |v| {
+            self.dummy.d8f32 = v;
         }
 
         if (kf.d1u8) |v| {

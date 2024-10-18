@@ -29,7 +29,6 @@ pub const Entity = struct {
 
     dash_modifiers: ?DashModifiers = null,
     effect_shower_stats: ?EffectShowerStats = null,
-    effects_shown: EffectsShown = .{},
 
     applied_onhit_effects: ?std.ArrayList(OnHitApplied) = null,
 

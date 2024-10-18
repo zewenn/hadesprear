@@ -36,7 +36,7 @@ pub fn update() !void {
 
     EntityLoop: for (entities) |entity| {
         const estats: *conf.EntityStats = if (entity.entity_stats) |*t| t else continue;
-    
+
         if (!(estats.is_invalnureable or
             estats.is_slowed or
             estats.is_rooted or
@@ -68,6 +68,13 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
+    const items = try manager.items();
+    defer manager.alloc.free(items);
+
+    for (items) |item| {
+        manager.removeFreeId(item);
+    }
+
     manager.deinit();
 }
 
@@ -97,7 +104,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             &e.ALLOCATOR,
             "invulnerable_anim",
             e.Animator.interpolation.lerp,
-            0.45,
+            0.42,
         );
         {
             invlunerable_anim.chain(
@@ -156,7 +163,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             &e.ALLOCATOR,
             "healing_anim",
             e.Animator.interpolation.lerp,
-            0.45,
+            0.21,
         );
         {
             healing_anim.chain(
@@ -236,14 +243,13 @@ fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void 
 
     if (istats.is_invalnureable) {
         if (!animator.isPlaying("invulnerable_anim")) {
+            animator.stop("healing_anim");
             try animator.play("invulnerable_anim");
         }
-        // item.display.sprite = "sprites/effects/invulnerable/anim_0.png";
-    }
-    else if (istats.is_healing) {
+    } else if (istats.is_healing) {
         if (!animator.isPlaying("healing_anim")) {
+            animator.stop("invulnerable_anim");
             try animator.play("healing_anim");
         }
-        // item.display.sprite = "sprites/effects/invulnerable/anim_0.png";
     }
 }

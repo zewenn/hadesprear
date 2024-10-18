@@ -236,6 +236,16 @@ pub fn update() !void {
     if (e.isKeyDown(.key_seven)) e.display.camera.zoom *= 0.99;
     if (e.isKeyDown(.key_eight)) e.display.camera.zoom *= 1.01;
 
+    if (e.isKeyDown(.key_e)) {
+        if (e.isKeyDown(.key_one)) {
+            Player.entity_stats.?.health += 0.1;
+            Player.entity_stats.?.is_healing = true;
+        } else Player.entity_stats.?.is_healing = false;
+        if (e.isKeyDown(.key_two)) {
+            Player.entity_stats.?.health -= 0.1;
+        }
+    }
+
     Player.entity_stats.?.health = e.zlib.math.clamp(
         f32,
         Player.entity_stats.?.health,

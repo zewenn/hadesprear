@@ -113,10 +113,7 @@ pub const RectangleVertices = struct {
     y_max: f32 = 0,
 
     pub fn init(transform: *Transform, collider: *Collider) Self {
-        const center_point = rl.Vector2.init(
-            transform.position.x + transform.scale.x / 2 - collider.rect.width / 2,
-            transform.position.y + transform.scale.y / 2 - collider.rect.height / 2,
-        );
+        const center_point = getCenterPoint(transform, collider);
         const delta_point_top_left = rl.Vector2
             .init(-collider.rect.width / 2, -collider.rect.height / 2)
             .rotate(std.math.degreesToRadians(transform.rotation.z));
@@ -196,6 +193,13 @@ pub const RectangleVertices = struct {
             .y_min = y_min,
             .y_max = y_max,
         };
+    }
+
+    pub fn getCenterPoint(transform: *Transform, collider: *Collider) rl.Vector2 {
+        return rl.Vector2.init(
+            transform.position.x + collider.rect.x + transform.scale.x / 2 - collider.rect.width / 2,
+            transform.position.y + collider.rect.y + transform.scale.y / 2 - collider.rect.height / 2,
+        );
     }
 
     pub fn recalculateXYMinMax(self: *Self) void {

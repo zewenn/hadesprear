@@ -311,10 +311,10 @@ pub fn getCachedOrNew(e: *entities.Entity) RectangleVertices {
         );
     }
 
-    cc.center = .{
-        .x = e.transform.position.x + e.transform.scale.x / 2 - e.collider.?.rect.width / 2,
-        .y = e.transform.position.y + e.transform.scale.y / 2 - e.collider.?.rect.height / 2,
-    };
+    cc.center = RectangleVertices.getCenterPoint(
+        &(e.transform),
+        &(e.collider.?),
+    );
 
     cc.recalculatePoints();
     cc.recalculateXYMinMax();

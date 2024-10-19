@@ -42,7 +42,8 @@ pub fn update() !void {
             estats.is_rooted or
             estats.is_stunned or
             estats.is_asleep or
-            estats.is_healing))
+            estats.is_healing or
+            estats.is_energised))
             continue;
 
         const items = try manager.items();
@@ -192,6 +193,40 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             );
         }
         try Animator.chain(healing_anim);
+
+        var energised_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            "energised_anim",
+            e.Animator.interpolation.lerp,
+            0.21,
+        );
+        {
+            energised_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/energised/anim_0.png",
+                },
+            );
+            energised_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/energised/anim_1.png",
+                },
+            );
+            energised_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/energised/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(energised_anim);
     }
 
     NewPtr.animator = Animator;
@@ -236,20 +271,36 @@ pub fn removeDead() !void {
 }
 
 fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void {
-    item.transform.position = entity.transform.position;
+    item.transform.position = entity.transform.position.add(e.Vec2(0, 8));
     item.effect_shower_stats.?.keep_alive = true;
 
     const istats: *conf.EntityStats = if (entity.entity_stats) |*i| i else return;
 
     if (istats.is_invalnureable) {
-        if (!animator.isPlaying("invulnerable_anim")) {
-            animator.stop("healing_anim");
-            try animator.play("invulnerable_anim");
-        }
-    } else if (istats.is_healing) {
-        if (!animator.isPlaying("healing_anim")) {
-            animator.stop("invulnerable_anim");
-            try animator.play("healing_anim");
-        }
+        try playAnim("invulnerable_anim", animator);
+        return;
     }
+
+    if (istats.is_healing) {
+        try playAnim("healing_anim", animator);
+        return;
+    }
+
+    if (istats.is_energised) {
+        try playAnim("energised_anim", animator);
+        return;
+    }
+}
+
+fn playAnim(anim: []const u8, animator: *e.Animator) !void {
+    if (animator.isPlaying(anim)) return;
+    stopAllAnims(animator);
+
+    try animator.play(anim);
+}
+
+fn stopAllAnims(animator: *e.Animator) void {
+    animator.stop("invulnerable_anim");
+    animator.stop("healing_anim");
+    animator.stop("energised_anim");
 }

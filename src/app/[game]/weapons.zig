@@ -54,6 +54,7 @@ pub inline fn applyOnHitEffect(
             );
             old = entity.entity_stats.?.movement_speed;
             entity.entity_stats.?.movement_speed = new;
+            entity.entity_stats.?.is_energised = true;
         },
         .stengthen => {
             use_timeout = true;
@@ -880,6 +881,8 @@ pub fn update() !void {
             switch (item.type) {
                 .energized => {
                     entity.entity_stats.?.movement_speed -= item.delta;
+                    if (entity.entity_stats.?.movement_speed == entity.entity_stats.?.base_movement_speed)
+                        entity.entity_stats.?.is_energised = false;
                 },
                 .stengthen => {
                     entity.entity_stats.?.damage -= item.delta;

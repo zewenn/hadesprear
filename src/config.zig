@@ -107,6 +107,7 @@ pub const ShootingStats = struct {
 pub const EntityStats = struct {
     const Self = @This();
 
+    base_movement_speed: f32 = 335,
     movement_speed: f32 = 335,
     max_movement_speed: f32 = 1280,
 
@@ -133,6 +134,7 @@ pub const EntityStats = struct {
     is_asleep: bool = false,
 
     is_healing: bool = false,
+    is_energised: bool = false,
 
     enemy_archetype: EnemyArchetypes = .minion,
     enemy_subtype: EnemySubtypes = .normal,

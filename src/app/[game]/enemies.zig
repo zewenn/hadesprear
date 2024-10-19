@@ -588,6 +588,7 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
         },
         .dash_modifiers = .{
             .dash_time = 0.25,
+            .change_invulnerable = if (archetype == .knight) false else true,
         },
         .collider = .{
             .dynamic = true,

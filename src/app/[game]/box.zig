@@ -23,7 +23,7 @@ var Box = e.entities.Entity{
     },
     .collider = .{
         .dynamic = false,
-        .rect = e.Rectangle.init(0, 0, 64, 64),
+        .rect = e.Rectangle.init(0, 0, 64, 32),
         .weight = 1,
     },
 };

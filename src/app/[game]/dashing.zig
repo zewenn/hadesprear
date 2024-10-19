@@ -33,7 +33,8 @@ pub fn update() !void {
         if (entity.dash_modifiers.?.dash_end <= e.time.gameTime) {
             entity.entity_stats.?.is_dashing = false;
             entity.entity_stats.?.can_move = true;
-            entity.entity_stats.?.is_invalnureable = false;
+            if (entity.entity_stats.?.is_invalnureable and entity.dash_modifiers.?.change_invulnerable)
+                entity.entity_stats.?.is_invalnureable = false;
             entity.display.tint = e.Color.white;
             continue;
         }
@@ -67,7 +68,8 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
 
     entity.entity_stats.?.is_dashing = true;
     entity.entity_stats.?.can_move = false;
-    entity.entity_stats.?.is_invalnureable = true;
+    if (!entity.entity_stats.?.is_invalnureable and entity.dash_modifiers.?.change_invulnerable)
+        entity.entity_stats.?.is_invalnureable = true;
 
     // TODO: add sprites instead of changing tint
     //       or maybe even just play an animation?

@@ -181,6 +181,7 @@ pub const DashModifiers = struct {
 
     recharge_time: f64 = 1.5,
     recharge_end: f64 = 0,
+    change_invulnerable: bool = true,
 
     dash_end: f64 = 0,
 };

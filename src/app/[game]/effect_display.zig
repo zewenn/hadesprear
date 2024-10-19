@@ -22,6 +22,16 @@ const manager = e.zlib.HeapManager(EffectShower, (struct {
     }
 }).callback);
 
+const ANIMS = struct {
+    pub const INVULNERABLE = "invulnerable_anim";
+    pub const HEALING = "healing_anim";
+    pub const ENERGISED = "energised_anim";
+    pub const SLOWED = "slowed_anim";
+    pub const ROOTED = "rooted_anim";
+    pub const STUNNED = "stunned_anim";
+    pub const ASLEEP = "asleep_anim";
+};
+
 pub fn awake() !void {
     manager.init(e.ALLOCATOR);
 }
@@ -37,13 +47,18 @@ pub fn update() !void {
     EntityLoop: for (entities) |entity| {
         const estats: *conf.EntityStats = if (entity.entity_stats) |*t| t else continue;
 
-        if (!(estats.is_invalnureable or
+        if (!(
+        //
+            estats.is_invalnureable or
+            estats.is_healing or
+            estats.is_energised or
+            //
             estats.is_slowed or
             estats.is_rooted or
             estats.is_stunned or
-            estats.is_asleep or
-            estats.is_healing or
-            estats.is_energised))
+            estats.is_asleep
+        //
+        ))
             continue;
 
         const items = try manager.items();
@@ -103,7 +118,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
     {
         var invlunerable_anim = e.Animator.Animation.init(
             &e.ALLOCATOR,
-            "invulnerable_anim",
+            ANIMS.INVULNERABLE,
             e.Animator.interpolation.lerp,
             0.42,
         );
@@ -162,7 +177,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
 
         var healing_anim = e.Animator.Animation.init(
             &e.ALLOCATOR,
-            "healing_anim",
+            ANIMS.HEALING,
             e.Animator.interpolation.lerp,
             0.21,
         );
@@ -196,7 +211,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
 
         var energised_anim = e.Animator.Animation.init(
             &e.ALLOCATOR,
-            "energised_anim",
+            ANIMS.ENERGISED,
             e.Animator.interpolation.lerp,
             0.21,
         );
@@ -227,6 +242,160 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             );
         }
         try Animator.chain(energised_anim);
+
+        var slowed_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            ANIMS.SLOWED,
+            e.Animator.interpolation.lerp,
+            0.21,
+        );
+        {
+            slowed_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/slowed/anim_0.png",
+                },
+            );
+            slowed_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/slowed/anim_1.png",
+                },
+            );
+            slowed_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/slowed/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(slowed_anim);
+
+        var rooted_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            ANIMS.ROOTED,
+            e.Animator.interpolation.lerp,
+            0.21,
+        );
+        {
+            rooted_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/rooted/anim_0.png",
+                },
+            );
+            rooted_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/rooted/anim_1.png",
+                },
+            );
+            rooted_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/rooted/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(rooted_anim);
+
+        var stunned_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            ANIMS.STUNNED,
+            e.Animator.interpolation.lerp,
+            0.35,
+        );
+        {
+            stunned_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/stunned/anim_0.png",
+                },
+            );
+            stunned_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/stunned/anim_1.png",
+                },
+            );
+            stunned_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -16,
+                    .sprite = "sprites/effects/stunned/anim_2.png",
+                },
+            );
+            stunned_anim.chain(
+                3,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/stunned/anim_3.png",
+                },
+            );
+
+            stunned_anim.chain(
+                4,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 8,
+                    .sprite = "sprites/effects/stunned/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(stunned_anim);
+
+        var asleep_anim = e.Animator.Animation.init(
+            &e.ALLOCATOR,
+            ANIMS.ASLEEP,
+            e.Animator.interpolation.lerp,
+            0.21,
+        );
+        {
+            asleep_anim.chain(
+                0,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/asleep/anim_0.png",
+                },
+            );
+            asleep_anim.chain(
+                1,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = -8,
+                    .sprite = "sprites/effects/asleep/anim_1.png",
+                },
+            );
+            asleep_anim.chain(
+                2,
+                .{
+                    // Used to modify position.y
+                    .d1f32 = 0,
+                    .sprite = "sprites/effects/asleep/anim_0.png",
+                },
+            );
+        }
+        try Animator.chain(asleep_anim);
+
     }
 
     NewPtr.animator = Animator;
@@ -277,17 +446,37 @@ fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void 
     const istats: *conf.EntityStats = if (entity.entity_stats) |*i| i else return;
 
     if (istats.is_invalnureable) {
-        try playAnim("invulnerable_anim", animator);
+        try playAnim(ANIMS.INVULNERABLE, animator);
         return;
     }
 
     if (istats.is_healing) {
-        try playAnim("healing_anim", animator);
+        try playAnim(ANIMS.HEALING, animator);
         return;
     }
 
     if (istats.is_energised) {
-        try playAnim("energised_anim", animator);
+        try playAnim(ANIMS.ENERGISED, animator);
+        return;
+    }
+
+    if (istats.is_slowed) {
+        try playAnim(ANIMS.SLOWED, animator);
+        return;
+    }
+
+    if (istats.is_rooted) {
+        try playAnim(ANIMS.ROOTED, animator);
+        return;
+    }
+
+    if (istats.is_stunned) {
+        try playAnim(ANIMS.STUNNED, animator);
+        return;
+    }
+
+    if (istats.is_asleep) {
+        try playAnim(ANIMS.ASLEEP, animator);
         return;
     }
 }
@@ -300,7 +489,11 @@ fn playAnim(anim: []const u8, animator: *e.Animator) !void {
 }
 
 fn stopAllAnims(animator: *e.Animator) void {
-    animator.stop("invulnerable_anim");
-    animator.stop("healing_anim");
-    animator.stop("energised_anim");
+    animator.stop(ANIMS.INVULNERABLE);
+    animator.stop(ANIMS.HEALING);
+    animator.stop(ANIMS.ENERGISED);
+    animator.stop(ANIMS.SLOWED);
+    animator.stop(ANIMS.ROOTED);
+    animator.stop(ANIMS.STUNNED);
+    animator.stop(ANIMS.ASLEEP);
 }

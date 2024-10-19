@@ -246,6 +246,16 @@ pub fn update() !void {
         }
     }
 
+    if (e.isKeyDown(.key_r)) {
+        Player.entity_stats.?.is_slowed = if (e.isKeyDown(.key_one)) true else false;
+
+        Player.entity_stats.?.is_rooted = if (e.isKeyDown(.key_two)) true else false;
+
+        Player.entity_stats.?.is_stunned = if (e.isKeyDown(.key_three)) true else false;
+
+        Player.entity_stats.?.is_asleep = if (e.isKeyDown(.key_four)) true else false;
+    }
+
     Player.entity_stats.?.health = e.zlib.math.clamp(
         f32,
         Player.entity_stats.?.health,

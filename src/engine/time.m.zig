@@ -3,6 +3,7 @@ const Allocator = @import("std").mem.Allocator;
 
 const rl = @import("raylib");
 const zlib = @import("z/z.m.zig");
+const events = @import("./events.m.zig");
 
 const Timeout = struct {
     func: *const fn () anyerror!void,
@@ -109,7 +110,7 @@ pub fn TimeoutHandler(comptime T: type) type {
             });
         }
 
-        pub fn update(self: *Self) !void {
+        pub fn update(self: *Self) anyerror!void {
             const items: []Waiter = try zlib.arrays.cloneToOwnedSlice(Waiter, self.waiters);
             defer self.alloc.free(items);
 

@@ -659,7 +659,7 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
             .normal => usePrefab(prefabs.epics.weapons.piercing_sword),
         },
         .brute => switch (subtype) {
-            .normal => usePrefab(prefabs.epics.weapons.piercing_sword),
+            .normal => usePrefab(prefabs.legendaries.weapons.staff),
         },
         .angler => switch (subtype) {
             .normal => usePrefab(prefabs.commons.weapons.angler_spear),

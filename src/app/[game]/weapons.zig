@@ -6,6 +6,11 @@ const e = @import("../../engine/engine.m.zig");
 
 const balancing = @import("balancing.zig");
 
+const TMType = e.time.TimeoutHandler(struct {
+    effects: conf.OnHitEffects = .none,
+});
+var tm: TMType = undefined;
+
 pub const OnHit = struct {
     entity: *e.entities.Entity,
     T: conf.OnHitEffects,
@@ -74,6 +79,24 @@ pub inline fn applyOnHitEffect(
         .delta = delta,
         .end_time = e.time.gameTime + e.zlib.math.clamp(f64, strength / 3, 0, 15),
     }) catch {};
+
+    tm.setTimeout(
+        (struct {
+            pub fn callback(args: TMType.ARGSTYPE) !void {
+                std.log.debug(
+                    "Effect: {s}",
+                    .{
+                        switch (args.effects) {
+                            .none => "none",
+                            else => "not none",
+                        },
+                    },
+                );
+            }
+        }).callback,
+        .{ .effects = effect },
+        1,
+    ) catch {};
 }
 
 pub const Hands = struct {
@@ -860,11 +883,14 @@ pub const Hands = struct {
     }
 };
 
-pub fn awake() !void {}
+pub fn awake() !void {
+    tm = TMType.init(e.ALLOCATOR);
+}
 
 pub fn init() !void {}
 
 pub fn update() !void {
+    try tm.update();
     const entities = try e.entities.all();
     defer e.entities.alloc.free(entities);
 
@@ -899,4 +925,6 @@ pub fn update() !void {
     }
 }
 
-pub fn deinit() !void {}
+pub fn deinit() !void {
+    tm.deinit();
+}

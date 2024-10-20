@@ -265,3 +265,7 @@ pub fn searchSliceMatrixForNext(
     if (closest_distance != 0) return closest;
     return [2]usize{ x, y };
 }
+
+pub fn cloneToOwnedSlice(comptime T: type, list: std.ArrayList(T)) ![]T {
+    return try @constCast(&try list.clone()).toOwnedSlice();
+}

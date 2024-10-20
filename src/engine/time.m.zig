@@ -2,6 +2,7 @@ const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 
 const rl = @import("raylib");
+const zlib = @import("z/z.m.zig");
 
 const Timeout = struct {
     func: *const fn () anyerror!void,
@@ -72,4 +73,58 @@ pub fn tick() !void {
         _ = timeouts.orderedRemove(i);
         break;
     }
+}
+
+pub fn TimeoutHandler(comptime T: type) type {
+    return struct {
+        const Waiter = struct {
+            end_time: f64,
+            callback: FunctionType,
+            args: T,
+        };
+        const FunctionType = *const fn (T) anyerror!void;
+        pub const ARGSTYPE = T;
+
+        const Self = @This();
+
+        waiters: std.ArrayList(Waiter),
+        alloc: Allocator,
+
+        pub fn init(allocator: Allocator) Self {
+            return Self{
+                .waiters = std.ArrayList(Waiter).init(allocator),
+                .alloc = allocator,
+            };
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.waiters.deinit();
+        }
+
+        pub fn setTimeout(self: *Self, callback: FunctionType, args: T, timeout: f64) !void {
+            try self.waiters.append(Waiter{
+                .end_time = gameTime + timeout,
+                .callback = callback,
+                .args = args,
+            });
+        }
+
+        pub fn update(self: *Self) !void {
+            const items: []Waiter = try zlib.arrays.cloneToOwnedSlice(Waiter, self.waiters);
+            defer self.alloc.free(items);
+
+            for (items) |item| {
+                if (item.end_time > gameTime) return;
+
+                try item.callback(item.args);
+
+                for (self.waiters.items, 0..) |compared_to, index| {
+                    if (!std.meta.eql(item, compared_to)) continue;
+                    _ = self.waiters.swapRemove(index);
+
+                    break;
+                }
+            }
+        }
+    };
 }

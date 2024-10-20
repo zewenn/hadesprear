@@ -125,6 +125,17 @@ pub fn make(comptime T: type) type {
             return try list.toOwnedSlice();
         }
 
+        pub fn isValid(ptr: *Entity) bool {
+            const as_int: usize = @intFromPtr(ptr);
+            for (entities.items) |eptr| {
+                const eptr_as_int: usize = @intFromPtr(eptr);
+
+                if (eptr_as_int != as_int) continue;
+                return true;
+            }
+            return false;
+        }
+
         /// Caller owns the returned memory
         pub fn all() ![]*Entity {
             var list = try entities.clone();

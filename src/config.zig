@@ -30,8 +30,6 @@ pub const Entity = struct {
     dash_modifiers: ?DashModifiers = null,
     effect_shower_stats: ?EffectShowerStats = null,
 
-    applied_onhit_effects: ?std.ArrayList(OnHitApplied) = null,
-
     /// This will resolve all allocations that can
     /// happen within an entity
     /// From raylib stuff to the on hit effects.
@@ -45,9 +43,6 @@ pub const Entity = struct {
                 rl.unloadTexture(texture);
                 self.cached_display.?.texture = null;
             }
-        }
-        if (self.applied_onhit_effects) |*list| {
-            list.deinit();
         }
     }
 

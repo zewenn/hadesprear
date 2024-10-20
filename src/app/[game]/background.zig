@@ -24,7 +24,7 @@ var Background = e.entities.Entity{
 // ===================== [Events] =====================
 
 pub fn awake() !void {
-    try e.entities.register(&Background);
+    try e.entities.add(&Background);
 }
 
 pub fn init() !void {}

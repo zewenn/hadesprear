@@ -16,7 +16,7 @@ const weapons = @import("weapons.zig");
 
 pub const manager = e.zlib.HeapManager(e.entities.Entity, (struct {
     pub fn callback(alloc: Allocator, item: *e.entities.Entity) !void {
-        e.entities.delete(item.id);
+        e.entities.remove(item.id);
         item.deinit();
         alloc.free(item.id);
     }
@@ -61,7 +61,7 @@ pub fn update() !void {
         }
 
         if (!e.entities.exists(entity_ptr.id)) {
-            try e.entities.register(entity_ptr);
+            try e.entities.add(entity_ptr);
         }
 
         const direction_vector = e.Vec2(1, 0)

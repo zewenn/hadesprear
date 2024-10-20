@@ -6,21 +6,14 @@ const e = @import("../../engine/engine.m.zig");
 
 const balancing = @import("balancing.zig");
 
-const TMType = e.time.TimeoutHandler(struct {
-    effects: conf.OnHitEffects = .none,
-});
+const TMType = e.time.TimeoutHandler(OnHit);
 var tm: TMType = undefined;
 
 pub const OnHit = struct {
     entity: *e.entities.Entity,
     T: conf.OnHitEffects,
     delta: f32,
-    end_time: f64,
 };
-
-fn calculateStrength(base: f32) f32 {
-    return (-(1 / (base + 1)) + 1) * 2;
-}
 
 pub inline fn applyOnHitEffect(
     entity: *e.entities.Entity,
@@ -28,11 +21,6 @@ pub inline fn applyOnHitEffect(
     strength: f32,
 ) void {
     if (entity.entity_stats == null) return;
-    if (entity.applied_onhit_effects == null) {
-        entity.applied_onhit_effects = std.ArrayList(conf.OnHitApplied).init(e.ALLOCATOR);
-    }
-
-    const applied_onhit_effects = &(entity.applied_onhit_effects.?);
 
     const scaled_strength: f32 = balancing.powerScaleCurve(strength);
     var use_timeout: bool = true;
@@ -53,7 +41,7 @@ pub inline fn applyOnHitEffect(
 
             new = e.zlib.math.clamp(
                 f32,
-                entity.entity_stats.?.movement_speed * calculateStrength(strength),
+                entity.entity_stats.?.movement_speed + scaled_strength,
                 -1 * entity.entity_stats.?.max_movement_speed,
                 entity.entity_stats.?.max_movement_speed,
             );
@@ -64,7 +52,7 @@ pub inline fn applyOnHitEffect(
         .stengthen => {
             use_timeout = true;
 
-            new = entity.entity_stats.?.damage * calculateStrength(strength);
+            new = entity.entity_stats.?.damage + scaled_strength;
             old = entity.entity_stats.?.damage;
             entity.entity_stats.?.damage = new;
         },
@@ -74,28 +62,35 @@ pub inline fn applyOnHitEffect(
 
     delta = new - old;
 
-    applied_onhit_effects.append(.{
-        .type = effect,
-        .delta = delta,
-        .end_time = e.time.gameTime + e.zlib.math.clamp(f64, strength / 3, 0, 15),
-    }) catch {};
-
     tm.setTimeout(
         (struct {
-            pub fn callback(args: TMType.ARGSTYPE) !void {
-                std.log.debug(
-                    "Effect: {s}",
-                    .{
-                        switch (args.effects) {
-                            .none => "none",
-                            else => "not none",
-                        },
+            pub fn callback(args: OnHit) !void {
+                if (!e.entities.isValid(args.entity)) return;
+
+                switch (args.T) {
+                    .energized => {
+                        args.entity.entity_stats.?.movement_speed -= args.delta;
+                        if (args.entity.entity_stats.?.movement_speed == args.entity.entity_stats.?.base_movement_speed)
+                            args.entity.entity_stats.?.is_energised = false;
                     },
-                );
+                    .stengthen => {
+                        args.entity.entity_stats.?.damage -= args.delta;
+                    },
+                    else => {},
+                }
             }
         }).callback,
-        .{ .effects = effect },
-        1,
+        OnHit{
+            .entity = entity,
+            .T = effect,
+            .delta = delta,
+        },
+        e.time.gameTime + e.zlib.math.clamp(
+            f64,
+            strength / 3,
+            0,
+            15,
+        ),
     ) catch {};
 }
 
@@ -891,38 +886,6 @@ pub fn init() !void {}
 
 pub fn update() !void {
     try tm.update();
-    const entities = try e.entities.all();
-    defer e.entities.alloc.free(entities);
-
-    for (entities) |entity| {
-        if (entity.applied_onhit_effects == null) continue;
-
-        const applied_onhit_effects = &(entity.applied_onhit_effects.?);
-        const items = try @constCast(&(try applied_onhit_effects.clone())).toOwnedSlice();
-        defer e.ALLOCATOR.free(items);
-
-        for (items) |item| {
-            if (item.end_time >= e.time.gameTime) continue;
-
-            switch (item.type) {
-                .energized => {
-                    entity.entity_stats.?.movement_speed -= item.delta;
-                    if (entity.entity_stats.?.movement_speed == entity.entity_stats.?.base_movement_speed)
-                        entity.entity_stats.?.is_energised = false;
-                },
-                .stengthen => {
-                    entity.entity_stats.?.damage -= item.delta;
-                },
-                else => {},
-            }
-
-            for (applied_onhit_effects.items, 0..) |item2, index| {
-                if (!std.meta.eql(item, item2)) continue;
-                _ = applied_onhit_effects.swapRemove(index);
-                break;
-            }
-        }
-    }
 }
 
 pub fn deinit() !void {

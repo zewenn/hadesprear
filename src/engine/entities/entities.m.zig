@@ -149,11 +149,11 @@ pub fn make(comptime T: type) type {
             return false;
         }
 
-        pub fn register(entity: *Entity) !void {
+        pub fn add(entity: *Entity) !void {
             try entities.append(entity);
         }
 
-        pub fn delete(id: []const u8) void {
+        pub fn remove(id: []const u8) void {
             for (entities.items, 0..) |item, i| {
                 if (!std.mem.eql(u8, item.id, id)) continue;
 

@@ -12,7 +12,7 @@ pub const EffectShower = struct {
 
 const manager = e.zlib.HeapManager(EffectShower, (struct {
     pub fn callback(alloc: Allocator, item: *EffectShower) !void {
-        e.entities.delete(item.entity.id);
+        e.entities.remove(item.entity.id);
 
         alloc.free(item.entity.id);
         alloc.free(item.entity.effect_shower_stats.?.bound_entity_id);
@@ -395,12 +395,11 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             );
         }
         try Animator.chain(asleep_anim);
-
     }
 
     NewPtr.animator = Animator;
 
-    try e.entities.register(&(NewPtr.entity));
+    try e.entities.add(&(NewPtr.entity));
 
     return NewPtr;
 }

@@ -101,7 +101,7 @@ fn summonProjectiles(
 // ===================== [Events] =====================
 
 pub fn awake() !void {
-    try e.entities.register(&Player);
+    try e.entities.add(&Player);
 
     player_animator = e.Animator.init(&e.ALLOCATOR, &Player);
     {
@@ -171,8 +171,8 @@ pub fn awake() !void {
         }
     }
 
-    try e.entities.register(&Hand0);
-    try e.entities.register(&Hand1);
+    try e.entities.add(&Hand0);
+    try e.entities.add(&Hand1);
 
     hands = try weapons.Hands.init(
         &e.ALLOCATOR,
@@ -548,7 +548,7 @@ pub fn deinit() !void {
     player_animator.deinit();
     hands.deinit();
 
-    e.entities.delete(Player.id);
+    e.entities.remove(Player.id);
     Player.deinit();
 
     if (health_display.is_content_heap) {

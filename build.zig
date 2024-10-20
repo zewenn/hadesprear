@@ -12,11 +12,8 @@ pub fn build(b: *std.Build) !void {
 
     var allocator = gpa.allocator();
 
-    TempDir: {
-        std.fs.cwd().makeDir("./src/.temp/") catch {};
-
-        break :TempDir;
-    }
+    // Making the src/.temp directory
+    std.fs.cwd().makeDir("./src/.temp/") catch {};
 
     Filenames: {
         // const files_dir = "./src/assets/";
@@ -29,10 +26,15 @@ pub fn build(b: *std.Build) !void {
         ) catch @panic("Couldn't open outfile!");
         defer output_file.close();
 
-        const res = try getAssetsEntries(&allocator);
+        const res = getEntries(
+            "./src/assets/",
+            allocator,
+            false,
+            false,
+        );
         defer {
-            for (res) |*item| {
-                item.destory();
+            for (res) |item| {
+                allocator.free(item);
             }
             allocator.free(res);
         }
@@ -41,7 +43,7 @@ pub fn build(b: *std.Build) !void {
         writer.writeAll("") catch break :Filenames;
         _ = writer.write("pub const Filenames = [_][]const u8{\n") catch break :Filenames;
 
-        for (res, 0..) |item, i| {
+        for (res, 0..) |filepath, i| {
             if (i == 0) {
                 _ = writer.write("\t\"") catch break :Filenames;
             } else {
@@ -50,18 +52,18 @@ pub fn build(b: *std.Build) !void {
 
             switch (builtin.os.tag) {
                 .windows => {
-                    const str = try allocator.alloc(u8, item.name.len);
+                    const str = try allocator.alloc(u8, filepath.len);
                     defer allocator.free(str);
 
-                    std.mem.copyForwards(u8, str, item.name);
+                    std.mem.copyForwards(u8, str, filepath);
 
-                    const owned = std.mem.replaceOwned(u8, allocator, item.name, "\\", "/") catch break :Filenames;
+                    const owned = std.mem.replaceOwned(u8, allocator, filepath, "\\", "/") catch break :Filenames;
                     defer allocator.free(owned);
 
                     writer.print("{s}", .{owned}) catch break :Filenames;
                 },
                 else => {
-                    writer.print("{s}", .{item.name}) catch break :Filenames;
+                    writer.print("{s}", .{filepath}) catch break :Filenames;
                 },
             }
 
@@ -89,101 +91,121 @@ pub fn build(b: *std.Build) !void {
         _ = writer.write("const sc = @import(\"../engine/scenes.m.zig\");\n\n") catch unreachable;
         _ = writer.write("pub fn register() !void {\n") catch unreachable;
 
-        var files_dirs = getEntries("./src/app/", &allocator);
+        const scene_directories = getEntries(
+            "./src/app/",
+            allocator,
+            true,
+            true,
+        );
         defer {
-            for (files_dirs.items) |files_dir| {
-                allocator.free(files_dir);
+            for (scene_directories) |item| {
+                allocator.free(item);
             }
-            files_dirs.deinit();
+            allocator.free(scene_directories);
         }
 
-        for (files_dirs.items) |files_dir| {
-            const scene_name = files_dir[1 .. files_dir.len - 1];
+        for (scene_directories) |shallow_entry_path| {
+            const scene_name = shallow_entry_path[1 .. shallow_entry_path.len - 1];
 
-            var Sfiles_fir = String.init_with_contents(allocator, files_dir) catch unreachable;
-            defer Sfiles_fir.deinit();
+            var shallow_entry_string = String.init_with_contents(
+                allocator,
+                shallow_entry_path,
+            ) catch @panic("Couldn't create shallow string");
+            defer shallow_entry_string.deinit();
 
-            if (!Sfiles_fir.startsWith("[") or !Sfiles_fir.endsWith("]")) continue;
+            if (!shallow_entry_string.startsWith("[") or !shallow_entry_string.endsWith("]")) continue;
 
-            var Ssub_path = String.init_with_contents(allocator, "./src/app/") catch unreachable;
-            defer Ssub_path.deinit();
+            var sub_path_string = String.init_with_contents(allocator, "./src/app/") catch unreachable;
+            defer sub_path_string.deinit();
 
-            Ssub_path.concat(files_dir) catch unreachable;
+            sub_path_string.concat(shallow_entry_path) catch @panic("Failed to concat wtf");
 
-            const sub_path = (Ssub_path.toOwned() catch unreachable).?;
+            const sub_path = (sub_path_string.toOwned() catch unreachable).?;
             defer allocator.free(sub_path);
 
-            const dir = std.fs.cwd().openDir(
+            const script_paths = getEntries(
                 sub_path,
-                .{
-                    .iterate = true,
-                },
-            ) catch unreachable;
+                allocator,
+                false,
+                false,
+            );
+            defer {
+                for (script_paths) |item| {
+                    allocator.free(item);
+                }
+                allocator.free(script_paths);
+            }
 
-            var it = dir.iterate();
+            for (script_paths) |path| {
+                var string_path_from_cwd = sub_path_string.clone() catch @panic("Failed to initalise string");
+                defer string_path_from_cwd.deinit();
 
-            while (it.next() catch unreachable) |entry| {
-                if (entry.kind != .file) continue;
+                string_path_from_cwd.concat("/") catch @panic("Couldn't concat!");
+                string_path_from_cwd.concat(path) catch @panic("Couldn't concat!");
 
-                var spath = Ssub_path.clone() catch unreachable;
-                defer spath.deinit();
+                const path_from_cwd = (string_path_from_cwd.toOwned() catch
+                    @panic("Couldn't make into owned slice")).?;
+                defer allocator.free(path_from_cwd);
 
-                spath.concat("/") catch unreachable;
-                spath.concat(entry.name) catch unreachable;
-
-                const file_sub = (spath.toOwned() catch unreachable).?;
-                defer allocator.free(file_sub);
-
-                // _ = writer.write(entry.name) catch unreachable;
-
-                const file = std.fs.cwd().openFile(file_sub, .{}) catch unreachable;
+                const file = std.fs.cwd().openFile(path_from_cwd, .{}) catch @panic("Failed to open file");
                 defer file.close();
 
-                // Max buffer size is 128MB
-                const contents_u8 = file.readToEndAlloc(allocator, BUF_128MB) catch |err| switch (err) {
+                const contents = file.readToEndAlloc(allocator, BUF_128MB) catch |err| switch (err) {
                     error.FileTooBig => @panic("Maximum file size exceeded"),
                     else => @panic("Failed to read file"),
                 };
-                defer allocator.free(contents_u8);
-
-                var Scontents = String.init_with_contents(allocator, contents_u8) catch unreachable;
-                defer Scontents.deinit();
+                defer allocator.free(contents);
 
                 writer.print("\ttry sc.register(\"{s}\", sc.Script", .{scene_name}) catch unreachable;
                 _ = writer.write("{\n") catch unreachable;
 
-                if (Scontents.find("\npub fn awake(") != null) {
+                if (std.mem.containsAtLeast(
+                    u8,
+                    contents,
+                    1,
+                    "\npub fn awake(",
+                )) {
                     writer.print(
                         "\t\t.eAwake = @import(\"../app/{s}/{s}\").awake,\n",
-                        .{ files_dir, entry.name },
+                        .{ shallow_entry_path, path },
                     ) catch unreachable;
                 }
-                if (Scontents.find("\npub fn init(") != null) {
+                if (std.mem.containsAtLeast(
+                    u8,
+                    contents,
+                    1,
+                    "\npub fn init(",
+                )) {
                     writer.print(
                         "\t\t.eInit = @import(\"../app/{s}/{s}\").init,\n",
-                        .{ files_dir, entry.name },
+                        .{ shallow_entry_path, path },
                     ) catch unreachable;
                 }
-                if (Scontents.find("\npub fn update(") != null) {
+                if (std.mem.containsAtLeast(
+                    u8,
+                    contents,
+                    1,
+                    "\npub fn update(",
+                )) {
                     writer.print(
                         "\t\t.eUpdate = @import(\"../app/{s}/{s}\").update,\n",
-                        .{ files_dir, entry.name },
+                        .{ shallow_entry_path, path },
                     ) catch unreachable;
                 }
-                if (Scontents.find("\npub fn deinit(") != null) {
+                if (std.mem.containsAtLeast(
+                    u8,
+                    contents,
+                    1,
+                    "\npub fn deinit(",
+                )) {
                     writer.print(
                         "\t\t.eDeinit = @import(\"../app/{s}/{s}\").deinit,\n",
-                        .{ files_dir, entry.name },
+                        .{ shallow_entry_path, path },
                     ) catch unreachable;
                 }
 
                 _ = writer.write("\t});") catch unreachable;
             }
-
-            //try e.scenes.register("default", e.scenes.Script{
-            //     .eAwake = player_script.awake,
-            // });
-
         }
         _ = writer.write("\n}") catch unreachable;
         break :Scenes;
@@ -251,145 +273,51 @@ const Segment = struct {
     list: std.ArrayListAligned([]const u8, null),
 };
 
-fn getAssetsEntries(allocator: *Allocator) ![]ModuleEntry {
-    var assets_dir = try std.fs.cwd().openDir("./src/assets/", .{ .iterate = true });
-    defer assets_dir.close();
-
-    const p_cwd = try std.process.getCwdAlloc(allocator.*);
-    defer allocator.free(p_cwd);
-
-    var walker = try assets_dir.walk(allocator.*);
-    defer walker.deinit();
-
-    var List = std.ArrayList(ModuleEntry).init(allocator.*);
-    defer List.deinit();
-
-    while (try walker.next()) |entry| {
-        if (entry.kind != .file) continue;
-
-        // var abs_pth = try String.init_with_contents(allocator.*, p_cwd);
-        var abs_pth = try String.init_with_contents(allocator.*, "../../");
-        // try abs_pth.concat("/");
-        try abs_pth.concat(entry.path);
-
-        defer abs_pth.deinit();
-
-        const path = try abs_pth.toOwned();
-        if (path == null) continue;
-
-        defer allocator.free(path.?);
-
-        // const extension: []const u8 = ".m.zig";
-        // if (!std.mem.endsWith(u8, entry.path, extension))
-        //     continue;
-
-        if (std.mem.endsWith(u8, entry.basename, ".DS_Store"))
-            continue;
-
-        if (!std.mem.endsWith(u8, entry.basename, ".mp3") and
-            !std.mem.endsWith(u8, entry.basename, ".png") and
-            !std.mem.endsWith(u8, entry.basename, ".ttf"))
-        {
-            std.log.err("Filetype not supported: {s}", .{entry.basename});
-            continue;
-        }
-
-        std.debug.print("Including asset: {s}\r", .{entry.basename});
-
-        try List.append(
-            try ModuleEntry.init(
-                allocator,
-                entry.path,
-                path.?,
-            ),
-        );
-    }
-
-    return try List.toOwnedSlice();
-}
-
 /// Caller owns the returned memory.
-fn getEntries(files_dir: []const u8, alloc: *Allocator) std.ArrayList([]const u8) {
+/// Returns the path of the entires.
+fn getEntries(files_dir: []const u8, allocator: Allocator, shallow: bool, include_dirs: bool) [][]const u8 {
     var dir = std.fs.cwd().openDir(files_dir, .{ .iterate = true }) catch unreachable;
     defer dir.close();
 
-    var result = std.ArrayList([]const u8).init(alloc.*);
+    var result = std.ArrayList([]const u8).init(allocator);
 
-    var it = dir.iterate();
-    while (it.next() catch unreachable) |*entry| {
-        if (entry.kind != .directory) continue;
-        const copied = alloc.alloc(u8, entry.name.len) catch unreachable;
+    if (!shallow) {
+        var walker =
+            dir.walk(allocator) catch
+            @panic("Couldn't walk");
 
-        for (copied, entry.name) |*l, l2| {
-            l.* = l2;
+        defer walker.deinit();
+
+        while (walker.next() catch @panic("Failed to iterate directory")) |*entry| {
+            if (!include_dirs and entry.kind == .directory) continue;
+            if (std.mem.eql(u8, entry.basename, ".DS_Store")) continue;
+
+            const copied = allocator.alloc(u8, std.mem.replacementSize(u8, entry.path, "\\", "/")) catch
+                @panic("Failed to allocate memory for slice");
+
+            _ = std.mem.replace(u8, entry.path, "\\", "/", copied);
+
+            result.append(copied) catch @panic("Failed to append slice to result");
         }
-        result.append(copied) catch unreachable;
+
+        return result.toOwnedSlice() catch @panic("Failed too convert to owned slice");
+    } else {
+        var iterator: std.fs.Dir.Iterator = dir.iterate();
+
+        while (iterator.next() catch @panic("Failed to iterate directory")) |*entry| {
+            if (!include_dirs and entry.kind == .directory) continue;
+
+            if (std.mem.eql(u8, entry.name, ".DS_Store")) continue;
+
+            const copied = allocator.alloc(u8, entry.name.len) catch
+                @panic("Failed to allocate memory for slice");
+
+            for (copied, entry.name) |*l, l2| {
+                l.* = l2;
+            }
+            result.append(copied) catch @panic("Failed to append slice to result");
+        }
     }
 
-    return result;
-}
-
-const ModuleEntry = struct {
-    const Self = @This();
-
-    name: []const u8,
-    abs_path: []const u8,
-    alloc: *Allocator,
-
-    pub fn init(allocator: *Allocator, name: []const u8, abs_path: []const u8) !Self {
-        return Self{
-            .name = try allocator.dupe(u8, name),
-            .abs_path = try allocator.dupe(u8, abs_path),
-            .alloc = allocator,
-        };
-    }
-
-    pub fn destory(self: *Self) void {
-        self.alloc.free(self.name);
-        self.alloc.free(self.abs_path);
-    }
-};
-
-fn getAllModules(allocator: *Allocator) ![]ModuleEntry {
-    var cwd = try std.fs.cwd().openDir(".", .{ .iterate = true });
-    defer cwd.close();
-
-    const p_cwd = try std.process.getCwdAlloc(allocator.*);
-    defer allocator.free(p_cwd);
-
-    var walker = try cwd.walk(allocator.*);
-    defer walker.deinit();
-
-    var List = std.ArrayList(ModuleEntry).init(allocator.*);
-    defer List.deinit();
-
-    while (try walker.next()) |entry| {
-        if (entry.kind != .file) continue;
-
-        // var abs_pth = try String.init_with_contents(allocator.*, p_cwd);
-        var abs_pth = try String.init_with_contents(allocator.*, "../../");
-        // try abs_pth.concat("/");
-        try abs_pth.concat(entry.path);
-
-        defer abs_pth.deinit();
-
-        const path = try abs_pth.toOwned();
-        if (path == null) continue;
-
-        defer allocator.free(path.?);
-
-        const extension: []const u8 = ".m.zig";
-        if (!std.mem.endsWith(u8, entry.path, extension))
-            continue;
-
-        try List.append(
-            try ModuleEntry.init(
-                allocator,
-                entry.basename[0 .. entry.basename.len - extension.len],
-                path.?,
-            ),
-        );
-    }
-
-    return try List.toOwnedSlice();
+    return result.toOwnedSlice() catch @panic("Failed to convert to owned slice");
 }

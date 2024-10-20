@@ -29,7 +29,7 @@ var Box = e.entities.Entity{
 };
 
 pub fn awake() !void {
-    try e.entities.register(&Box);
+    try e.entities.add(&Box);
 }
 
 pub fn init() !void {}

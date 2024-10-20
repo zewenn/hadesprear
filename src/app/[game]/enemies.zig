@@ -32,11 +32,11 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
             hands.deinit();
         }
 
-        e.entities.delete(item.hand0.id);
+        e.entities.remove(item.hand0.id);
         item.hand0.deinit();
         alloc.free(item.hand0.id);
 
-        e.entities.delete(item.hand1.id);
+        e.entities.remove(item.hand1.id);
         item.hand1.deinit();
         alloc.free(item.hand1.id);
 
@@ -50,7 +50,7 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
             }
         }
 
-        e.entities.delete(item.entity.id);
+        e.entities.remove(item.entity.id);
         item.entity.deinit();
         alloc.free(item.entity.id);
 
@@ -144,7 +144,7 @@ pub fn update() !void {
         // ==========================================
 
         if (!e.entities.exists(entity_ptr.id)) {
-            try e.entities.register(entity_ptr);
+            try e.entities.add(entity_ptr);
 
             item.animator = e.Animator.init(
                 &e.ALLOCATOR,
@@ -157,8 +157,8 @@ pub fn update() !void {
                 &item.hand1,
             );
 
-            try e.entities.register(&item.hand0);
-            try e.entities.register(&item.hand1);
+            try e.entities.add(&item.hand0);
+            try e.entities.add(&item.hand1);
 
             var animator = &(item.animator.?);
             {

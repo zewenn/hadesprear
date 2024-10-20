@@ -68,7 +68,7 @@ pub fn equals(self: *Self, other: Self) bool {
 
     if (self.background_image) |sBgImg| {
         if (other.background_image) |oBgImg| {
-            if (!z.arrays.StringEqual(sBgImg, oBgImg)) return false;
+            if (!std.mem.eql(u8, sBgImg, oBgImg)) return false;
         } else return false;
     } else if (other.background_image != null) return false;
 

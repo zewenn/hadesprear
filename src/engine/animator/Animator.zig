@@ -74,7 +74,7 @@ pub fn stop(self: *Self, id: []const u8) void {
     const anim = self.animations.getPtr(id);
     if (anim) |animation| {
         for (self.playing.items, 0..) |item, i| {
-            if (!z.arrays.StringEqual(item.id, id)) continue;
+            if (!std.mem.eql(u8, item.id, id)) continue;
 
             _ = self.playing.orderedRemove(i);
             break;

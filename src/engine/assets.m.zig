@@ -44,23 +44,23 @@ pub fn init(allocator: *Allocator) !void {
 
     for (filenames, files) |name, data| {
         // Images
-        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "png")) {
+        if (std.mem.eql(u8, name[name.len - 3 .. name.len], "png")) {
             const img = rl.loadImageFromMemory(".png", data);
             try image_map.put(name, img);
         }
 
         // Audio
-        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "mp3")) {
+        if (std.mem.eql(u8, name[name.len - 3 .. name.len], "mp3")) {
             const wave = rl.loadWaveFromMemory(".mp3", data);
             try wave_map.put(name, wave);
         }
-        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "wav")) {
+        if (std.mem.eql(u8, name[name.len - 3 .. name.len], "wav")) {
             const wave = rl.loadWaveFromMemory(".wav", data);
             try wave_map.put(name, wave);
         }
 
         // Fonts
-        if (z.arrays.StringEqual(name[name.len - 3 .. name.len], "ttf")) {
+        if (std.mem.eql(u8, name[name.len - 3 .. name.len], "ttf")) {
             var fontChars = [_]i32{
                 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // 0-9
                 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, // A-Z

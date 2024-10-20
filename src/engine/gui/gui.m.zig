@@ -178,7 +178,7 @@ pub fn select(selector: []const u8) ?*GUIElement {
             },
             '#' => {
                 // ID based search
-                if (zlib.arrays.StringEqual(value.options.id, selector[1..])) {
+                if (std.mem.eql(u8, value.options.id, selector[1..])) {
                     return value;
                 }
             },

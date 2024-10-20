@@ -7,12 +7,14 @@ const BUF_128MB = 1024000000;
 
 const cmds = enum { new_sript, quit, none };
 
-fn keywrdToEnum(kw: []const u8) cmds {
-    if (z.arrays.StringEqual(kw, "ns")) {
+fn keywordToEnum(kw: []const u8) cmds {
+    if (std.mem.eql(u8, kw, "ns") or
+        std.mem.eql(u8, kw, "new-script"))
+    {
         return .new_sript;
     }
-    if (z.arrays.StringEqual(kw, "q") or
-        z.arrays.StringEqual(kw, "quit"))
+    if (std.mem.eql(u8, kw, "q") or
+        std.mem.eql(u8, kw, "quit"))
     {
         return .quit;
     }
@@ -48,7 +50,7 @@ pub fn main() !void {
 
         if (args.items.len == 0) continue;
 
-        switch (keywrdToEnum(args.items[0])) {
+        switch (keywordToEnum(args.items[0])) {
             .new_sript => {
                 if (args.items.len < 3) {
                     z.dprint("[!] Not enough arguments {d}/2", .{args.items.len});

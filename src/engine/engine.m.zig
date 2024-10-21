@@ -146,6 +146,7 @@ pub fn update() !void {
     // std.log.info("CAMERA: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 
     // last_farme_at = rl.getTime();
+    window.update();
     try display.update();
     // std.log.info("DISPLAY: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 

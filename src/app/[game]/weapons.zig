@@ -11,13 +11,13 @@ var tm: TMType = undefined;
 
 pub const OnHit = struct {
     entity: *e.entities.Entity,
-    T: conf.OnHitEffects,
+    T: conf.Effects,
     delta: f32,
 };
 
-pub inline fn applyOnHitEffect(
+pub inline fn applyEffect(
     entity: *e.entities.Entity,
-    effect: conf.OnHitEffects,
+    effect: conf.Effects,
     strength: f32,
 ) void {
     if (entity.entity_stats == null) return;
@@ -31,17 +31,17 @@ pub inline fn applyOnHitEffect(
 
     switch (effect) {
         .none => use_timeout = false,
-        .vamp => {
+        .healing => {
             use_timeout = false;
 
             entity.entity_stats.?.health += scaled_strength;
         },
-        .energized => {
+        .energised => {
             use_timeout = true;
 
             new = e.zlib.math.clamp(
                 f32,
-                entity.entity_stats.?.movement_speed + scaled_strength,
+                entity.entity_stats.?.movement_speed + scaled_strength * 10,
                 -1 * entity.entity_stats.?.max_movement_speed,
                 entity.entity_stats.?.max_movement_speed,
             );
@@ -56,6 +56,25 @@ pub inline fn applyOnHitEffect(
             old = entity.entity_stats.?.damage;
             entity.entity_stats.?.damage = new;
         },
+        .slowed => {
+            use_timeout = true;
+
+            new = e.zlib.math.clamp(
+                f32,
+                entity.entity_stats.?.movement_speed - scaled_strength * 5,
+                50,
+                entity.entity_stats.?.max_movement_speed,
+            );
+            old = entity.entity_stats.?.movement_speed;
+            entity.entity_stats.?.movement_speed = new;
+            entity.entity_stats.?.is_slowed = true;
+        },
+        .rooted => {
+            use_timeout = true;
+
+            entity.entity_stats.?.is_rooted = true;
+        },
+        else => {},
     }
 
     if (!use_timeout) return;
@@ -65,16 +84,25 @@ pub inline fn applyOnHitEffect(
     tm.setTimeout(
         (struct {
             pub fn callback(args: OnHit) !void {
+                std.log.debug("Removing", .{});
                 if (!e.entities.isValid(args.entity)) return;
 
                 switch (args.T) {
-                    .energized => {
+                    .energised => {
                         args.entity.entity_stats.?.movement_speed -= args.delta;
-                        if (args.entity.entity_stats.?.movement_speed == args.entity.entity_stats.?.base_movement_speed)
+                        if (args.entity.entity_stats.?.movement_speed <= args.entity.entity_stats.?.base_movement_speed)
                             args.entity.entity_stats.?.is_energised = false;
+                    },
+                    .slowed => {
+                        args.entity.entity_stats.?.movement_speed -= args.delta;
+                        // if (args.entity.entity_stats.?.movement_speed >= args.entity.entity_stats.?.base_movement_speed)
+                        args.entity.entity_stats.?.is_slowed = false;
                     },
                     .stengthen => {
                         args.entity.entity_stats.?.damage -= args.delta;
+                    },
+                    .rooted => {
+                        args.entity.entity_stats.?.is_rooted = false;
                     },
                     else => {},
                 }
@@ -85,11 +113,11 @@ pub inline fn applyOnHitEffect(
             .T = effect,
             .delta = delta,
         },
-        e.time.gameTime + e.zlib.math.clamp(
+        e.zlib.math.clamp(
             f64,
-            strength / 3,
-            0,
-            15,
+            strength / 100,
+            0.5,
+            2,
         ),
     ) catch {};
 }

@@ -55,15 +55,17 @@ pub fn update() !void {
 
 pub fn deinit() !void {}
 
-pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
+pub fn applyDash(entity: *e.entities.Entity, towards: f32, strength: f32, use_charges: bool) !void {
     if (entity.entity_stats == null) return;
     if (entity.dash_modifiers == null) return;
 
     if (entity.dash_modifiers.?.charges_available == 0) return;
 
-    entity.dash_modifiers.?.charges_available -= 1;
-    if (entity.dash_modifiers.?.recharge_end < e.time.gameTime) {
-        entity.dash_modifiers.?.recharge_end = e.time.gameTime + entity.dash_modifiers.?.recharge_time;
+    if (use_charges) {
+        entity.dash_modifiers.?.charges_available -= 1;
+        if (entity.dash_modifiers.?.recharge_end < e.time.gameTime) {
+            entity.dash_modifiers.?.recharge_end = e.time.gameTime + entity.dash_modifiers.?.recharge_time;
+        }
     }
 
     entity.entity_stats.?.is_dashing = true;
@@ -78,5 +80,5 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32) !void {
     entity.dash_modifiers.?.towards = e.Vec2(1, 0)
         .rotate(std.math.degreesToRadians(towards));
 
-    entity.dash_modifiers.?.dash_end = e.time.gameTime + entity.dash_modifiers.?.dash_time;
+    entity.dash_modifiers.?.dash_end = e.time.gameTime + entity.dash_modifiers.?.dash_time * strength;
 }

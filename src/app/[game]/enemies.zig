@@ -350,12 +350,18 @@ pub fn update() !void {
                 try dashing.applyDash(
                     entity_ptr,
                     (direction),
+                    1,
+                    false,
                 );
                 break :Dash;
             },
             else => {},
         }
-        if (entity_ptr.entity_stats.?.can_move) {
+        if (entity_ptr.entity_stats.?.can_move and
+            !entity_ptr.entity_stats.?.is_rooted and
+            !entity_ptr.entity_stats.?.is_stunned and
+            !entity_ptr.entity_stats.?.is_asleep)
+        {
             if (distance >= item.entity.entity_stats.?.run_away_distance) {
                 entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
                 entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();

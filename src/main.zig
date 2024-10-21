@@ -22,6 +22,8 @@ pub fn main() !void {
     );
     defer e.window.deinit();
 
+    e.window.makeResizable();
+
     try e.compile();
     try e.init(&allocator);
     defer e.deinit() catch {};

@@ -91,7 +91,7 @@ pub const prefabs = struct {
                             20,
                         },
                     ),
-                    .projectile_on_hit_effect = .vamp,
+                    .projectile_on_hit_effect = .healing,
                 },
 
                 .icon = "sprites/weapons/steel_sword.png",
@@ -194,7 +194,7 @@ pub const prefabs = struct {
                         5,
                         [_]?f32{ -75, -37.5, 0, 37.5, 75 },
                     ),
-                    .projectile_on_hit_effect = .vamp,
+                    .projectile_on_hit_effect = .healing,
                 },
                 .weapon_heavy = .{
                     .projectile_array = [5]?f32{ -25, -12.5, 0, 12.5, 25 } ++ ([_]?f32{null} ** 11),
@@ -215,7 +215,7 @@ pub const prefabs = struct {
 
             pub const staff = Item(.{
                 .T = .weapon,
-                .level = 10,
+                .level = 100,
                 .weapon_type = .polearm,
                 .rarity = .legendary,
                 .damage = 10,
@@ -229,7 +229,7 @@ pub const prefabs = struct {
                 .weapon_light = .{
                     .projectile_array = [3]?f32{ -60, 0, 60 } ++ ([_]?f32{null} ** 13),
                     .projectile_health = 500,
-                    .projectile_on_hit_effect = .energized,
+                    .projectile_on_hit_effect = .slowed,
                 },
                 .weapon_heavy = .{
                     .projectile_health = 1000,
@@ -248,6 +248,7 @@ pub const prefabs = struct {
 
             pub const daggers = Item(.{
                 .T = .weapon,
+                .level = 100,
                 .weapon_type = .daggers,
                 .rarity = .legendary,
                 .damage = 10,
@@ -257,7 +258,10 @@ pub const prefabs = struct {
 
                 .weapon_light = .{
                     .projectile_array = [2]?f32{ -20, 20 } ++ ([_]?f32{null} ** 14),
-                    .projectile_health = 500,
+
+                    .projectile_on_hit_effect = .slowed,
+                    .projectile_on_hit_strength_multiplier = 1.5,
+                    .projectile_target = .enemy,
                 },
                 .weapon_heavy = .{
                     .projectile_array = [3]?f32{ -20, 0, 20 } ++ ([_]?f32{null} ** 13),

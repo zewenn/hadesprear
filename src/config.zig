@@ -114,6 +114,8 @@ pub const EntityStats = struct {
     crit_rate: f32 = 0,
     crit_damage_multiplier: f32 = 2,
 
+    aggro_distance: f32 = 600,
+    is_aggroed: bool = false,
     run_away_distance: f32 = 0,
 
     is_enemy: bool = false,

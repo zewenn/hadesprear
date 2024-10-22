@@ -333,29 +333,37 @@ pub fn update() !void {
 
         const move_vec = normalised_distance_vec;
 
-        switch (action) {
-            // Apply dash
-            1 => Dash: {
-                if (!item.entity.entity_stats.?.can_dash) break :Dash;
-                const direction: f32 = angle + @as(
-                    f32,
-                    @floatFromInt(
-                        std.crypto.random.intRangeLessThanBiased(
-                            i32,
-                            -90,
-                            90,
+        if (entity_ptr.entity_stats.?.can_move and
+            !entity_ptr.entity_stats.?.is_rooted and
+            !entity_ptr.entity_stats.?.is_stunned and
+            !entity_ptr.entity_stats.?.is_asleep and
+            (distance < entity_ptr.entity_stats.?.aggro_distance or entity_ptr.entity_stats.?.is_aggroed))
+        {
+            entity_ptr.entity_stats.?.is_aggroed = true;
+            switch (action) {
+                // Apply dash
+                1 => Dash: {
+                    if (!item.entity.entity_stats.?.can_dash) break :Dash;
+                    const direction: f32 = angle + @as(
+                        f32,
+                        @floatFromInt(
+                            std.crypto.random.intRangeLessThanBiased(
+                                i32,
+                                -90,
+                                90,
+                            ),
                         ),
-                    ),
-                );
-                try dashing.applyDash(
-                    entity_ptr,
-                    (direction),
-                );
-                break :Dash;
-            },
-            else => {},
-        }
-        if (entity_ptr.entity_stats.?.can_move) {
+                    );
+                    try dashing.applyDash(
+                        entity_ptr,
+                        (direction),
+                        1,
+                        false,
+                    );
+                    break :Dash;
+                },
+                else => {},
+            }
             if (distance >= item.entity.entity_stats.?.run_away_distance) {
                 entity_ptr.transform.position.x += move_vec.x * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();
                 entity_ptr.transform.position.y += move_vec.y * entity_ptr.entity_stats.?.movement_speed * e.time.DeltaTime();

@@ -102,13 +102,27 @@ pub fn update() !void {
                 }
             }
 
-            if (projectile_data.health <= 0 or other.entity_stats.?.health <= 0) {
-                if (projectile_data.owner) |owner| {
-                    weapons.applyOnHitEffect(
-                        owner,
-                        projectile_data.on_hit_effect,
-                        projectile_data.on_hit_effect_strength,
-                    );
+            if (projectile_data.health <= 0 or other.entity_stats.?.health <= 0) OnHit: {
+                switch (projectile_data.on_hit_target) {
+                    .enemy => {
+                        if (other.entity_stats.?.health > 0) {
+                            weapons.applyEffect(
+                                other,
+                                projectile_data.on_hit_effect,
+                                projectile_data.on_hit_effect_strength,
+                            );
+                            break :OnHit;
+                        }
+                    },
+                    .self => {
+                        if (projectile_data.owner) |owner| {
+                            weapons.applyEffect(
+                                owner,
+                                projectile_data.on_hit_effect,
+                                projectile_data.on_hit_effect_strength,
+                            );
+                        }
+                    },
                 }
             }
 
@@ -210,6 +224,7 @@ pub fn summonMultiple(
                 @floatFromInt(weapon.level),
             ) *
                 strct.projectile_on_hit_strength_multiplier,
+            .on_hit_target = strct.projectile_target,
         });
     }
 

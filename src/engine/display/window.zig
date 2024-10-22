@@ -23,6 +23,13 @@ pub fn init(title: [*:0]const u8, startSize: rl.Vector2) void {
     }
 }
 
+pub fn update() void {
+    size = rl.Vector2.init(
+        @floatFromInt(rl.getScreenWidth()),
+        @floatFromInt(rl.getScreenHeight()),
+    );
+}
+
 pub fn deinit() void {
     rl.closeAudioDevice();
     rl.closeWindow();
@@ -60,4 +67,8 @@ pub fn toggleFullscreen() void {
     }
     fullscreen = !fullscreen;
     rl.toggleFullscreen();
+}
+
+pub fn makeResizable() void {
+    rl.setWindowState(.{ .window_resizable = true });
 }

@@ -89,8 +89,9 @@ pub const ProjectileData = struct {
     bleed_per_second: f32 = 100,
 
     owner: ?*Entity = null,
-    on_hit_effect: OnHitEffects = .none,
+    on_hit_effect: Effects = .none,
     on_hit_effect_strength: f32 = 0,
+    on_hit_target: OnHitTargets = .self,
 };
 
 pub const ShootingStats = struct {
@@ -113,6 +114,8 @@ pub const EntityStats = struct {
     crit_rate: f32 = 0,
     crit_damage_multiplier: f32 = 2,
 
+    aggro_distance: f32 = 600,
+    is_aggroed: bool = false,
     run_away_distance: f32 = 0,
 
     is_enemy: bool = false,
@@ -136,6 +139,7 @@ pub const EntityStats = struct {
 };
 
 pub const Effects = enum {
+    none,
     slowed,
     rooted,
     stunned,
@@ -143,6 +147,7 @@ pub const Effects = enum {
     invulnerable,
     healing,
     energised,
+    stengthen,
 };
 
 pub const EffectsShown = struct {
@@ -200,17 +205,15 @@ pub const ItemStats = enum {
     dash_charges,
 };
 
-pub const OnHitEffects = enum {
-    none,
-    energized,
-    vamp,
-    stengthen,
-};
-
 pub const OnHitApplied = struct {
-    type: OnHitEffects,
+    type: Effects,
     delta: f32,
     end_time: f64,
+};
+
+pub const OnHitTargets = enum {
+    self,
+    enemy,
 };
 
 pub const WeaponAttackTypeStats = struct {
@@ -227,8 +230,9 @@ pub const WeaponAttackTypeStats = struct {
     projectile_health: f32 = 0.01,
     projectile_bps: f32 = 100,
 
-    projectile_on_hit_effect: OnHitEffects = .none,
+    projectile_on_hit_effect: Effects = .none,
     projectile_on_hit_strength_multiplier: f32 = 1,
+    projectile_target: OnHitTargets = .self,
 
     multiplier: f32 = 1,
     sprite: []const u8 = "sprites/projectiles/player/generic/light.png",

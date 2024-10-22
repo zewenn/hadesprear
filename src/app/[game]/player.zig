@@ -382,12 +382,16 @@ pub fn update() !void {
             }
         }
         if (e.isKeyPressed(.key_q)) {
-            weapons.applyOnHitEffect(@ptrCast(&Player), .energized, 10);
+            weapons.applyEffect(@ptrCast(&Player), .energised, 10);
         }
 
         const norm_vector = move_vector.normalize();
 
-        if (Player.entity_stats.?.can_move) {
+        if (Player.entity_stats.?.can_move and
+            !Player.entity_stats.?.is_rooted and
+            !Player.entity_stats.?.is_stunned and
+            !Player.entity_stats.?.is_asleep)
+        {
             Player.transform.position.x += norm_vector.x * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
             Player.transform.position.y += norm_vector.y * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
         }
@@ -401,6 +405,8 @@ pub fn update() !void {
                         move_vector.x,
                     ),
                 ),
+                1,
+                true,
             );
         }
 

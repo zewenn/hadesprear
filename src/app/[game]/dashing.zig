@@ -63,7 +63,10 @@ pub fn update() !void {
             continue;
         }
 
-        try spawnShadow(entity, 0.15);
+        try spawnShadow(
+            entity,
+            @floatCast(entity.dash_modifiers.?.dash_time / 3),
+        );
 
         entity.transform.position.x +=
             entity.dash_modifiers.?.towards.x *
@@ -125,7 +128,12 @@ pub fn spawnShadow(target: *e.Entity, lifetime: f32) !void {
         .id = try e.UUIDV7(),
         .tags = "bound, dash-shadow",
         .transform = target.*.transform,
-        .display = target.*.display,
+        .display = .{
+            .sprite = target.*.display.sprite,
+            .scaling = target.*.display.scaling,
+            .tint = e.Color.gray,
+            .layer = .trail_effects,
+        },
     };
 
     const appended = try manager.appendReturn(.{

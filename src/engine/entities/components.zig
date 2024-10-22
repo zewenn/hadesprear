@@ -59,11 +59,18 @@ pub const Display = struct {
         pixelate,
         normal,
     };
+    pub const layers = enum(u8) {
+        background = 10,
+        trail_effects = 18,
+        foreground = 20,
+        showers = 30,
+    };
 
     sprite: []const u8,
     scaling: scalings = .normal,
     tint: rl.Color = rl.Color.white,
     ignore_world_pos: bool = false,
+    layer: layers = .foreground,
 };
 
 pub const Collider = struct {

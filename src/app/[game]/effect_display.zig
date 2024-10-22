@@ -104,6 +104,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         .display = .{
             .scaling = .pixelate,
             .sprite = e.MISSINGNO,
+            .layer = .showers,
         },
         .effect_shower_stats = .{
             .bound_entity_id = try e.ALLOCATOR.dupe(u8, entity_id),
@@ -439,7 +440,7 @@ pub fn removeDead() !void {
 }
 
 fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void {
-    item.transform.position = entity.transform.position.add(e.Vec2(0, 8));
+    item.transform.position = entity.transform.position;
     item.effect_shower_stats.?.keep_alive = true;
 
     const istats: *conf.EntityStats = if (entity.entity_stats) |*i| i else return;

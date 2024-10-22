@@ -18,6 +18,10 @@ pub const camera = @import("./camera.zig");
 // ==================================================
 
 fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
+    if (@intFromEnum(lsh.display.layer) != @intFromEnum(rsh.display.layer)) {
+        return @intFromEnum(lsh.display.layer) < @intFromEnum(rsh.display.layer);
+    }
+
     const lsh_transform = lsh.transform;
     const rsh_transform = rsh.transform;
 

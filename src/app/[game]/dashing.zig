@@ -59,7 +59,6 @@ pub fn update() !void {
             entity.entity_stats.?.can_move = true;
             if (entity.entity_stats.?.is_invalnureable and entity.dash_modifiers.?.change_invulnerable)
                 entity.entity_stats.?.is_invalnureable = false;
-            // entity.display.tint = e.Color.white;
             continue;
         }
 
@@ -112,10 +111,6 @@ pub fn applyDash(entity: *e.entities.Entity, towards: f32, strength: f32, use_ch
     entity.entity_stats.?.can_move = false;
     if (!entity.entity_stats.?.is_invalnureable and entity.dash_modifiers.?.change_invulnerable)
         entity.entity_stats.?.is_invalnureable = true;
-
-    // TODO: add sprites instead of changing tint
-    //       or maybe even just play an animation?
-    // entity.display.tint = e.Color.yellow;
 
     entity.dash_modifiers.?.towards = e.Vec2(1, 0)
         .rotate(std.math.degreesToRadians(towards));

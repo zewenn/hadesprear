@@ -178,6 +178,7 @@ pub const prefabs = struct {
     pub const legendaries = struct {
         pub const weapons = struct {
             pub const legendary_sword = Item(.{
+                .equipped = true,
                 .id = 0,
                 .T = .weapon,
                 .rarity = .legendary,

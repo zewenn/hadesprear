@@ -58,6 +58,16 @@ pub const equippedbar = struct {
         item.equipped = true;
     }
 
+    pub fn autoEquip() void {
+        for (bag, 0..) |itemornull, index| {
+            if (itemornull == null) continue;
+            const item: *Item = &(bag[index].?);
+            if (!item.equipped) continue;
+
+            equippedbar.equip(item);
+        }
+    }
+
     pub fn unequip(item: *Item) void {
         item.equipped = false;
         switch (item.T) {
@@ -1002,7 +1012,6 @@ pub fn awake() !void {
 
     GUI.BM3D.setLayer(1);
     HandsWeapon = usePrefab(prefabs.hands);
-    // e.input.ui_mode = true;
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
 
@@ -1012,6 +1021,15 @@ pub fn awake() !void {
 
     sortBag();
 
+    // Auto equip last equipped items, since the equipped bar ain't saved
+    // for (bag) |itemornull| {
+    //     const item: *Item = if (itemornull) |*t| @constCast(t) else continue;
+    //     if (!item.equipped) continue;
+
+    //     equippedbar.equip(item);
+    // }
+
+    // Slot Generation
     slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, bag_page_rows * bag_page_cols);
 
     inline for (0..bag_page_rows) |row| {
@@ -1050,6 +1068,7 @@ pub fn awake() !void {
         }
     }
 
+    // The main GUI
     INVENTORY_GUI = try GUI.Container(
         .{
             .id = "InventoryParentBackground",
@@ -1823,6 +1842,8 @@ pub fn init() !void {
     _ = pickUpSort(
         usePrefab(prefabs.legendaries.weapons.claymore),
     );
+
+    equippedbar.autoEquip();
 
     sortBag();
     try updateGUI();

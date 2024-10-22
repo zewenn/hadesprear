@@ -10,11 +10,19 @@ const toUnit = GUI.toUnit;
 const prefabs = @import("items.zig").prefabs;
 const usePrefab = @import("items.zig").usePrefab;
 
+var current_row_bag_items: usize = 0;
+var current_row_bag_spells: usize = 0;
+const max_rows: comptime_int = 12;
+
 const bag_pages: comptime_int = 3;
 const bag_page_rows: comptime_int = 4;
-const bag_page_cols: comptime_int = 7;
-const bag_size: comptime_int = bag_pages * bag_page_rows * bag_page_cols;
+const bag_page_cols: comptime_int = 4;
+const items_bag_size: comptime_int = max_rows * bag_page_cols;
+const spellss_bag_size: comptime_int = (max_rows) * 2;
 const bag_page_size: comptime_int = bag_page_cols * bag_page_rows;
+
+const spell_bag_page_rows: comptime_int = 4;
+const spell_bag_page_cols: comptime_int = 2;
 
 pub const Item = conf.Item;
 
@@ -23,8 +31,11 @@ pub var delete_mode_last_frame: bool = false;
 
 pub var HandsWeapon: Item = undefined;
 
-pub var bag: [bag_size]?conf.Item = [_]?conf.Item{null} ** bag_size;
+pub var bag: [items_bag_size]?conf.Item = [_]?conf.Item{null} ** items_bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
+
+pub var spell_bag: [spellss_bag_size]?conf.Item = [_]?conf.Item{null} ** spellss_bag_size;
+pub var sorted_spell_bag: []*?conf.Item = undefined;
 
 pub var animation_mapping_dummy: e.entities.Entity = undefined;
 pub var dummy_animator: e.Animator = undefined;
@@ -37,6 +48,7 @@ pub const equippedbar = struct {
 
     pub fn equip(item: *Item) void {
         switch (item.T) {
+            .spell => {},
             .weapon => {
                 unequip(current_weapon);
                 current_weapon = item;
@@ -71,6 +83,7 @@ pub const equippedbar = struct {
     pub fn unequip(item: *Item) void {
         item.equipped = false;
         switch (item.T) {
+            .spell => {},
             .weapon => {
                 current_weapon = &HandsWeapon;
                 HandsWeapon.equipped = true;
@@ -103,28 +116,17 @@ var INVENTORY_GUI: *GUI.GUIElement = undefined;
 var shown: bool = false;
 var bag_element: *GUI.GUIElement = undefined;
 var is_preview_heap_loaded = false;
-var slots: []*GUI.GUIElement = undefined;
-
-const current_page = struct {
-    var value: usize = 0;
-
-    pub fn set(to: usize) void {
-        if (to >= bag_pages) return;
-        if (to < 0) return;
-
-        value = to;
-    }
-
-    pub fn get() usize {
-        return value;
-    }
-};
+var item_slots: []*GUI.GUIElement = undefined;
+var spell_slots: []*GUI.GUIElement = undefined;
 
 const SLOT_SIZE: f32 = 5;
 const PREVIEW_FONT_COLOR = e.Color.white;
 
-const WIDTH_VW: f32 = SLOT_SIZE * 7 + 6;
-const HEIGHT_VW: f32 = SLOT_SIZE * 4 + 3;
+const WIDTH_VW: f32 = SLOT_SIZE * bag_page_cols + bag_page_cols - 1;
+const HEIGHT_VW: f32 = SLOT_SIZE * bag_page_rows + bag_page_rows - 1;
+
+const SPELLS_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + 1;
+const EQUIPPED_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + 1;
 
 const PREVIEW_2x1 = "sprites/gui/preview_2x1.png";
 const PREVIEW_4x1 = "sprites/gui/preview_4x1.png";
@@ -213,6 +215,8 @@ pub const preview = struct {
         const named_damage_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d:.0}{s}", .{ string, number, if (percent) "%" else "" });
         defer e.ALLOCATOR.free(named_damage_string);
 
+        std.log.info("s: {s}", .{named_damage_string});
+
         elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_damage_string);
         elem.is_content_heap = true;
     }
@@ -221,7 +225,7 @@ pub const preview = struct {
         selected_item = item;
 
         if (!selected) {
-            std.log.warn("Element weren't selectedd!", .{});
+            std.log.warn("Element weren't selected!", .{});
             select();
         }
 
@@ -232,6 +236,8 @@ pub const preview = struct {
             .epic => PREVIEW_EPIC_2x2,
             .legendary => PREVIEW_LEGENDARY_2x2,
         };
+
+        std.log.info("sdjhfjhsdbfjhks", .{});
 
         display_item.options.style.background.image = item.icon;
 
@@ -298,6 +304,7 @@ pub const preview = struct {
     }
 
     pub fn free() void {
+        std.log.info("jashdfjsdgfiugsiudfgsdgf 2", .{});
         if (level_number.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, level_number.contents.?);
         }
@@ -365,18 +372,8 @@ pub const preview = struct {
     }
 };
 
-/// Turns the Item.T value into a usize.
-fn getValurFromItemType(T: conf.ItemTypes) usize {
-    return switch (T) {
-        .weapon => 0,
-        .ring => 1,
-        .amethyst => 2,
-        .wayfinder => 3,
-    };
-}
-
 /// The sorting function `sortBag()` uses.
-fn sort(_: void, a: *?conf.Item, b: *?conf.Item) bool {
+fn sortItems(_: void, a: *?conf.Item, b: *?conf.Item) bool {
     if (b.* == null) return true;
     if (a.* == null) return false;
 
@@ -386,8 +383,8 @@ fn sort(_: void, a: *?conf.Item, b: *?conf.Item) bool {
     if (b.*.?.rarity == .common and a.*.?.rarity != .common) return true;
     if (b.*.?.rarity == .epic and a.*.?.rarity == .legendary) return true;
 
-    const a_val = getValurFromItemType(a.*.?.T);
-    const b_val = getValurFromItemType(b.*.?.T);
+    const a_val: usize = @intFromEnum(a.*.?.T);
+    const b_val: usize = @intFromEnum(b.*.?.T);
     if (b.*.?.rarity == a.*.?.rarity) return a_val <= b_val;
 
     if (a.*.?.rarity == .common and b.*.?.rarity != .common) return false;
@@ -404,7 +401,13 @@ pub fn sortBag() void {
         *?conf.Item,
         sorted_bag,
         {},
-        sort,
+        sortItems,
+    );
+    std.sort.insertion(
+        *?conf.Item,
+        sorted_spell_bag,
+        {},
+        sortItems,
     );
 }
 
@@ -432,9 +435,8 @@ pub fn pickUpSort(item: conf.Item) bool {
 pub fn updateGUI() !void {
     for (0..bag_page_rows) |row| {
         for (0..bag_page_cols) |col| {
-            const index = current_page.get() *
-                bag_page_size +
-                row *
+            const index =
+                (row + current_row_bag_items) *
                 bag_page_cols +
                 col;
 
@@ -519,12 +521,14 @@ pub fn updateGUI() !void {
     }
 
     const base_tags = [_][]const u8{
+        "spell",
         "weapon",
         "ring",
         "amethyst",
         "wayfinder",
     };
     const enum_tags = [_]conf.ItemTypes{
+        .spell,
         .weapon,
         .ring,
         .amethyst,
@@ -558,6 +562,7 @@ pub fn updateGUI() !void {
         const shower: *GUI.GUIElement = if (GUI.select(shower_selector)) |el| el else continue;
 
         const item: ?*Item = switch (etag) {
+            .spell => null,
             .weapon => equippedbar.current_weapon,
             .ring => equippedbar.ring,
             .amethyst => equippedbar.amethyst,
@@ -627,6 +632,7 @@ inline fn MainSlotButton(
     id: []const u8,
     btn_id: []const u8,
     shower_id: []const u8,
+    is_spell: bool,
     col_start: f32,
     col: usize,
     row: usize,
@@ -674,15 +680,21 @@ inline fn MainSlotButton(
                 },
             },
             "",
-            e.Vec2(0 + col + col_start, 0 + row),
+            e.Vec2(0 + col + col_start, 0 + row + 1),
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
-                    const item = sorted_bag[
-                        bag_page_size *
-                            current_page.get() +
-                            row * bag_page_cols +
-                            col
-                    ];
+                    const item = switch (is_spell) {
+                        false => sorted_bag[
+                            (current_row_bag_items +
+                                row) * bag_page_cols +
+                                col
+                        ],
+                        true => sorted_spell_bag[
+                            (current_row_bag_spells +
+                                row) * spell_bag_page_cols +
+                                col
+                        ],
+                    };
                     //
                     if (delete_mode) {
                         if (col_start != 0)
@@ -779,6 +791,7 @@ inline fn EquippedSlotButton(
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
                     const item: ?*Item = switch (item_type) {
+                        .spell => null,
                         .weapon => equippedbar.current_weapon,
                         .ring => equippedbar.ring,
                         .amethyst => equippedbar.amethyst,
@@ -824,94 +837,89 @@ inline fn EquippedSlotButton(
     }));
 }
 
-/// Generates the button/slot interface
-inline fn PageButton(
+inline fn NavigatorButton(
     id: []const u8,
     btn_id: []const u8,
-    text: [*:0]const u8,
-    page: usize,
+    shower_id: []const u8,
     col: usize,
     row: usize,
-    container_width: f32,
-    container_height: f32,
-    func: ?*const fn () anyerror!void,
+    varptr: *usize,
+    towards: enum { up, down },
 ) !*GUI.GUIElement {
-    return try GUI.Container(
-        .{
-            .id = id,
-            .style = .{
-                .width = .{
-                    .value = SLOT_SIZE * 2 + 1,
-                    .unit = .vw,
-                },
-                .height = .{
-                    .value = SLOT_SIZE,
-                    .unit = .vw,
-                },
-                .left = .{
-                    .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1) - 1.5 + SLOT_SIZE / 2,
-                    .unit = .vw,
-                },
-                .top = .{
-                    .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
-                    .unit = .vw,
-                },
-                .background = .{
-                    .image = "sprites/gui/page_btn_inactive.png",
-                },
+    return try GUI.Container(.{
+        .id = id,
+        .style = .{
+            .width = u("100%"),
+            .height = preview.generic_stat_button_style.height,
+            .left = u("-50%"),
+            .top = .{
+                .value = switch (towards) {
+                    .up => -1,
+                    .down => 1,
+                } * (HEIGHT_VW + switch (towards) {
+                    .up => 2,
+                    .down => 0,
+                } *
+                    (preview.generic_stat_button_style.height.value) + 2) / 2,
+                .unit = .vw,
+            },
+            .background = .{
+                .image = "sprites/gui/item_slot.png",
             },
         },
-        @constCast(&[_]*GUI.GUIElement{
-            try GUI.Button(
-                .{
-                    .id = btn_id,
-                    .style = .{
-                        .top = u("50%"),
-                        .left = u("50%"),
-                        .width = u("100%"),
-                        .height = u("100%"),
-                        .translate = .{
-                            .x = .center,
-                            .y = .center,
-                        },
-                        .font = .{
-                            .size = 18,
-                        },
-                        .color = e.Color.black,
-                    },
-                    .hover = .{
-                        .color = e.Color.black,
-                        .background = .{
-                            .image = "sprites/gui/page_btn.png",
-                        },
+    }, @constCast(&[_]*GUI.GUIElement{
+        try GUI.Button(
+            .{
+                .id = btn_id,
+                .style = .{
+                    .width = u("100%"),
+                    .height = u("100%"),
+                    .top = u("0%"),
+                    .left = u("0%"),
+                },
+                .hover = .{
+                    .background = .{
+                        .image = "sprites/gui/slot_highlight.png",
                     },
                 },
-                text,
-                e.Vec2(0 + col, 0 + row),
-                if (func) |fun| fun else (struct {
-                    pub fn callback() anyerror!void {
-                        current_page.set(page);
-                        //
-                        sortBag();
-                        try updateGUI();
-                        //
-                        const p0: *GUI.GUIElement = if (GUI.select("#page1")) |el| el else return;
-                        const p1: *GUI.GUIElement = if (GUI.select("#page2")) |el| el else return;
-                        const p2: *GUI.GUIElement = if (GUI.select("#page3")) |el| el else return;
-                        //
-                        p0.options.style.background.image = "sprites/gui/page_btn_inactive.png";
-                        p1.options.style.background.image = "sprites/gui/page_btn_inactive.png";
-                        p2.options.style.background.image = "sprites/gui/page_btn_inactive.png";
-                        //
-                        const selector = try std.fmt.allocPrint(e.ALLOCATOR, "#page{d}", .{page + 1});
-                        defer e.ALLOCATOR.free(selector);
-                        const self: *GUI.GUIElement = if (GUI.select(selector)) |el| el else return;
-                        self.options.style.background.image = "sprites/gui/page_btn.png";
-                    }
-                }).callback,
-            ),
+            },
+            "",
+            e.Vec2(0 + col, 0 + row),
+            (struct {
+                pub fn callback() anyerror!void {
+                    const value = @as(i32, @intCast(varptr.*)) + @as(i32, switch (towards) {
+                        .up => -1,
+                        .down => 1,
+                    });
+                    std.log.info("Value: {d}", .{value});
+                    if (value < 0) return;
+                    if (value > @as(i32, @intCast(max_rows))) return;
+                    varptr.* = @intCast(value);
+                    try updateGUI();
+                }
+            }).callback,
+        ),
+        try GUI.Empty(.{
+            .id = shower_id,
+            .style = .{
+                .width = u("75%"),
+                .height = u("75%"),
+                .left = u("50%"),
+                .top = u("50%"),
+                .translate = .{
+                    .x = .center,
+                    .y = .center,
+                },
+                .background = .{
+                    .image = switch (towards) {
+                        .up => "sprites/entity/player/weapons/gloves/left.png",
+                        .down => "sprites/entity/player/weapons/gloves/right.png",
+                    },
+                    .fill = .contain,
+                },
+            },
         }),
-    );
+    }));
 }
 
 pub fn show() void {
@@ -1013,10 +1021,15 @@ pub fn awake() !void {
     GUI.BM3D.setLayer(1);
     HandsWeapon = usePrefab(prefabs.hands);
 
-    sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, bag_size);
+    sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, items_bag_size);
+    sorted_spell_bag = try e.ALLOCATOR.alloc(*?conf.Item, spellss_bag_size);
 
     for (0..bag.len) |index| {
         sorted_bag[index] = &(bag[index]);
+    }
+
+    for (0..spell_bag.len) |index| {
+        sorted_spell_bag[index] = &(spell_bag[index]);
     }
 
     sortBag();
@@ -1030,7 +1043,7 @@ pub fn awake() !void {
     // }
 
     // Slot Generation
-    slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, bag_page_rows * bag_page_cols);
+    item_slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, bag_page_rows * bag_page_cols);
 
     inline for (0..bag_page_rows) |row| {
         inline for (0..bag_page_cols) |col| {
@@ -1050,21 +1063,61 @@ pub fn awake() !void {
                 .{ row, col },
             );
 
-            slots[row * bag_page_cols + col] = try MainSlotButton(
+            item_slots[row * bag_page_cols + col] = try MainSlotButton(
                 id,
                 button_id,
                 button_shower_id,
-                1,
+                false,
+                2,
                 col,
                 row,
                 WIDTH_VW,
-                HEIGHT_VW + SLOT_SIZE + 1,
+                HEIGHT_VW,
                 null,
             );
 
-            slots[row * bag_page_cols + col].heap_id = true;
-            slots[row * bag_page_cols + col].children.?.items[0].heap_id = true;
-            slots[row * bag_page_cols + col].children.?.items[1].heap_id = true;
+            item_slots[row * bag_page_cols + col].heap_id = true;
+            item_slots[row * bag_page_cols + col].children.?.items[0].heap_id = true;
+            item_slots[row * bag_page_cols + col].children.?.items[1].heap_id = true;
+        }
+    }
+
+    spell_slots = try e.ALLOCATOR.alloc(*GUI.GUIElement, spell_bag_page_rows * spell_bag_page_cols);
+
+    inline for (0..spell_bag_page_rows) |row| {
+        inline for (0..spell_bag_page_cols) |col| {
+            const id = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "spell-slot-{d}-{d}",
+                .{ row, col },
+            );
+            const button_id = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "spell-slot-btn-{d}-{d}",
+                .{ row, col },
+            );
+            const button_shower_id = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "spell-slot-btn-shower-{d}-{d}",
+                .{ row, col },
+            );
+
+            spell_slots[row * spell_bag_page_cols + col] = try MainSlotButton(
+                id,
+                button_id,
+                button_shower_id,
+                true,
+                6,
+                col,
+                row,
+                SPELLS_BAR_WIDTH_VW,
+                HEIGHT_VW,
+                null,
+            );
+
+            spell_slots[row * spell_bag_page_cols + col].heap_id = true;
+            spell_slots[row * spell_bag_page_cols + col].children.?.items[0].heap_id = true;
+            spell_slots[row * spell_bag_page_cols + col].children.?.items[1].heap_id = true;
         }
     }
 
@@ -1082,7 +1135,7 @@ pub fn awake() !void {
             },
         },
         @constCast(&[_]*GUI.GUIElement{
-            // Main inventory
+            // Main inventory / Items
             try GUI.Container(
                 .{
                     .id = "Bag",
@@ -1096,25 +1149,52 @@ pub fn awake() !void {
                             .unit = .vw,
                         },
                         .top = u("50%"),
-                        .left = u("41w"),
+                        .left = u("38w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            // .color = e.Color.blue,
+                            .color = e.Color.blue,
                         },
                     },
                 },
-                slots,
+                item_slots,
             ),
-            // Equipped - Delete - Pages
+            // Main inventory / Spells
+            try GUI.Container(
+                .{
+                    .id = "Bag-Spells",
+                    .style = .{
+                        .width = .{
+                            .value = 2 * SLOT_SIZE + 1,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = HEIGHT_VW,
+                            .unit = .vw,
+                        },
+                        .top = u("50%"),
+                        .left = u("56w"),
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .background = .{
+                            .color = e.Color.pink,
+                        },
+                    },
+                },
+                // slots,
+                spell_slots,
+            ),
+            // Equipped - Delete
             try GUI.Container(
                 .{
                     .id = "equippedShower",
                     .style = .{
                         .width = .{
-                            .value = SLOT_SIZE,
+                            .value = SLOT_SIZE * 2 + 1,
                             .unit = .vw,
                         },
                         .height = .{
@@ -1122,17 +1202,18 @@ pub fn awake() !void {
                             .unit = .vw,
                         },
                         .top = u("50%"),
-                        .left = u("13w"),
+                        .left = u("16w"),
                         .translate = .{
                             .x = .center,
                             .y = .center,
                         },
                         .background = .{
-                            // .color = e.Color.green,
+                            .color = e.Color.green,
                         },
                     },
                 },
                 @constCast(&[_]*GUI.GUIElement{
+                    // Weapon
                     try EquippedSlotButton(
                         "equipped_weapon",
                         "equipped_weapon_btn",
@@ -1140,11 +1221,12 @@ pub fn awake() !void {
                         0,
                         0,
                         0,
-                        SLOT_SIZE,
+                        EQUIPPED_BAR_WIDTH_VW,
                         HEIGHT_VW + SLOT_SIZE + 1,
                         .weapon,
                         null,
                     ),
+                    // Ring
                     try EquippedSlotButton(
                         "equipped_ring",
                         "equipped_ring_btn",
@@ -1152,11 +1234,12 @@ pub fn awake() !void {
                         0,
                         0,
                         1,
-                        SLOT_SIZE,
+                        EQUIPPED_BAR_WIDTH_VW,
                         HEIGHT_VW + SLOT_SIZE + 1,
                         .ring,
                         null,
                     ),
+                    // Amethyst
                     try EquippedSlotButton(
                         "equipped_amethyst",
                         "equipped_amethyst_btn",
@@ -1164,11 +1247,12 @@ pub fn awake() !void {
                         0,
                         0,
                         2,
-                        SLOT_SIZE,
+                        EQUIPPED_BAR_WIDTH_VW,
                         HEIGHT_VW + SLOT_SIZE + 1,
                         .amethyst,
                         null,
                     ),
+                    // Wayfinder
                     try EquippedSlotButton(
                         "equipped_wayfinder",
                         "equipped_wayfinder_btn",
@@ -1176,19 +1260,72 @@ pub fn awake() !void {
                         0,
                         0,
                         3,
-                        SLOT_SIZE,
+                        EQUIPPED_BAR_WIDTH_VW,
                         HEIGHT_VW + SLOT_SIZE + 1,
                         .wayfinder,
+                        null,
+                    ),
+                    // Spell - Q
+                    try EquippedSlotButton(
+                        "equipped_spell_q",
+                        "equipped_spell_q_btn",
+                        "equipped_spell_q_shower",
+                        0,
+                        1,
+                        0,
+                        EQUIPPED_BAR_WIDTH_VW,
+                        HEIGHT_VW + SLOT_SIZE + 1,
+                        .spell,
+                        null,
+                    ),
+                    // Spell - E
+                    try EquippedSlotButton(
+                        "equipped_spell_e",
+                        "equipped_spell_e_btn",
+                        "equipped_spell_e_shower",
+                        0,
+                        1,
+                        1,
+                        EQUIPPED_BAR_WIDTH_VW,
+                        HEIGHT_VW + SLOT_SIZE + 1,
+                        .spell,
+                        null,
+                    ),
+                    // Spell - R
+                    try EquippedSlotButton(
+                        "equipped_spell_r",
+                        "equipped_spell_r_btn",
+                        "equipped_spell_r_shower",
+                        0,
+                        1,
+                        2,
+                        EQUIPPED_BAR_WIDTH_VW,
+                        HEIGHT_VW + SLOT_SIZE + 1,
+                        .spell,
+                        null,
+                    ),
+                    // Spell - X
+                    try EquippedSlotButton(
+                        "equipped_spell_x",
+                        "equipped_spell_x_btn",
+                        "equipped_spell_x_shower",
+                        0,
+                        1,
+                        3,
+                        EQUIPPED_BAR_WIDTH_VW,
+                        HEIGHT_VW + SLOT_SIZE + 1,
+                        .spell,
                         null,
                     ),
                     try MainSlotButton(
                         "delete_mode",
                         "delete_mode_btn",
                         "delete_mode_shower",
+                        false,
                         0,
                         0,
                         4,
-                        SLOT_SIZE,
+                        EQUIPPED_BAR_WIDTH_VW,
                         HEIGHT_VW + SLOT_SIZE + 1,
                         (struct {
                             pub fn callback() anyerror!void {
@@ -1197,41 +1334,99 @@ pub fn awake() !void {
                             }
                         }).callback,
                     ),
-                    try PageButton(
-                        "page1",
-                        "page_1_btn",
-                        "Page 1",
+                }),
+            ),
+            // Main inventory / Items / BUTTONS
+            try GUI.Container(
+                .{
+                    .id = "Bag-Buttons",
+                    .style = .{
+                        .width = .{
+                            .value = WIDTH_VW,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = HEIGHT_VW + 2 + preview.generic_stat_button_style.height.value * @as(f32, 2),
+                            .unit = .vw,
+                        },
+                        .top = u("50%"),
+                        .left = u("38w"),
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .background = .{
+                            .color = e.Color.lime,
+                        },
+                    },
+                },
+                @constCast(&[_]*GUI.GUIElement{
+                    try NavigatorButton(
+                        "bag-nav-up",
+                        "bag-nav-up-btn",
+                        "bag-nav-up-shower",
+                        2,
                         0,
-                        2,
-                        4,
-                        SLOT_SIZE,
-                        HEIGHT_VW + SLOT_SIZE + 1,
-                        null,
+                        &current_row_bag_items,
+                        .up,
                     ),
-                    try PageButton(
-                        "page2",
-                        "page_2_btn",
-                        "Page 2",
-                        1,
-                        4,
-                        4,
-                        SLOT_SIZE,
-                        HEIGHT_VW + SLOT_SIZE + 1,
-                        null,
-                    ),
-                    try PageButton(
-                        "page3",
-                        "page_3_btn",
-                        "Page 3",
+                    try NavigatorButton(
+                        "bag-nav-down",
+                        "bag-nav-down-btn",
+                        "bag-nav-down-shower",
                         2,
-                        6,
-                        4,
-                        SLOT_SIZE,
-                        HEIGHT_VW + SLOT_SIZE + 1,
-                        null,
+                        5,
+                        &current_row_bag_items,
+                        .down,
                     ),
                 }),
             ),
+            // Main inventory / Spells / BUTTONS
+            try GUI.Container(
+                .{
+                    .id = "Bag-Spells-Buttons",
+                    .style = .{
+                        .width = .{
+                            .value = SPELLS_BAR_WIDTH_VW,
+                            .unit = .vw,
+                        },
+                        .height = .{
+                            .value = HEIGHT_VW + 2 + preview.generic_stat_button_style.height.value * @as(f32, 2),
+                            .unit = .vw,
+                        },
+                        .top = u("50%"),
+                        .left = u("56w"),
+                        .translate = .{
+                            .x = .center,
+                            .y = .center,
+                        },
+                        .background = .{
+                            .color = e.Color.lime,
+                        },
+                    },
+                },
+                @constCast(&[_]*GUI.GUIElement{
+                    try NavigatorButton(
+                        "bag-spells-nav-up",
+                        "bag-spells-nav-up-btn",
+                        "bag-spells-nav-up-shower",
+                        6,
+                        0,
+                        &current_row_bag_spells,
+                        .up,
+                    ),
+                    try NavigatorButton(
+                        "bag-spells-nav-down",
+                        "bag-spells-nav-down-btn",
+                        "bag-spells-nav-down-shower",
+                        6,
+                        5,
+                        &current_row_bag_spells,
+                        .down,
+                    ),
+                }),
+            ),
+
             // Preview
             try GUI.Container(
                 .{
@@ -1245,6 +1440,7 @@ pub fn awake() !void {
                             .value = SLOT_SIZE * 7 + 6,
                             .unit = .vw,
                         },
+                        .z_index = 1,
                         .top = u("50%"),
                         .left = .{
                             .value = 78,
@@ -1893,8 +2089,10 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    e.ALLOCATOR.free(slots);
+    e.ALLOCATOR.free(item_slots);
+    e.ALLOCATOR.free(spell_slots);
     e.ALLOCATOR.free(sorted_bag);
+    e.ALLOCATOR.free(sorted_spell_bag);
     preview.free();
 
     dummy_animator.deinit();

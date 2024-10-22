@@ -189,6 +189,7 @@ pub const DashModifiers = struct {
 };
 
 pub const ItemTypes = enum {
+    spell,
     weapon,
     ring,
     amethyst,
@@ -295,6 +296,10 @@ pub fn createProjectileArray(comptime size: usize, comptime degree_list: [size]?
     return degree_list ++ ([_]?f32{null} ** (16 - size));
 }
 
+pub fn createTypeArray(comptime T: type, comptime size: usize, comptime list: [size]?T) [16]?T {
+    return @as([size]?T, list) ++ ([_]?T{null} ** (16 - size));
+}
+
 pub fn newItem(item: Item) Item {
     var res = item;
     res.weapon_light = WeaponAttackLightStats(res.weapon_light);
@@ -354,6 +359,9 @@ pub const Item = struct {
     weapon_heavy: WeaponAttackTypeStats = WeaponAttackHeavyStats(.{}),
     weapon_dash: WeaponAttackTypeStats = WeaponAttackDashStats(.{}),
 
+    spell_archetype: SpellTypes = .spawn,
+    spell_blessings: [16]?Blessings = createTypeArray(Blessings, 0, [_]?Blessings{}),
+
     weapon_projectile_scale_light: rl.Vector2 = .{
         .x = 64,
         .y = 64,
@@ -364,4 +372,35 @@ pub const Item = struct {
     icon: []const u8 = "sprites/missingno.png",
     weapon_sprite_left: []const u8 = "sprites/missingno.png",
     weapon_sprite_right: []const u8 = "sprites/missingno.png",
+};
+
+// ========================================================================
+//
+//                                SPELLS
+//
+// ========================================================================
+
+pub const SpellTypes = enum {
+    spawn,
+    lingering,
+    targeted,
+};
+
+pub const Blessings = enum {
+    /// Pure damage increase
+    war,
+    /// Multiple Projectiles, +1/blessing
+    death,
+    /// Slowing / Rooting / Stunning
+    ice,
+    /// Protection to the Summoner
+    mind,
+    /// Piercing
+    water,
+    /// Energised on hit
+    lightning,
+    /// Bonus healing
+    earth,
+    /// Increased crit rate
+    hunt,
 };

@@ -558,6 +558,10 @@ pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtyp
         .display = .{
             .scaling = .pixelate,
             .sprite = switch (archetype) {
+                .minion => MINION_LEFT_0,
+                .brute => BRUTE_LEFT_0,
+                .angler => ANGLER_LEFT_0,
+                .tank => TANK_LEFT_0,
                 else => MELEE_LEFT_0,
             },
         },

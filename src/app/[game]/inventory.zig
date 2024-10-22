@@ -212,12 +212,12 @@ pub const preview = struct {
     }
 
     pub fn toNamedHeapString(elem: *GUI.GUIElement, string: []const u8, number: f32, percent: bool) !void {
-        const named_damage_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d:.0}{s}", .{ string, number, if (percent) "%" else "" });
-        defer e.ALLOCATOR.free(named_damage_string);
+        const named_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d:.0}{s}", .{ string, number, if (percent) "%" else "" });
+        defer e.ALLOCATOR.free(named_string);
 
-        std.log.info("s: {s}", .{named_damage_string});
 
-        elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_damage_string);
+        e.zlib.addrprint("elem", elem);
+        elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_string);
         elem.is_content_heap = true;
     }
 
@@ -237,8 +237,6 @@ pub const preview = struct {
             .legendary => PREVIEW_LEGENDARY_2x2,
         };
 
-        std.log.info("sdjhfjhsdbfjhks", .{});
-
         display_item.options.style.background.image = item.icon;
 
         const level_string = try e.zlib.arrays.NumberToString(e.ALLOCATOR, item.level);
@@ -249,6 +247,7 @@ pub const preview = struct {
 
         name.contents = item.name;
 
+        e.zlib.addrprint("dmg", damage);
         try toNamedHeapString(damage, "DAMAGE", item.damage, false);
         try toNamedHeapString(health, "HEALTH", item.health, false);
         try toNamedHeapString(crit_rate, "CRIT RATE", item.crit_rate, true);
@@ -304,7 +303,6 @@ pub const preview = struct {
     }
 
     pub fn free() void {
-        std.log.info("jashdfjsdgfiugsiudfgsdgf 2", .{});
         if (level_number.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, level_number.contents.?);
         }
@@ -1440,7 +1438,6 @@ pub fn awake() !void {
                             .value = SLOT_SIZE * 7 + 6,
                             .unit = .vw,
                         },
-                        .z_index = 1,
                         .top = u("50%"),
                         .left = .{
                             .value = 78,

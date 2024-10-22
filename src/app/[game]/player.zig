@@ -41,7 +41,8 @@ pub var Player = e.entities.Entity{
         .damage = 10,
     },
     .dash_modifiers = .{
-        .dash_time = 0.25,
+        .dash_time = 0.35,
+        .movement_speed_multiplier = 3.5,
     },
 };
 

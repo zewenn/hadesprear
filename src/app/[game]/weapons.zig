@@ -84,7 +84,6 @@ pub inline fn applyEffect(
     tm.setTimeout(
         (struct {
             pub fn callback(args: OnHit) !void {
-                std.log.debug("Removing", .{});
                 if (!e.entities.isValid(args.entity)) return;
 
                 switch (args.T) {

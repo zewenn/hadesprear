@@ -28,7 +28,7 @@ pub const Entity = struct {
     entity_stats: ?EntityStats = null,
 
     dash_modifiers: ?DashModifiers = null,
-    effect_shower_stats: ?EffectShowerStats = null,
+    effect_shower_stats: ?BoundEntityStats = null,
 
     /// This will resolve all allocations that can
     /// happen within an entity
@@ -68,7 +68,7 @@ pub const ProjectileSide = enum {
     enemy,
 };
 
-pub const EffectShowerStats = struct {
+pub const BoundEntityStats = struct {
     bound_entity_id: []const u8,
     keep_alive: bool = false,
 };

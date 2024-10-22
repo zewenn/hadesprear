@@ -115,7 +115,7 @@ pub fn TimeoutHandler(comptime T: type) type {
             defer self.alloc.free(items);
 
             for (items) |item| {
-                if (item.end_time > gameTime) return;
+                if (item.end_time > gameTime) continue;
 
                 try item.callback(item.args);
 

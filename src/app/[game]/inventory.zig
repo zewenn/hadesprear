@@ -18,7 +18,7 @@ const bag_pages: comptime_int = 3;
 const bag_page_rows: comptime_int = 4;
 const bag_page_cols: comptime_int = 4;
 const items_bag_size: comptime_int = max_rows * bag_page_cols;
-const spellss_bag_size: comptime_int = (max_rows) * 2;
+const spells_bag_size: comptime_int = (max_rows) * spell_bag_page_cols;
 const bag_page_size: comptime_int = bag_page_cols * bag_page_rows;
 
 const spell_bag_page_rows: comptime_int = 4;
@@ -34,7 +34,7 @@ pub var HandsWeapon: Item = undefined;
 pub var bag: [items_bag_size]?conf.Item = [_]?conf.Item{null} ** items_bag_size;
 pub var sorted_bag: []*?conf.Item = undefined;
 
-pub var spell_bag: [spellss_bag_size]?conf.Item = [_]?conf.Item{null} ** spellss_bag_size;
+pub var spell_bag: [spells_bag_size]?conf.Item = [_]?conf.Item{null} ** spells_bag_size;
 pub var sorted_spell_bag: []*?conf.Item = undefined;
 
 pub var animation_mapping_dummy: e.entities.Entity = undefined;
@@ -119,7 +119,7 @@ var is_preview_heap_loaded = false;
 var item_slots: []*GUI.GUIElement = undefined;
 var spell_slots: []*GUI.GUIElement = undefined;
 
-const SLOT_SIZE: f32 = 5;
+const SLOT_SIZE: f32 = 4;
 const PREVIEW_FONT_COLOR = e.Color.white;
 
 const WIDTH_VW: f32 = SLOT_SIZE * bag_page_cols + bag_page_cols - 1;
@@ -159,14 +159,14 @@ pub const preview = struct {
 
     pub const generic_stat_button_style = GUI.StyleSheet{
         .background = .{
-            .image = e.MISSINGNO,
+            .image = "sprites/gui/slots/48x12/empty.png",
         },
         .width = .{
-            .value = SLOT_SIZE * 2 + 1,
+            .value = SLOT_SIZE * 2,
             .unit = .vw,
         },
         .height = .{
-            .value = (SLOT_SIZE - 1) / 2,
+            .value = SLOT_SIZE / 2,
             .unit = .vw,
         },
 
@@ -176,12 +176,12 @@ pub const preview = struct {
         },
 
         .font = .{
-            .size = 10,
+            .size = 8,
             .shadow = .{
                 .color = e.Color{
-                    .r = 100,
-                    .g = 100,
-                    .b = 100,
+                    .r = 50,
+                    .g = 50,
+                    .b = 50,
                     .a = 255,
                 },
                 .offset = e.Vec2(2, 2),
@@ -215,8 +215,6 @@ pub const preview = struct {
         const named_string = try std.fmt.allocPrint(e.ALLOCATOR, "{s}: {d:.0}{s}", .{ string, number, if (percent) "%" else "" });
         defer e.ALLOCATOR.free(named_string);
 
-
-        e.zlib.addrprint("elem", elem);
         elem.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, named_string);
         elem.is_content_heap = true;
     }
@@ -247,7 +245,6 @@ pub const preview = struct {
 
         name.contents = item.name;
 
-        e.zlib.addrprint("dmg", damage);
         try toNamedHeapString(damage, "DAMAGE", item.damage, false);
         try toNamedHeapString(health, "HEALTH", item.health, false);
         try toNamedHeapString(crit_rate, "CRIT RATE", item.crit_rate, true);
@@ -383,7 +380,12 @@ fn sortItems(_: void, a: *?conf.Item, b: *?conf.Item) bool {
 
     const a_val: usize = @intFromEnum(a.*.?.T);
     const b_val: usize = @intFromEnum(b.*.?.T);
-    if (b.*.?.rarity == a.*.?.rarity) return a_val <= b_val;
+    if (b.*.?.rarity == a.*.?.rarity) {
+        if (a_val != b_val) return a_val <= b_val;
+        if (a_val == @intFromEnum(conf.ItemTypes.weapon) and b_val == @intFromEnum(conf.ItemTypes.weapon)) {
+            return @intFromEnum(a.*.?.weapon_type) <= @intFromEnum(b.*.?.weapon_type);
+        }
+    }
 
     if (a.*.?.rarity == .common and b.*.?.rarity != .common) return false;
     if (a.*.?.rarity == .epic and b.*.?.rarity == .legendary) return false;
@@ -412,10 +414,15 @@ pub fn sortBag() void {
 /// Return `true` when the item was picked up successfully,
 /// `false` when the inventory is full.
 pub fn pickUp(item: conf.Item) bool {
-    for (bag, 0..) |it, index| {
+    const iterated_bag: []?conf.Item = switch (item.T) {
+        .spell => @constCast(&spell_bag),
+        else => @constCast(&bag),
+    };
+
+    for (iterated_bag, 0..) |it, index| {
         if (it != null) continue;
 
-        bag[index] = item;
+        iterated_bag[index] = item;
         return true;
     }
     return false;
@@ -434,7 +441,7 @@ pub fn updateGUI() !void {
     for (0..bag_page_rows) |row| {
         for (0..bag_page_cols) |col| {
             const index =
-                (row + current_row_bag_items) *
+                (row + @min(current_row_bag_items, max_rows - bag_page_rows)) *
                 bag_page_cols +
                 col;
 
@@ -479,9 +486,9 @@ pub fn updateGUI() !void {
 
                 element.options.style.background.image = switch (it.equipped) {
                     false => switch (it.rarity) {
-                        .common => "sprites/gui/item_slot.png",
-                        .epic => "sprites/gui/item_slot_epic.png",
-                        .legendary => "sprites/gui/item_slot_legendary.png",
+                        .common => "sprites/gui/slots/24x24/common.png",
+                        .epic => "sprites/gui/slots/24x24/epic.png",
+                        .legendary => "sprites/gui/slots/24x24/legendary.png",
                     },
                     true => switch (it.rarity) {
                         .common => e.MISSINGNO,
@@ -505,6 +512,82 @@ pub fn updateGUI() !void {
 
             shower.options.style.background.image = null;
             element.options.style.background.image = "sprites/gui/item_slot_empty.png";
+        }
+    }
+    for (0..spell_bag_page_rows) |row| {
+        for (0..spell_bag_page_cols) |col| {
+            const index =
+                (row + @min(current_row_bag_spells, max_rows - spell_bag_page_rows)) *
+                spell_bag_page_cols +
+                col;
+
+            const element_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#spell-slot-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(element_selector);
+
+            const button_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#spell-slot-btn-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(button_selector);
+
+            const shower_selector = try std.fmt.allocPrint(
+                e.ALLOCATOR,
+                "#spell-slot-btn-shower-{d}-{d}",
+                .{
+                    row,
+                    col,
+                },
+            );
+            defer e.ALLOCATOR.free(shower_selector);
+
+            const element: *GUI.GUIElement = if (GUI.select(element_selector)) |el| el else continue;
+            const button: *GUI.GUIElement = if (GUI.select(button_selector)) |el| el else continue;
+            const shower: *GUI.GUIElement = if (GUI.select(shower_selector)) |el| el else continue;
+
+            const spell = sorted_spell_bag[index].*;
+
+            if (spell) |sp| {
+                shower.options.style.background.image = sp.icon;
+
+                element.options.style.background.image = switch (sp.equipped) {
+                    false => switch (sp.rarity) {
+                        .common => "sprites/gui/slots/24x24/common.png",
+                        .epic => "sprites/gui/slots/24x24/epic.png",
+                        .legendary => "sprites/gui/slots/24x24/legendary.png",
+                    },
+                    true => switch (sp.rarity) {
+                        .common => e.MISSINGNO,
+                        .epic => e.MISSINGNO,
+                        .legendary => e.MISSINGNO,
+                    },
+                };
+
+                if (delete_mode) {
+                    button.options.hover.background.image = "sprites/gui/delete_slot.png";
+                    continue;
+                }
+                button.options.hover.background.image = "sprites/gui/slot_highlight.png";
+                continue;
+            }
+
+            button.options.hover.background.image = switch (delete_mode) {
+                false => "sprites/gui/slot_highlight.png",
+                true => "sprites/gui/slot_highlight_delete.png",
+            };
+
+            shower.options.style.background.image = null;
+            element.options.style.background.image = "sprites/gui/spell_slot_empty.png";
         }
     }
 
@@ -583,9 +666,9 @@ pub fn updateGUI() !void {
         shower.options.style.background.image = it.icon;
 
         element.options.style.background.image = switch (it.rarity) {
-            .common => "sprites/gui/item_slot.png",
-            .epic => "sprites/gui/item_slot_epic.png",
-            .legendary => "sprites/gui/item_slot_legendary.png",
+            .common => "sprites/gui/slots/24x24/common.png",
+            .epic => "sprites/gui/slots/24x24/epic.png",
+            .legendary => "sprites/gui/slots/24x24/legendary.png",
         };
 
         if (delete_mode) {
@@ -658,7 +741,7 @@ inline fn MainSlotButton(
                 .unit = .vw,
             },
             .background = .{
-                .image = "sprites/gui/item_slot.png",
+                .image = "sprites/gui/slots/24x24/common.png",
             },
         },
     }, @constCast(&[_]*GUI.GUIElement{
@@ -765,7 +848,7 @@ inline fn EquippedSlotButton(
                 .unit = .vw,
             },
             .background = .{
-                .image = "sprites/gui/item_slot.png",
+                .image = "sprites/gui/slots/24x24/common.png",
             },
         },
     }, @constCast(&[_]*GUI.GUIElement{
@@ -841,15 +924,20 @@ inline fn NavigatorButton(
     shower_id: []const u8,
     col: usize,
     row: usize,
+    width: f32,
     varptr: *usize,
     towards: enum { up, down },
 ) !*GUI.GUIElement {
     return try GUI.Container(.{
         .id = id,
         .style = .{
-            .width = u("100%"),
+            .width = .{
+                .value = width * SLOT_SIZE,
+                .unit = .vw,
+            },
             .height = preview.generic_stat_button_style.height,
-            .left = u("-50%"),
+            // .left = u("-50%"),
+            .translate = .{ .x = .center },
             .top = .{
                 .value = switch (towards) {
                     .up => -1,
@@ -862,7 +950,11 @@ inline fn NavigatorButton(
                 .unit = .vw,
             },
             .background = .{
-                .image = "sprites/gui/item_slot.png",
+                .image = switch (@as(i32, @intFromFloat(width))) {
+                    4 => "sprites/gui/slots/96x12/common.png",
+                    2 => "sprites/gui/slots/48x12/common.png",
+                    else => "sprites/gui/slots/24x24/common.png",
+                },
             },
         },
     }, @constCast(&[_]*GUI.GUIElement{
@@ -873,11 +965,15 @@ inline fn NavigatorButton(
                     .width = u("100%"),
                     .height = u("100%"),
                     .top = u("0%"),
-                    .left = u("0%"),
+                    .left = u("-50%"),
                 },
                 .hover = .{
                     .background = .{
-                        .image = "sprites/gui/slot_highlight.png",
+                        .image = switch (@as(i32, @intFromFloat(width))) {
+                            4 => "sprites/gui/selectors/normal/96x12.png",
+                            2 => "sprites/gui/selectors/normal/48x12.png",
+                            else => "sprites/gui/selectors/normal/24x24.png",
+                        },
                     },
                 },
             },
@@ -889,9 +985,8 @@ inline fn NavigatorButton(
                         .up => -1,
                         .down => 1,
                     });
-                    std.log.info("Value: {d}", .{value});
                     if (value < 0) return;
-                    if (value > @as(i32, @intCast(max_rows))) return;
+                    if (value >= @as(i32, @intCast(max_rows - spell_bag_page_rows))) return;
                     varptr.* = @intCast(value);
                     try updateGUI();
                 }
@@ -902,7 +997,7 @@ inline fn NavigatorButton(
             .style = .{
                 .width = u("75%"),
                 .height = u("75%"),
-                .left = u("50%"),
+                // .left = u("50%"),
                 .top = u("50%"),
                 .translate = .{
                     .x = .center,
@@ -910,8 +1005,8 @@ inline fn NavigatorButton(
                 },
                 .background = .{
                     .image = switch (towards) {
-                        .up => "sprites/entity/player/weapons/gloves/left.png",
-                        .down => "sprites/entity/player/weapons/gloves/right.png",
+                        .up => "sprites/gui/arrow_up.png",
+                        .down => "sprites/gui/arrow_down.png",
                     },
                     .fill = .contain,
                 },
@@ -1020,7 +1115,7 @@ pub fn awake() !void {
     HandsWeapon = usePrefab(prefabs.hands);
 
     sorted_bag = try e.ALLOCATOR.alloc(*?conf.Item, items_bag_size);
-    sorted_spell_bag = try e.ALLOCATOR.alloc(*?conf.Item, spellss_bag_size);
+    sorted_spell_bag = try e.ALLOCATOR.alloc(*?conf.Item, spells_bag_size);
 
     for (0..bag.len) |index| {
         sorted_bag[index] = &(bag[index]);
@@ -1153,7 +1248,7 @@ pub fn awake() !void {
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.blue,
+                            // .color = e.Color.blue,
                         },
                     },
                 },
@@ -1179,7 +1274,7 @@ pub fn awake() !void {
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.pink,
+                            // .color = e.Color.pink,
                         },
                     },
                 },
@@ -1206,7 +1301,7 @@ pub fn awake() !void {
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.green,
+                            // .color = e.Color.green,
                         },
                     },
                 },
@@ -1354,7 +1449,7 @@ pub fn awake() !void {
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.lime,
+                            // .color = e.Color.lime,
                         },
                     },
                 },
@@ -1365,6 +1460,7 @@ pub fn awake() !void {
                         "bag-nav-up-shower",
                         2,
                         0,
+                        bag_page_cols,
                         &current_row_bag_items,
                         .up,
                     ),
@@ -1374,6 +1470,7 @@ pub fn awake() !void {
                         "bag-nav-down-shower",
                         2,
                         5,
+                        bag_page_cols,
                         &current_row_bag_items,
                         .down,
                     ),
@@ -1399,7 +1496,7 @@ pub fn awake() !void {
                             .y = .center,
                         },
                         .background = .{
-                            .color = e.Color.lime,
+                            // .color = e.Color.lime,
                         },
                     },
                 },
@@ -1410,6 +1507,7 @@ pub fn awake() !void {
                         "bag-spells-nav-up-shower",
                         6,
                         0,
+                        spell_bag_page_cols,
                         &current_row_bag_spells,
                         .up,
                     ),
@@ -1419,6 +1517,7 @@ pub fn awake() !void {
                         "bag-spells-nav-down-shower",
                         6,
                         5,
+                        spell_bag_page_cols,
                         &current_row_bag_spells,
                         .down,
                     ),
@@ -1469,7 +1568,7 @@ pub fn awake() !void {
                                     .unit = .vw,
                                 },
                                 .background = .{
-                                    .image = "sprites/gui/item_slot_legendary.png",
+                                    .image = "sprites/gui/slots/24x24/legendary.png",
                                 },
                             },
                         },
@@ -1522,7 +1621,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = PREVIEW_2x2,
+                                    // .image = "sprites/gui/slots/48x48/empty.png",
                                 },
                             },
                         },
@@ -1571,8 +1670,8 @@ pub fn awake() !void {
                             .id = "preview-item-name",
                             .style = .{
                                 .width = .{
-                                    .value = 100,
-                                    .unit = .percent,
+                                    .value = 4 * SLOT_SIZE + 1,
+                                    .unit = .vw,
                                 },
                                 .height = .{
                                     .value = SLOT_SIZE,
@@ -1592,7 +1691,7 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = PREVIEW_4x1,
+                                    .image = "sprites/gui/slots/96x12/empty.png",
                                 },
                                 .font = .{
                                     .size = 14,
@@ -2034,6 +2133,18 @@ pub fn init() !void {
     );
     _ = pickUpSort(
         usePrefab(prefabs.legendaries.weapons.claymore),
+    );
+    _ = pickUpSort(
+        usePrefab(.{
+            .id = e.uuid.v7.new(),
+            .T = .spell,
+
+            .rarity = .legendary,
+
+            .name = "Spell",
+
+            .icon = "sprites/entity/enemies/brute/left_0.png",
+        }),
     );
 
     equippedbar.autoEquip();

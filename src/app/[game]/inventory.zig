@@ -119,20 +119,24 @@ var is_preview_heap_loaded = false;
 var item_slots: []*GUI.GUIElement = undefined;
 var spell_slots: []*GUI.GUIElement = undefined;
 
-const SLOT_SIZE: f32 = 4;
+const SLOT_SIZE: f32 = 96;
+const SPACING_SIZE: f32 = SLOT_SIZE / 4;
 const PREVIEW_FONT_COLOR = e.Color.white;
 
-const WIDTH_VW: f32 = SLOT_SIZE * bag_page_cols + bag_page_cols - 1;
-const HEIGHT_VW: f32 = SLOT_SIZE * bag_page_rows + bag_page_rows - 1;
+const WIDTH_VW: f32 = SLOT_SIZE * bag_page_cols + SPACING_SIZE * (bag_page_cols - 1);
+const HEIGHT_VW: f32 = SLOT_SIZE * bag_page_rows + SPACING_SIZE * (bag_page_rows - 1);
 
-const SPELLS_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + 1;
-const EQUIPPED_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + 1;
+const SPELLS_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + SPACING_SIZE;
+const EQUIPPED_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + SPACING_SIZE;
 
 const PREVIEW_2x1 = "sprites/gui/preview_2x1.png";
 const PREVIEW_4x1 = "sprites/gui/preview_4x1.png";
 const PREVIEW_2x2 = "sprites/gui/preview_2x2.png";
 const PREVIEW_EPIC_2x2 = "sprites/gui/preview_epic_2x2.png";
 const PREVIEW_LEGENDARY_2x2 = "sprites/gui/preview_legendary_2x2.png";
+
+const SLOT_HIGHLIGHT = "sprites/gui/selectors/normal/24x24.png";
+const SLOT_DELETE = "sprites/gui/selectors/delete/24x24.png";
 
 pub const preview = struct {
     var is_shown = false;
@@ -162,12 +166,12 @@ pub const preview = struct {
             .image = "sprites/gui/slots/48x12/empty.png",
         },
         .width = .{
-            .value = SLOT_SIZE * 2,
-            .unit = .vw,
+            .value = SLOT_SIZE * 2 + SPACING_SIZE,
+            .unit = .unit,
         },
         .height = .{
             .value = SLOT_SIZE / 2,
-            .unit = .vw,
+            .unit = .unit,
         },
 
         .translate = .{
@@ -176,7 +180,7 @@ pub const preview = struct {
         },
 
         .font = .{
-            .size = 8,
+            .size = 12,
             .shadow = .{
                 .color = e.Color{
                     .r = 50,
@@ -501,13 +505,13 @@ pub fn updateGUI() !void {
                     button.options.hover.background.image = "sprites/gui/delete_slot.png";
                     continue;
                 }
-                button.options.hover.background.image = "sprites/gui/slot_highlight.png";
+                button.options.hover.background.image = SLOT_HIGHLIGHT;
                 continue;
             }
 
             button.options.hover.background.image = switch (delete_mode) {
-                false => "sprites/gui/slot_highlight.png",
-                true => "sprites/gui/slot_highlight_delete.png",
+                false => SLOT_HIGHLIGHT,
+                true => SLOT_DELETE,
             };
 
             shower.options.style.background.image = null;
@@ -577,13 +581,13 @@ pub fn updateGUI() !void {
                     button.options.hover.background.image = "sprites/gui/delete_slot.png";
                     continue;
                 }
-                button.options.hover.background.image = "sprites/gui/slot_highlight.png";
+                button.options.hover.background.image = SLOT_HIGHLIGHT;
                 continue;
             }
 
             button.options.hover.background.image = switch (delete_mode) {
-                false => "sprites/gui/slot_highlight.png",
-                true => "sprites/gui/slot_highlight_delete.png",
+                false => SLOT_HIGHLIGHT,
+                true => SLOT_DELETE,
             };
 
             shower.options.style.background.image = null;
@@ -652,8 +656,8 @@ pub fn updateGUI() !void {
 
         if (item == null) {
             button.options.hover.background.image = switch (delete_mode) {
-                false => "sprites/gui/slot_highlight.png",
-                true => "sprites/gui/slot_highlight_delete.png",
+                false => SLOT_HIGHLIGHT,
+                true => SLOT_DELETE,
             };
 
             shower.options.style.background.image = null;
@@ -675,7 +679,7 @@ pub fn updateGUI() !void {
             button.options.hover.background.image = "sprites/gui/delete_slot.png";
             continue;
         }
-        button.options.hover.background.image = "sprites/gui/slot_highlight.png";
+        button.options.hover.background.image = SLOT_HIGHLIGHT;
     }
 
     // if (e.input.input_mode == .Keyboard) try autoSelect();
@@ -726,22 +730,23 @@ inline fn MainSlotButton(
         .style = .{
             .width = .{
                 .value = SLOT_SIZE,
-                .unit = .vw,
+                .unit = .unit,
             },
             .height = .{
                 .value = SLOT_SIZE,
-                .unit = .vw,
+                .unit = .unit,
             },
             .left = .{
-                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1),
-                .unit = .vw,
+                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + SPACING_SIZE),
+                .unit = .unit,
             },
             .top = .{
-                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
-                .unit = .vw,
+                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + SPACING_SIZE),
+                .unit = .unit,
             },
             .background = .{
                 .image = "sprites/gui/slots/24x24/common.png",
+                // .color = e.Color.purple,
             },
         },
     }, @constCast(&[_]*GUI.GUIElement{
@@ -833,19 +838,19 @@ inline fn EquippedSlotButton(
         .style = .{
             .width = .{
                 .value = SLOT_SIZE,
-                .unit = .vw,
+                .unit = .unit,
             },
             .height = .{
                 .value = SLOT_SIZE,
-                .unit = .vw,
+                .unit = .unit,
             },
             .left = .{
-                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + 1),
-                .unit = .vw,
+                .value = -1 * (container_width / 2) + (@as(f32, @floatFromInt(col))) * (SLOT_SIZE + SPACING_SIZE),
+                .unit = .unit,
             },
             .top = .{
-                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + 1),
-                .unit = .vw,
+                .value = -1 * (container_height / 2) + (@as(f32, @floatFromInt(row))) * (SLOT_SIZE + SPACING_SIZE),
+                .unit = .unit,
             },
             .background = .{
                 .image = "sprites/gui/slots/24x24/common.png",
@@ -933,7 +938,7 @@ inline fn NavigatorButton(
         .style = .{
             .width = .{
                 .value = width * SLOT_SIZE,
-                .unit = .vw,
+                .unit = .unit,
             },
             .height = preview.generic_stat_button_style.height,
             // .left = u("-50%"),
@@ -946,8 +951,8 @@ inline fn NavigatorButton(
                     .up => 2,
                     .down => 0,
                 } *
-                    (preview.generic_stat_button_style.height.value) + 2) / 2,
-                .unit = .vw,
+                    (preview.generic_stat_button_style.height.value) + 2 * SPACING_SIZE) / 2,
+                .unit = .unit,
             },
             .background = .{
                 .image = switch (@as(i32, @intFromFloat(width))) {
@@ -1223,6 +1228,10 @@ pub fn awake() !void {
                     .color = e.Color.init(0, 0, 0, 128),
                 },
                 .top = u("-100%"),
+                .left = u("50%"),
+                .translate = .{
+                    .x = .center,
+                },
                 .width = u("100w"),
                 .height = u("100h"),
             },
@@ -1235,14 +1244,17 @@ pub fn awake() !void {
                     .style = .{
                         .width = .{
                             .value = WIDTH_VW,
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .height = .{
                             .value = HEIGHT_VW,
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
-                        .left = u("38w"),
+                        .left = .{
+                            .value = -1 * (2 * SLOT_SIZE + 2 * SPACING_SIZE),
+                            .unit = .unit,
+                        },
                         .translate = .{
                             .x = .center,
                             .y = .center,
@@ -1260,15 +1272,18 @@ pub fn awake() !void {
                     .id = "Bag-Spells",
                     .style = .{
                         .width = .{
-                            .value = 2 * SLOT_SIZE + 1,
-                            .unit = .vw,
+                            .value = SPELLS_BAR_WIDTH_VW,
+                            .unit = .unit,
                         },
                         .height = .{
                             .value = HEIGHT_VW,
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
-                        .left = u("56w"),
+                        .left = .{
+                            .value = 1 * SLOT_SIZE + 1 * SPACING_SIZE,
+                            .unit = .unit,
+                        },
                         .translate = .{
                             .x = .center,
                             .y = .center,
@@ -1287,15 +1302,18 @@ pub fn awake() !void {
                     .id = "equippedShower",
                     .style = .{
                         .width = .{
-                            .value = SLOT_SIZE * 2 + 1,
-                            .unit = .vw,
+                            .value = EQUIPPED_BAR_WIDTH_VW,
+                            .unit = .unit,
                         },
                         .height = .{
-                            .value = HEIGHT_VW + SLOT_SIZE + 1,
-                            .unit = .vw,
+                            .value = HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
-                        .left = u("16w"),
+                        .left = .{
+                            .value = -1 * (6 * SLOT_SIZE + 4 * SPACING_SIZE),
+                            .unit = .unit,
+                        },
                         .translate = .{
                             .x = .center,
                             .y = .center,
@@ -1315,7 +1333,7 @@ pub fn awake() !void {
                         0,
                         0,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .weapon,
                         null,
                     ),
@@ -1328,7 +1346,7 @@ pub fn awake() !void {
                         0,
                         1,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .ring,
                         null,
                     ),
@@ -1341,7 +1359,7 @@ pub fn awake() !void {
                         0,
                         2,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .amethyst,
                         null,
                     ),
@@ -1354,7 +1372,7 @@ pub fn awake() !void {
                         0,
                         3,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .wayfinder,
                         null,
                     ),
@@ -1367,7 +1385,7 @@ pub fn awake() !void {
                         1,
                         0,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .spell,
                         null,
                     ),
@@ -1380,7 +1398,7 @@ pub fn awake() !void {
                         1,
                         1,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .spell,
                         null,
                     ),
@@ -1393,7 +1411,7 @@ pub fn awake() !void {
                         1,
                         2,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .spell,
                         null,
                     ),
@@ -1406,7 +1424,7 @@ pub fn awake() !void {
                         1,
                         3,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         .spell,
                         null,
                     ),
@@ -1419,7 +1437,7 @@ pub fn awake() !void {
                         0,
                         4,
                         EQUIPPED_BAR_WIDTH_VW,
-                        HEIGHT_VW + SLOT_SIZE + 1,
+                        HEIGHT_VW + SLOT_SIZE + SPACING_SIZE,
                         (struct {
                             pub fn callback() anyerror!void {
                                 delete_mode = !delete_mode;
@@ -1436,14 +1454,17 @@ pub fn awake() !void {
                     .style = .{
                         .width = .{
                             .value = WIDTH_VW,
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .height = .{
                             .value = HEIGHT_VW + 2 + preview.generic_stat_button_style.height.value * @as(f32, 2),
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
-                        .left = u("38w"),
+                        .left = .{
+                            .value = -1 * (2 * SLOT_SIZE + 2 * SPACING_SIZE),
+                            .unit = .unit,
+                        },
                         .translate = .{
                             .x = .center,
                             .y = .center,
@@ -1483,14 +1504,17 @@ pub fn awake() !void {
                     .style = .{
                         .width = .{
                             .value = SPELLS_BAR_WIDTH_VW,
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .height = .{
                             .value = HEIGHT_VW + 2 + preview.generic_stat_button_style.height.value * @as(f32, 2),
-                            .unit = .vw,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
-                        .left = u("56w"),
+                        .left = .{
+                            .value = -1 * (-1 * SLOT_SIZE - 1 * SPACING_SIZE),
+                            .unit = .unit,
+                        },
                         .translate = .{
                             .x = .center,
                             .y = .center,
@@ -1530,21 +1554,24 @@ pub fn awake() !void {
                     .id = "item-preview",
                     .style = .{
                         .width = .{
-                            .value = SLOT_SIZE * 4 + 3,
-                            .unit = .vw,
+                            .value = SLOT_SIZE * 4 + 3 * SPACING_SIZE,
+                            .unit = .unit,
                         },
                         .height = .{
-                            .value = SLOT_SIZE * 7 + 6,
-                            .unit = .vw,
+                            .value = SLOT_SIZE * 7 + 6 * SPACING_SIZE,
+                            .unit = .unit,
                         },
                         .top = u("50%"),
                         .left = .{
-                            .value = 78,
-                            .unit = .vw,
+                            .value = 5 * SLOT_SIZE + 3 * SPACING_SIZE,
+                            .unit = .unit,
                         },
                         .translate = .{
                             .x = .center,
                             .y = .center,
+                        },
+                        .background = .{
+                            // .color = e.Color.red,
                         },
                     },
                 },
@@ -1555,17 +1582,17 @@ pub fn awake() !void {
                             .id = "preview-display",
                             .style = .{
                                 .width = .{
-                                    .value = 2 * SLOT_SIZE + 1,
-                                    .unit = .vw,
+                                    .value = 2 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .height = .{
-                                    .value = 2 * SLOT_SIZE + 1,
-                                    .unit = .vw,
+                                    .value = 2 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .top = u("-50%"),
                                 .left = .{
-                                    .value = -1 * (SLOT_SIZE * 2 + 1) - 0.5,
-                                    .unit = .vw,
+                                    .value = -1 * (SLOT_SIZE * 2 + SPACING_SIZE) - 0.5 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .background = .{
                                     .image = "sprites/gui/slots/24x24/legendary.png",
@@ -1601,27 +1628,27 @@ pub fn awake() !void {
                             .id = "preview-level-container",
                             .style = .{
                                 .width = .{
-                                    .value = 2 * SLOT_SIZE + 1,
-                                    .unit = .vw,
+                                    .value = 2 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .height = .{
-                                    .value = 2 * SLOT_SIZE + 1,
-                                    .unit = .vw,
+                                    .value = 2 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = -1 * SLOT_SIZE * 3.5 + 2.5,
-                                    .unit = .vw,
+                                    .value = -2.5 * SLOT_SIZE - 2.5 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = SLOT_SIZE * 1 + 1,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE * 1 + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .translate = .{
                                     .x = .center,
                                     .y = .center,
                                 },
                                 .background = .{
-                                    // .image = "sprites/gui/slots/48x48/empty.png",
+                                    .image = "sprites/gui/slots/48x48/empty.png",
                                 },
                             },
                         },
@@ -1669,21 +1696,22 @@ pub fn awake() !void {
                         .{
                             .id = "preview-item-name",
                             .style = .{
-                                .width = .{
-                                    .value = 4 * SLOT_SIZE + 1,
-                                    .unit = .vw,
-                                },
+                                // .width = .{
+                                //     .value = 4 * SLOT_SIZE + SPACING_SIZE,
+                                //     .unit = .unit,
+                                // },
+                                .width = u("100%"),
                                 .height = .{
                                     .value = SLOT_SIZE,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = -1 * SLOT_SIZE * 1 - 1,
-                                    .unit = .vw,
+                                    .value = -1 * SLOT_SIZE * 1 - SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 // .left = .{
                                 //     .value = SLOT_SIZE * 1 + 1,
-                                //     .unit = .vw,
+                                //     .unit = .unit,
                                 // },
                                 .color = PREVIEW_FONT_COLOR,
                                 .translate = .{
@@ -1711,12 +1739,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .left = .{
-                                    .value = -1 * (SLOT_SIZE * 2 + 1.5),
-                                    .unit = .vw,
+                                    .value = -1 * (SLOT_SIZE * 2 + 1.5 * SPACING_SIZE),
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = -1 * (SLOT_SIZE - 1) / 4,
-                                    .unit = .vw,
+                                    .value = -0.5 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1746,12 +1774,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .top = .{
-                                    .value = -1 * (SLOT_SIZE - 1) / 4,
-                                    .unit = .vw,
+                                    .value = -0.5 * SLOT_SIZE + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .left = .{
                                     .value = 0.5,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1782,12 +1810,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .top = .{
-                                    .value = (SLOT_SIZE - 1) / 2,
-                                    .unit = .vw,
+                                    .value = 0 * SLOT_SIZE + 2 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = -1 * (SLOT_SIZE * 2 + 1.5),
-                                    .unit = .vw,
+                                    .value = -1 * (SLOT_SIZE * 2 + 1.5 * SPACING_SIZE),
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1817,12 +1845,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .top = .{
-                                    .value = (SLOT_SIZE - 1) / 2,
-                                    .unit = .vw,
+                                    .value = 0 * SLOT_SIZE + 2 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .left = .{
                                     .value = 0.5,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1852,12 +1880,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .left = .{
-                                    .value = -1 * (SLOT_SIZE * 2 + 1.5),
-                                    .unit = .vw,
+                                    .value = -1 * (SLOT_SIZE * 2 + 1.5 * SPACING_SIZE),
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE + 2 - 1 * ((SLOT_SIZE - 1) / 2),
-                                    .unit = .vw,
+                                    .value = 0.5 * SLOT_SIZE + 3 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1888,11 +1916,11 @@ pub fn awake() !void {
                                 .background = preview.generic_stat_button_style.background,
                                 .left = .{
                                     .value = 0.5,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE + 2 - 1 * ((SLOT_SIZE - 1) / 2),
-                                    .unit = .vw,
+                                    .value = 0.5 * SLOT_SIZE + 3 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1922,12 +1950,12 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .left = .{
-                                    .value = -1 * (SLOT_SIZE * 2 + 1.5),
-                                    .unit = .vw,
+                                    .value = -1 * (SLOT_SIZE * 2 + 1.5 * SPACING_SIZE),
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = 2 * (SLOT_SIZE) - 1 * ((SLOT_SIZE - 1) / 2),
-                                    .unit = .vw,
+                                    .value = 1 * SLOT_SIZE + 4 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                             },
                         },
@@ -1953,20 +1981,20 @@ pub fn awake() !void {
                             .id = "preview-equip-button",
                             .style = .{
                                 .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE * 2 + 1 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .height = .{
                                     .value = SLOT_SIZE,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = -1 * SLOT_SIZE - 1,
-                                    .unit = .vw,
+                                    .value = -1 * SLOT_SIZE - 1 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE * 3 + 3,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE * 3 + 3 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .translate = .{
                                     .x = .center,
@@ -1974,7 +2002,7 @@ pub fn awake() !void {
                                 },
                                 .color = PREVIEW_FONT_COLOR,
                                 .background = .{
-                                    .image = PREVIEW_2x1,
+                                    .image = "sprites/gui/slots/48x24/common.png",
                                 },
                             },
                         },
@@ -1988,20 +2016,20 @@ pub fn awake() !void {
                             .id = "preview-level-up",
                             .style = .{
                                 .width = .{
-                                    .value = SLOT_SIZE * 2 + 1,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE * 2 + SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .height = .{
                                     .value = SLOT_SIZE,
-                                    .unit = .vw,
+                                    .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = SLOT_SIZE + 1,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE + 1 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .top = .{
-                                    .value = SLOT_SIZE * 3 + 3,
-                                    .unit = .vw,
+                                    .value = SLOT_SIZE * 3 + 3 * SPACING_SIZE,
+                                    .unit = .unit,
                                 },
                                 .background = .{
                                     .image = "sprites/gui/page_btn_inactive.png",

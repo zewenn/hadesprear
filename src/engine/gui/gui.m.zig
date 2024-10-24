@@ -12,6 +12,7 @@ pub const StyleSheet = @import("StyleSheet.zig");
 pub const ButtonInterface = @import("ButtonInterface.zig");
 pub const u = @import("Unit.zig").u;
 pub const toUnit = @import("Unit.zig").toUnit;
+pub const Unit = @import("Unit.zig");
 
 pub const manager = zlib.HeapManager(GUIElement, (struct {
     pub fn callback(_: Allocator, item: *GUIElement) !void {

@@ -349,8 +349,11 @@ pub fn update() !void {
             } else break :FontRendering;
 
             const len = std.mem.indexOfSentinel(u8, 0, content);
-            const ox: f32 = style.font.size * @as(f32, @floatFromInt(len)) / 2;
-            const oy: f32 = style.font.size / 2;
+
+            const fs = @constCast(&GUI.Unit{ .unit = .unit, .value = style.font.size }).calculate(0, 0);
+
+            const ox: f32 = fs * @as(f32, @floatFromInt(len)) / 2;
+            const oy: f32 = fs / 2;
 
             if (style.font.shadow) |shadow| {
                 rl.drawTextPro(
@@ -360,7 +363,7 @@ pub fn update() !void {
                     // origin,
                     rl.Vector2.init(ox, oy),
                     transform.rotation.z,
-                    style.font.size,
+                    fs,
                     style.font.spacing,
                     shadow.color,
                 );
@@ -372,7 +375,7 @@ pub fn update() !void {
                 // origin,
                 rl.Vector2.init(ox, oy),
                 transform.rotation.z,
-                style.font.size,
+                fs,
                 style.font.spacing,
                 style.color,
             );

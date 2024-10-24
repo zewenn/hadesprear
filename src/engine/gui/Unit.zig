@@ -33,7 +33,8 @@ pub fn equals(self: *Self, other: Self) bool {
 pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
     return switch (self.unit) {
         .px => parent + self.value,
-        .unit => parent + self.value * 16,
+        .unit => parent + self.value * ((window.size.x / 1920 + window.size.y / 1080) / 2),
+        // .unit => parent + window.size.x * (self.value / 100),
         .percent => parent + percent_parent * (self.value / 100),
         .vw => parent + window.size.x * (self.value / 100),
         .vh => parent + window.size.y * (self.value / 100),

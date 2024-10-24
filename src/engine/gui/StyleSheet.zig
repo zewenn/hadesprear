@@ -38,7 +38,7 @@ background: struct {
 
 font: struct {
     family: []const u8 = "fonts/press_play.ttf",
-    size: f32 = 12,
+    size: f32 = 16,
     spacing: f32 = 0,
     shadow: ?struct {
         offset: rl.Vector2 = .{

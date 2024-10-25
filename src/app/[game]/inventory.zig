@@ -131,9 +131,9 @@ const EQUIPPED_BAR_WIDTH_VW: f32 = SLOT_SIZE * 2 + SPACING_SIZE;
 
 const PREVIEW_2x1 = "sprites/gui/preview_2x1.png";
 const PREVIEW_4x1 = "sprites/gui/preview_4x1.png";
-const PREVIEW_2x2 = "sprites/gui/preview_2x2.png";
-const PREVIEW_EPIC_2x2 = "sprites/gui/preview_epic_2x2.png";
-const PREVIEW_LEGENDARY_2x2 = "sprites/gui/preview_legendary_2x2.png";
+const PREVIEW_2x2 = "sprites/gui/slots/48x48/common.png";
+const PREVIEW_EPIC_2x2 = "sprites/gui/slots/48x48/epic.png";
+const PREVIEW_LEGENDARY_2x2 = "sprites/gui/slots/48x48/legendary.png";
 
 const SLOT_HIGHLIGHT = "sprites/gui/selectors/normal/24x24.png";
 const SLOT_DELETE = "sprites/gui/selectors/delete/24x24.png";
@@ -163,7 +163,7 @@ pub const preview = struct {
 
     pub const generic_stat_button_style = GUI.StyleSheet{
         .background = .{
-            .image = "sprites/gui/slots/48x12/empty.png",
+            .image = "sprites/gui/slots/52x12/empty.png",
         },
         .width = .{
             .value = SLOT_SIZE * 2 + SPACING_SIZE,
@@ -1719,10 +1719,10 @@ pub fn awake() !void {
                                     .y = .center,
                                 },
                                 .background = .{
-                                    .image = "sprites/gui/slots/96x12/empty.png",
+                                    .image = "sprites/gui/slots/108x24/empty.png",
                                 },
                                 .font = .{
-                                    .size = 14,
+                                    .size = 20,
                                     .shadow = preview.generic_stat_button_style.font.shadow,
                                 },
                             },
@@ -1778,7 +1778,7 @@ pub fn awake() !void {
                                     .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = 0.5,
+                                    .value = 0.5 * SPACING_SIZE,
                                     .unit = .unit,
                                 },
                             },
@@ -1849,7 +1849,7 @@ pub fn awake() !void {
                                     .unit = .unit,
                                 },
                                 .left = .{
-                                    .value = 0.5,
+                                    .value = 0.5 * SPACING_SIZE,
                                     .unit = .unit,
                                 },
                             },
@@ -1915,7 +1915,7 @@ pub fn awake() !void {
                                 .translate = preview.generic_stat_button_style.translate,
                                 .background = preview.generic_stat_button_style.background,
                                 .left = .{
-                                    .value = 0.5,
+                                    .value = 0.5 * SPACING_SIZE,
                                     .unit = .unit,
                                 },
                                 .top = .{

@@ -257,37 +257,37 @@ pub fn update() !void {
         Player.entity_stats.?.is_asleep = if (e.isKeyDown(.key_four)) true else false;
     }
 
-    // Player.entity_stats.?.health = e.zlib.math.clamp(
-    //     f32,
-    //     Player.entity_stats.?.health,
-    //     0,
-    //     Player.entity_stats.?.max_health,
-    // );
+    Player.entity_stats.?.health = e.zlib.math.clamp(
+        f32,
+        Player.entity_stats.?.health,
+        0,
+        Player.entity_stats.?.max_health,
+    );
 
-    // if (health_display.is_content_heap) {
-    //     e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
-    // }
+    if (health_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, health_display.contents.?);
+    }
 
-    // try inventory.preview.toNamedHeapString(
-    //     health_display,
-    //     "HP",
-    //     Player.entity_stats.?.health / Player.entity_stats.?.max_health * 100,
-    //     true,
-    // );
+    try inventory.preview.toNamedHeapString(
+        health_display,
+        "HP",
+        Player.entity_stats.?.health / Player.entity_stats.?.max_health * 100,
+        true,
+    );
 
-    // if (dash_charges_display.is_content_heap) {
-    //     e.zlib.arrays.freeManyItemPointerSentinel(
-    //         e.ALLOCATOR,
-    //         dash_charges_display.contents.?,
-    //     );
-    // }
+    if (dash_charges_display.is_content_heap) {
+        e.zlib.arrays.freeManyItemPointerSentinel(
+            e.ALLOCATOR,
+            dash_charges_display.contents.?,
+        );
+    }
 
-    // try inventory.preview.toNamedHeapString(
-    //     dash_charges_display,
-    //     "Dashes",
-    //     @floatFromInt(Player.dash_modifiers.?.charges_available),
-    //     false,
-    // );
+    try inventory.preview.toNamedHeapString(
+        dash_charges_display,
+        "Dashes",
+        @floatFromInt(Player.dash_modifiers.?.charges_available),
+        false,
+    );
 
     if (e.input.ui_mode) return;
 

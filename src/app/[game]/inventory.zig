@@ -1657,7 +1657,7 @@ pub fn awake() !void {
                                 .{
                                     .id = "preview-level-text",
                                     .style = .{
-                                        .top = u("-28x"),
+                                        .top = u("-28u"),
                                         .font = .{
                                             .size = 16,
                                             .shadow = preview.generic_stat_button_style.font.shadow,
@@ -1675,7 +1675,7 @@ pub fn awake() !void {
                                 .{
                                     .id = "preview-level-number",
                                     .style = .{
-                                        .top = u("12x"),
+                                        .top = u("12u"),
                                         .font = .{
                                             .size = 44,
                                             .shadow = preview.generic_stat_button_style.font.shadow,

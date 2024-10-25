@@ -30,10 +30,26 @@ pub fn equals(self: *Self, other: Self) bool {
     return true;
 }
 
+fn getUnitSize() f32 {
+    const sw: f32 = 1920;
+    const sh: f32 = 1080;
+
+    const w: f32 = switch (window.size.x > window.size.y) {
+        true => window.size.y * 16 / 9,
+        false => window.size.x,
+    };
+    const h: f32 = switch (window.size.x < window.size.y) {
+        true => window.size.x * 9 / 16,
+        false => window.size.y,
+    };
+
+    return (w / sw + h / sh) / 2;
+}
+
 pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {
     return switch (self.unit) {
         .px => parent + self.value,
-        .unit => parent + self.value * ((window.size.x / 1920 + window.size.y / 1080) / 2),
+        .unit => parent + self.value * getUnitSize(),
         // .unit => parent + window.size.x * (self.value / 100),
         .percent => parent + percent_parent * (self.value / 100),
         .vw => parent + window.size.x * (self.value / 100),

@@ -315,6 +315,8 @@ pub const AttackTypes = enum {
     dash,
 };
 
+pub const SpellSlots = enum {q, e, r, x};
+
 pub const Item = struct {
     /// If id is 0 the Item is a prefab and should not be modified without cloning
     id: u128 = 0,
@@ -336,6 +338,7 @@ pub const Item = struct {
     } = .sword,
 
     equipped: bool = false,
+    equipped_spell_slot: ?SpellSlots = null,
     unequippable: bool = true,
 
     level: usize = 0,

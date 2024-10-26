@@ -4,6 +4,8 @@ const entities = @import("../engine.m.zig").entities;
 const window = @import("../display/display.m.zig").window;
 const z = @import("../z/z.m.zig");
 
+const loadf32 = @import("../engine.m.zig").loadf32;
+
 const Self = @This();
 
 const UnitEnum = enum {
@@ -43,7 +45,28 @@ fn getUnitSize() f32 {
         false => window.size.y,
     };
 
-    return (w / sw + h / sh) / 2;
+    return floorToNearestScalable((w / sw + h / sh) / 2);
+}
+
+fn floorToNearestScalable(to_be_rounded: f32) f32 {
+    var n: f32 = 1;
+    var upper: f32 = 1;
+    var lower: f32 = 1;
+
+    if (to_be_rounded == 1) return 1;
+
+    while (!(upper >= to_be_rounded and lower <= to_be_rounded)) {
+        n += 1;
+        if (1 > to_be_rounded) {
+            lower = 1 / n;
+            upper = 1 / (n - 1);
+        } else {
+            lower = n - 1;
+            upper = n;
+        }
+    }
+
+    return lower;
 }
 
 pub fn calculate(self: *Self, parent: f32, percent_parent: f32) f32 {

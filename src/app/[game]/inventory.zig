@@ -40,15 +40,27 @@ pub var sorted_spell_bag: []*?conf.Item = undefined;
 pub var animation_mapping_dummy: e.entities.Entity = undefined;
 pub var dummy_animator: e.Animator = undefined;
 
+pub var spell_equip_mode: bool = false;
+
 pub const equippedbar = struct {
     pub var current_weapon: *Item = &HandsWeapon;
     pub var ring: ?*Item = null;
     pub var amethyst: ?*Item = null;
     pub var wayfinder: ?*Item = null;
 
+    pub const spells = struct {
+        pub var q: ?*Item = null;
+        pub var e: ?*Item = null;
+        pub var r: ?*Item = null;
+        pub var x: ?*Item = null;
+    };
+
     pub fn equip(item: *Item) void {
         switch (item.T) {
-            .spell => {},
+            .spell => {
+                spell_equip_mode = true;
+                return;
+            },
             .weapon => {
                 unequip(current_weapon);
                 current_weapon = item;
@@ -68,6 +80,37 @@ pub const equippedbar = struct {
         }
 
         item.equipped = true;
+
+        sortBag();
+        updateGUI() catch {};
+        autoSelect() catch {};
+    }
+
+    pub fn equipSpell(item: *Item, slot: conf.SpellSlots) void {
+        if (item.T != .spell) {
+            equip(item);
+            return;
+        }
+
+        const ptr = switch (slot) {
+            .q => &(spells.q),
+            .e => &(spells.e),
+            .r => &(spells.r),
+            .x => &(spells.x),
+        };
+
+        if (ptr.* != null) unequip(ptr.*.?);
+
+        ptr.* = item;
+
+        item.equipped = true;
+        item.equipped_spell_slot = slot;
+
+        spell_equip_mode = false;
+
+        sortBag();
+        updateGUI() catch {};
+        autoSelect() catch {};
     }
 
     pub fn autoEquip() void {
@@ -83,7 +126,18 @@ pub const equippedbar = struct {
     pub fn unequip(item: *Item) void {
         item.equipped = false;
         switch (item.T) {
-            .spell => {},
+            .spell => Spell: {
+                if (item.equipped_spell_slot == null) break :Spell;
+                const ptr = switch (item.equipped_spell_slot.?) {
+                    .q => &(spells.q),
+                    .e => &(spells.e),
+                    .r => &(spells.r),
+                    .x => &(spells.x),
+                };
+
+                ptr.* = null;
+                item.equipped_spell_slot = null;
+            },
             .weapon => {
                 current_weapon = &HandsWeapon;
                 HandsWeapon.equipped = true;
@@ -119,7 +173,7 @@ var is_preview_heap_loaded = false;
 var item_slots: []*GUI.GUIElement = undefined;
 var spell_slots: []*GUI.GUIElement = undefined;
 
-const SLOT_SIZE: f32 = 96;
+const SLOT_SIZE: f32 = 24 * 5;
 const SPACING_SIZE: f32 = SLOT_SIZE / 4;
 const PREVIEW_FONT_COLOR = e.Color.white;
 
@@ -224,6 +278,9 @@ pub const preview = struct {
     }
 
     pub fn show(item: *Item) !void {
+        if (selected_item != item) {
+            spell_equip_mode = false;
+        }
         selected_item = item;
 
         if (!selected) {
@@ -495,9 +552,9 @@ pub fn updateGUI() !void {
                         .legendary => "sprites/gui/slots/24x24/legendary.png",
                     },
                     true => switch (it.rarity) {
-                        .common => e.MISSINGNO,
-                        .epic => e.MISSINGNO,
-                        .legendary => e.MISSINGNO,
+                        .common => "sprites/gui/slots/24x24/common_equipped.png",
+                        .epic => "sprites/gui/slots/24x24/epic_equipped.png",
+                        .legendary => "sprites/gui/slots/24x24/legendary_equipped.png",
                     },
                 };
 
@@ -571,9 +628,9 @@ pub fn updateGUI() !void {
                         .legendary => "sprites/gui/slots/24x24/legendary.png",
                     },
                     true => switch (sp.rarity) {
-                        .common => e.MISSINGNO,
-                        .epic => e.MISSINGNO,
-                        .legendary => e.MISSINGNO,
+                        .common => "sprites/gui/slots/24x24/common_equipped.png",
+                        .epic => "sprites/gui/slots/24x24/epic_equipped.png",
+                        .legendary => "sprites/gui/slots/24x24/legendary_equipped.png",
                     },
                 };
 
@@ -606,18 +663,24 @@ pub fn updateGUI() !void {
     }
 
     const base_tags = [_][]const u8{
-        "spell",
         "weapon",
         "ring",
         "amethyst",
         "wayfinder",
+        "spell_q",
+        "spell_e",
+        "spell_r",
+        "spell_x",
     };
     const enum_tags = [_]conf.ItemTypes{
-        .spell,
         .weapon,
         .ring,
         .amethyst,
         .wayfinder,
+        .spell,
+        .spell,
+        .spell,
+        .spell,
     };
 
     for (base_tags, enum_tags) |tag, etag| {
@@ -647,7 +710,13 @@ pub fn updateGUI() !void {
         const shower: *GUI.GUIElement = if (GUI.select(shower_selector)) |el| el else continue;
 
         const item: ?*Item = switch (etag) {
-            .spell => null,
+            .spell => Res: {
+                if (std.mem.eql(u8, tag, "spell_q")) break :Res equippedbar.spells.q;
+                if (std.mem.eql(u8, tag, "spell_e")) break :Res equippedbar.spells.e;
+                if (std.mem.eql(u8, tag, "spell_r")) break :Res equippedbar.spells.r;
+                if (std.mem.eql(u8, tag, "spell_x")) break :Res equippedbar.spells.x;
+                break :Res null;
+            },
             .weapon => equippedbar.current_weapon,
             .ring => equippedbar.ring,
             .amethyst => equippedbar.amethyst,
@@ -681,6 +750,23 @@ pub fn updateGUI() !void {
         }
         button.options.hover.background.image = SLOT_HIGHLIGHT;
     }
+
+    const spell_q_display = GUI.assertSelect("#equipped_spell_q_shower");
+    const spell_e_display = GUI.assertSelect("#equipped_spell_e_shower");
+    const spell_r_display = GUI.assertSelect("#equipped_spell_r_shower");
+    const spell_x_display = GUI.assertSelect("#equipped_spell_x_shower");
+
+    if (spell_equip_mode) {
+        spell_q_display.contents = "Q";
+        spell_e_display.contents = "E";
+        spell_r_display.contents = "R";
+        spell_x_display.contents = "X";
+        return;
+    }
+    spell_q_display.contents = "";
+    spell_e_display.contents = "";
+    spell_r_display.contents = "";
+    spell_x_display.contents = "";
 
     // if (e.input.input_mode == .Keyboard) try autoSelect();
 }
@@ -877,7 +963,13 @@ inline fn EquippedSlotButton(
             if (func) |fun| fun else (struct {
                 pub fn callback() anyerror!void {
                     const item: ?*Item = switch (item_type) {
-                        .spell => null,
+                        .spell => Res: {
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_q")) break :Res equippedbar.spells.q;
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_e")) break :Res equippedbar.spells.e;
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_r")) break :Res equippedbar.spells.r;
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_x")) break :Res equippedbar.spells.x;
+                            break :Res null;
+                        },
                         .weapon => equippedbar.current_weapon,
                         .ring => equippedbar.ring,
                         .amethyst => equippedbar.amethyst,
@@ -917,6 +1009,14 @@ inline fn EquippedSlotButton(
                 .background = .{
                     .image = "sprites/entity/player/weapons/gloves/left.png",
                     .fill = .contain,
+                },
+                .color = e.Color.white,
+                .font = .{
+                    .size = 28,
+                    .shadow = .{
+                        .offset = e.Vec2(2, 2),
+                        .color = e.Color.gray,
+                    },
                 },
             },
         }),
@@ -2174,6 +2274,18 @@ pub fn init() !void {
             .icon = "sprites/entity/enemies/brute/left_0.png",
         }),
     );
+    _ = pickUpSort(
+        usePrefab(.{
+            .id = e.uuid.v7.new(),
+            .T = .spell,
+
+            .rarity = .common,
+
+            .name = "Spell",
+
+            .icon = "sprites/entity/enemies/brute/right_0.png",
+        }),
+    );
 
     equippedbar.autoEquip();
 
@@ -2193,6 +2305,8 @@ pub fn update() !void {
     };
     if (!e.input.ui_mode) return;
 
+    if (GUI.BM3D.current_layer != 1) return;
+
     if ((e.isMouseButtonPressed(.mouse_button_left) or
         e.isKeyPressed(.key_enter) or
         e.isKeyPressed(.key_backspace) or
@@ -2208,10 +2322,6 @@ pub fn update() !void {
         try updateGUI();
     }
 
-    if (e.isKeyPressed(.key_e) and preview.is_shown) {
-        try preview.equippButtonCallback();
-    }
-
     if ((e.isKeyPressed(.key_up) or
         e.isKeyPressed(.key_down) or
         e.isKeyPressed(.key_left) or
@@ -2219,6 +2329,27 @@ pub fn update() !void {
         GUI.hovered_button != null)
     {
         try autoSelect();
+    }
+
+    if (spell_equip_mode and preview.selected_item != null) {
+        if (e.isKeyPressed(.key_q))
+            equippedbar.equipSpell(preview.selected_item.?, .q)
+        else if (e.isKeyPressed(.key_e))
+            equippedbar.equipSpell(preview.selected_item.?, .e)
+        else if (e.isKeyPressed(.key_r))
+            equippedbar.equipSpell(preview.selected_item.?, .r)
+        else if (e.isKeyPressed(.key_x))
+            equippedbar.equipSpell(preview.selected_item.?, .x);
+
+        if (preview.selected_item.?.equipped) {
+            spell_equip_mode = false;
+
+            sortBag();
+            try updateGUI();
+            try preview.show(preview.selected_item.?);
+        }
+    } else if (e.isKeyPressed(.key_e) and preview.is_shown) {
+        try preview.equippButtonCallback();
     }
 
     delete_mode_last_frame = delete_mode;

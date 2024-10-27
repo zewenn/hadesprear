@@ -370,7 +370,7 @@ pub const Item = struct {
         .y = 64,
     },
 
-    name: [*:0]const u8,
+    name: []const u8,
 
     icon: []const u8 = "sprites/missingno.png",
     weapon_sprite_left: []const u8 = "sprites/missingno.png",

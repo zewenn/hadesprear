@@ -31,10 +31,10 @@ pub var delete_mode_last_frame: bool = false;
 
 pub var HandsWeapon: Item = undefined;
 
-pub var bag: [items_bag_size]?conf.Item = [_]?conf.Item{null} ** items_bag_size;
+pub var bag: []?conf.Item = undefined;
 pub var sorted_bag: []*?conf.Item = undefined;
 
-pub var spell_bag: [spells_bag_size]?conf.Item = [_]?conf.Item{null} ** spells_bag_size;
+pub var spell_bag: []?conf.Item = undefined;
 pub var sorted_spell_bag: []*?conf.Item = undefined;
 
 pub var animation_mapping_dummy: e.entities.Entity = undefined;
@@ -80,8 +80,10 @@ pub const equippedbar = struct {
         }
 
         item.equipped = true;
+        std.log.debug("item.equipped", .{});
 
         sortBag();
+        std.log.debug("bag sorted", .{});
         updateGUI() catch {};
         autoSelect() catch {};
     }
@@ -114,12 +116,17 @@ pub const equippedbar = struct {
     }
 
     pub fn autoEquip() void {
+        std.log.debug("Loop start", .{});
+        defer std.log.debug("Loop end", .{});
         for (bag, 0..) |itemornull, index| {
+            std.log.debug("{d}: {any}", .{ index, itemornull });
             if (itemornull == null) continue;
-            const item: *Item = &(bag[index].?);
+            const item = &(bag[index].?);
             if (!item.equipped) continue;
 
+            std.log.debug("Equipping", .{});
             equippedbar.equip(item);
+            std.log.debug("Equipping - Done", .{});
         }
     }
 
@@ -304,7 +311,8 @@ pub const preview = struct {
         level_number.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, level_string);
         level_number.is_content_heap = true;
 
-        name.contents = item.name;
+        name.contents = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, item.name);
+        name.is_content_heap = true;
 
         try toNamedHeapString(damage, "DAMAGE", item.damage, false);
         try toNamedHeapString(health, "HEALTH", item.health, false);
@@ -363,6 +371,9 @@ pub const preview = struct {
     pub fn free() void {
         if (level_number.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, level_number.contents.?);
+        }
+        if (name.is_content_heap) {
+            e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, name.contents.?);
         }
         if (damage.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, damage.contents.?);
@@ -477,7 +488,7 @@ pub fn sortBag() void {
 pub fn pickUp(item: conf.Item) bool {
     const iterated_bag: []?conf.Item = switch (item.T) {
         .spell => @constCast(&spell_bag),
-        else => @constCast(&bag),
+        else => bag,
     };
 
     for (iterated_bag, 0..) |it, index| {
@@ -981,7 +992,7 @@ inline fn EquippedSlotButton(
                     }
                     const it = item.?;
                     if (delete_mode) {
-                        if (!std.mem.eql(u8, std.mem.span(it.name), std.mem.span(HandsWeapon.name))) {
+                        if (!std.mem.eql(u8, it.name, HandsWeapon.name)) {
                             equippedbar.unequip(it);
                             // const x = @as(*?Item, @ptrCast(it));
                             // x.* = null;
@@ -1144,6 +1155,16 @@ pub fn toggle() void {
 }
 
 pub fn awake() !void {
+    bag = try e.ALLOCATOR.alloc(?Item, items_bag_size);
+    for (bag, 0..) |_, index| {
+        bag[index] = null;
+    }
+
+    spell_bag = try e.ALLOCATOR.alloc(?Item, spells_bag_size);
+    for (spell_bag, 0..) |_, index| {
+        spell_bag[index] = null;
+    }
+
     animation_mapping_dummy = e.entities.Entity.dummy();
     dummy_animator = e.Animator.init(&e.ALLOCATOR, &animation_mapping_dummy);
     {
@@ -2244,53 +2265,60 @@ pub fn init() !void {
     preview.select();
     preview.hideElement();
 
-    _ = pickUpSort(
-        usePrefab(prefabs.legendaries.weapons.legendary_sword),
-    );
-    _ = pickUpSort(
-        usePrefab(prefabs.epics.weapons.piercing_sword),
-    );
-    _ = pickUpSort(
-        usePrefab(prefabs.epics.amethysts.test_amethyst),
-    );
-    _ = pickUpSort(
-        usePrefab(prefabs.legendaries.weapons.staff),
-    );
-    _ = pickUpSort(
-        usePrefab(prefabs.legendaries.weapons.daggers),
-    );
-    _ = pickUpSort(
-        usePrefab(prefabs.legendaries.weapons.claymore),
-    );
-    _ = pickUpSort(
-        usePrefab(.{
-            .id = e.uuid.v7.new(),
-            .T = .spell,
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.legendaries.weapons.legendary_sword),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.epics.weapons.piercing_sword),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.epics.amethysts.test_amethyst),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.legendaries.weapons.staff),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.legendaries.weapons.daggers),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.legendaries.weapons.claymore),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(.{
+    //         .id = e.uuid.v7.new(),
+    //         .T = .spell,
 
-            .rarity = .legendary,
+    //         .rarity = .legendary,
 
-            .name = "Spell",
+    //         .name = "Spell",
 
-            .icon = "sprites/entity/enemies/brute/left_0.png",
-        }),
-    );
-    _ = pickUpSort(
-        usePrefab(.{
-            .id = e.uuid.v7.new(),
-            .T = .spell,
+    //         .icon = "sprites/entity/enemies/brute/left_0.png",
+    //     }),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(.{
+    //         .id = e.uuid.v7.new(),
+    //         .T = .spell,
 
-            .rarity = .common,
+    //         .rarity = .common,
 
-            .name = "Spell",
+    //         .name = "Spell",
 
-            .icon = "sprites/entity/enemies/brute/right_0.png",
-        }),
-    );
+    //         .icon = "sprites/entity/enemies/brute/right_0.png",
+    //     }),
+    // );
+
+    loadFromSave();
+    std.log.debug("asd", .{});
+    std.log.debug("bag: {any}", .{bag});
 
     equippedbar.autoEquip();
+    std.log.debug("autoequipped", .{});
 
     sortBag();
+    std.log.debug("bag sorted", .{});
     try updateGUI();
+    std.log.debug("gui updated", .{});
 }
 
 pub fn update() !void {
@@ -2356,6 +2384,9 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
+    try e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json");
+    try e.saveloader.save(e.ALLOCATOR, spell_bag, "saved/spell_bag.json");
+
     e.ALLOCATOR.free(item_slots);
     e.ALLOCATOR.free(spell_slots);
     e.ALLOCATOR.free(sorted_bag);
@@ -2364,4 +2395,27 @@ pub fn deinit() !void {
 
     dummy_animator.deinit();
     animation_mapping_dummy.deinit();
+
+    e.ALLOCATOR.free(bag);
+    e.ALLOCATOR.free(spell_bag);
+}
+
+fn loadFromSave() void {
+    // BAG
+    // ------------------------------------------------------------------------------------
+    const loaded_bag = e.saveloader.load([]?Item, e.ARENA, "saved/bag.json");
+
+    const loaded_bag_unwrapped = if (loaded_bag) |x| x else return;
+    defer e.ARENA.free(loaded_bag_unwrapped);
+
+    std.mem.copyForwards(?Item, bag, loaded_bag_unwrapped);
+
+    // SPELL BAG
+    // ------------------------------------------------------------------------------------
+    const loaded_spell_bag = e.saveloader.load([]?Item, e.ARENA, "saved/spell_bag.json");
+
+    const loaded_spell_bag_unwrapped = if (loaded_spell_bag) |x| x else return;
+    defer e.ARENA.free(loaded_spell_bag_unwrapped);
+
+    std.mem.copyForwards(?Item, spell_bag, loaded_spell_bag_unwrapped);
 }

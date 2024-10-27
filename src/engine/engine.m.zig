@@ -26,6 +26,8 @@ pub usingnamespace rl;
 pub const uuid = @import("uuid");
 
 pub var ALLOCATOR: Allocator = undefined;
+pub var ARENA: Allocator = undefined;
+var arena_alloc: std.heap.ArenaAllocator = undefined;
 
 pub const entities = @import("../config.zig").entities;
 pub const components = @import("./entities/components.zig");
@@ -39,6 +41,8 @@ pub const window = display.window;
 pub const camera = display.camera;
 
 pub const MISSINGNO = "sprites/missingno.png";
+
+pub const saveloader = @import("./saveloader.zig");
 
 pub fn loadf32(v: anytype) f32 {
     return switch (@typeInfo(@TypeOf(v))) {
@@ -86,6 +90,10 @@ pub fn UUIDV7() ![]u8 {
 
 pub fn init(allocator: *Allocator) !void {
     ALLOCATOR = allocator.*;
+
+    arena_alloc = std.heap.ArenaAllocator.init(allocator.*);
+    ARENA = arena_alloc.allocator();
+
     time.init(allocator);
 
     entities.init(allocator);
@@ -116,6 +124,8 @@ pub fn deinit() !void {
 
     entities.deinit();
     time.deinit();
+
+    arena_alloc.deinit();
 }
 
 pub fn update() !void {

@@ -1,6 +1,7 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
+const Colour = @import("../display/Colour.zig");
 
 const entities = @import("../engine.m.zig").entities;
 const z = @import("../z/z.m.zig");
@@ -25,10 +26,10 @@ rotation: f32 = 0,
 width: Unit = Unit.init(64, .px),
 height: Unit = Unit.init(64, .px),
 
-color: rl.Color = rl.Color.black,
+color: Colour.HEX = Colour.black,
 
 background: struct {
-    color: ?rl.Color = null,
+    color: ?Colour.HEX = null,
     image: ?[]const u8 = null,
     fill: enum {
         scale,
@@ -45,7 +46,7 @@ font: struct {
             .x = 0,
             .y = 0,
         },
-        color: rl.Color,
+        color: u32,
     } = null,
 } = .{},
 

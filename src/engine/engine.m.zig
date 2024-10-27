@@ -13,6 +13,7 @@ pub const zString = @import("./strings.m.zig").String;
 pub const collision = @import("./collision.m.zig");
 
 pub const display = @import("./display/display.m.zig");
+pub const Colour = display.Colour;
 
 pub const GUI = @import("./gui/gui.m.zig");
 pub const Animator = @import("./animator/Animator.zig");
@@ -95,6 +96,7 @@ pub fn init(allocator: *Allocator) !void {
     ARENA = arena_alloc.allocator();
 
     time.init(allocator);
+    Colour.init(ALLOCATOR);
 
     entities.init(allocator);
 
@@ -123,6 +125,8 @@ pub fn deinit() !void {
     events.deinit();
 
     entities.deinit();
+    Colour.deinit();
+
     time.deinit();
 
     arena_alloc.deinit();

@@ -12,7 +12,7 @@ const z = @import("../z/z.m.zig");
 // ==================================================
 
 pub const window = @import("./window.zig");
-
+pub const Colour = @import("Colour.zig");
 pub const camera = @import("./camera.zig");
 
 // ==================================================
@@ -49,7 +49,7 @@ pub fn update() !void {
     rl.beginDrawing();
     defer rl.endDrawing();
 
-    rl.clearBackground(rl.Color.white);
+    rl.clearBackground(Colour.make(Colour.RENDER_FILL_BACKGROUND));
 
     // ==============================================
 
@@ -198,10 +198,10 @@ pub fn update() !void {
         var origin = transform.anchor.?;
 
         BackgroundColorRendering: {
-            var background_color: rl.Color = undefined;
-            if (style.background.color) |c| {
-                background_color = c;
-            } else break :BackgroundColorRendering;
+            const background_color: rl.Color = if (style.background.color) |c|
+                Colour.make(c)
+            else
+                break :BackgroundColorRendering;
 
             rl.drawRectanglePro(
                 rl.Rectangle.init(
@@ -365,7 +365,7 @@ pub fn update() !void {
                     transform.rotation.z,
                     fs,
                     style.font.spacing,
-                    shadow.color,
+                    Colour.make(shadow.color),
                 );
             }
             rl.drawTextPro(
@@ -377,7 +377,7 @@ pub fn update() !void {
                 transform.rotation.z,
                 fs,
                 style.font.spacing,
-                style.color,
+                Colour.make(style.color),
             );
         }
     }
@@ -386,7 +386,7 @@ pub fn update() !void {
 fn drawTetxure(
     texture: rl.Texture,
     transform: entities.Transform,
-    tint: rl.Color,
+    tint: Colour.HEX,
     ignore_cam: bool,
     collider: ?entities.RectangleVertices,
 ) void {
@@ -441,7 +441,7 @@ fn drawTetxure(
         ),
         origin,
         transform.rotation.z,
-        tint,
+        Colour.make(tint),
     );
 
     // Debug

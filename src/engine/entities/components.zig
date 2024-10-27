@@ -68,7 +68,7 @@ pub const Display = struct {
 
     sprite: []const u8,
     scaling: scalings = .normal,
-    tint: rl.Color = rl.Color.white,
+    tint: u32 = 0xffffffff,
     ignore_world_pos: bool = false,
     layer: layers = .foreground,
 };

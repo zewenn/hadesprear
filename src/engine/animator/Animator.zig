@@ -127,7 +127,7 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
     }
 
     if (kf.tint) |v| {
-        self.display.tint = v;
+        self.display.tint = @intCast(v.toInt());
     }
 
     // Dummy

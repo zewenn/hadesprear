@@ -275,12 +275,12 @@ pub fn update() !void {
                         .font = .{
                             .size = 16,
                             .shadow = .{
-                                .color = e.Color.dark_purple,
+                                .color = e.Colour.dark_purple,
                                 .offset = e.Vec2(2, 2),
                             },
                         },
                         .z_index = -1,
-                        .color = e.Color.red,
+                        .color = e.Colour.red,
                         .translate = .{
                             .x = .center,
                             .y = .center,

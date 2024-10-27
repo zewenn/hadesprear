@@ -80,10 +80,8 @@ pub const equippedbar = struct {
         }
 
         item.equipped = true;
-        std.log.debug("item.equipped", .{});
 
         sortBag();
-        std.log.debug("bag sorted", .{});
         updateGUI() catch {};
         autoSelect() catch {};
     }
@@ -116,17 +114,19 @@ pub const equippedbar = struct {
     }
 
     pub fn autoEquip() void {
-        std.log.debug("Loop start", .{});
-        defer std.log.debug("Loop end", .{});
         for (bag, 0..) |itemornull, index| {
-            std.log.debug("{d}: {any}", .{ index, itemornull });
             if (itemornull == null) continue;
             const item = &(bag[index].?);
             if (!item.equipped) continue;
 
-            std.log.debug("Equipping", .{});
-            equippedbar.equip(item);
-            std.log.debug("Equipping - Done", .{});
+            equippedbar.equipSpell(item, if (item.equipped_spell_slot) |x| x else .q);
+        }
+        for (spell_bag, 0..) |itemornull, index| {
+            if (itemornull == null) continue;
+            const item = &(spell_bag[index].?);
+            if (!item.equipped) continue;
+
+            equippedbar.equipSpell(item, if (item.equipped_spell_slot) |x| x else .q);
         }
     }
 
@@ -182,7 +182,7 @@ var spell_slots: []*GUI.GUIElement = undefined;
 
 const SLOT_SIZE: f32 = 24 * 5;
 const SPACING_SIZE: f32 = SLOT_SIZE / 4;
-const PREVIEW_FONT_COLOR = e.Color.white;
+const PREVIEW_FONT_COLOR: e.Colour.HEX = e.Colour.white;
 
 const WIDTH_VW: f32 = SLOT_SIZE * bag_page_cols + SPACING_SIZE * (bag_page_cols - 1);
 const HEIGHT_VW: f32 = SLOT_SIZE * bag_page_rows + SPACING_SIZE * (bag_page_rows - 1);
@@ -241,14 +241,9 @@ pub const preview = struct {
         },
 
         .font = .{
-            .size = 12,
+            .size = 14,
             .shadow = .{
-                .color = e.Color{
-                    .r = 50,
-                    .g = 50,
-                    .b = 50,
-                    .a = 255,
-                },
+                .color = e.Colour.black,
                 .offset = e.Vec2(2, 2),
             },
         },
@@ -362,7 +357,7 @@ pub const preview = struct {
         };
         equip.options.style.color = switch (item.unequippable) {
             true => PREVIEW_FONT_COLOR,
-            false => e.Color.gray,
+            false => e.Colour.gray,
         };
 
         showElement();
@@ -467,8 +462,7 @@ fn sortItems(_: void, a: *?conf.Item, b: *?conf.Item) bool {
     if (a.*.?.rarity == .common and b.*.?.rarity != .common) return false;
     if (a.*.?.rarity == .epic and b.*.?.rarity == .legendary) return false;
 
-    std.log.warn("Something went wrong in the sort...", .{});
-    return false;
+    return a.*.?.name[0] <= b.*.?.name[0];
 }
 
 /// Sorts the bag, result is in `sorted_bag`.
@@ -492,7 +486,7 @@ pub fn sortBag() void {
 /// `false` when the inventory is full.
 pub fn pickUp(item: conf.Item) bool {
     const iterated_bag: []?conf.Item = switch (item.T) {
-        .spell => @constCast(&spell_bag),
+        .spell => spell_bag,
         else => bag,
     };
 
@@ -664,7 +658,7 @@ pub fn updateGUI() !void {
             };
 
             shower.options.style.background.image = null;
-            element.options.style.background.image = "sprites/gui/spell_slot_empty.png";
+            element.options.style.background.image = "sprites/gui/slots/24x24/empty_spell.png";
         }
     }
 
@@ -746,7 +740,13 @@ pub fn updateGUI() !void {
             };
 
             shower.options.style.background.image = null;
-            element.options.style.background.image = "sprites/gui/item_slot_empty.png";
+            element.options.style.background.image = switch (etag) {
+                .spell => "sprites/gui/slots/24x24/empty_spell.png",
+                .weapon => "sprites/gui/slots/24x24/empty_weapon.png",
+                .amethyst => "sprites/gui/slots/24x24/empty_amethyst.png",
+                .ring => "sprites/gui/slots/24x24/empty_ring.png",
+                else => "sprites/gui/item_slot_empty.png",
+            };
             continue;
         }
 
@@ -991,6 +991,26 @@ inline fn EquippedSlotButton(
                         .amethyst => equippedbar.amethyst,
                         .wayfinder => equippedbar.wayfinder,
                     };
+                    //
+                    if (item_type == .spell and spell_equip_mode) {
+                        equippedbar.equipSpell(preview.selected_item.?, Res: {
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_q"))
+                                break :Res .q;
+                            //
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_e"))
+                                break :Res .e;
+                            //
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_r"))
+                                break :Res .r;
+                            //
+                            if (std.mem.containsAtLeast(u8, id, 1, "spell_x"))
+                                break :Res .x;
+                            //
+                            break :Res .q;
+                        });
+                        return;
+                    }
+                    //
                     if (item == null) {
                         preview.hideElement();
                         return;
@@ -1026,12 +1046,12 @@ inline fn EquippedSlotButton(
                     .image = "sprites/entity/player/weapons/gloves/left.png",
                     .fill = .contain,
                 },
-                .color = e.Color.white,
+                .color = e.Colour.white,
                 .font = .{
                     .size = 28,
                     .shadow = .{
                         .offset = e.Vec2(2, 2),
-                        .color = e.Color.gray,
+                        .color = e.Colour.black,
                     },
                 },
             },
@@ -1351,7 +1371,7 @@ pub fn awake() !void {
             .id = "InventoryParentBackground",
             .style = .{
                 .background = .{
-                    .color = e.Color.init(0, 0, 0, 128),
+                    .color = 0x00000088,
                 },
                 .top = u("-100%"),
                 .left = u("50%"),
@@ -1738,7 +1758,7 @@ pub fn awake() !void {
                                             .image = "sprites/entity/player/weapons/gloves/left.png",
                                             .fill = .contain,
                                         },
-                                        .rotation = 135,
+                                        .rotation = 0,
                                         .translate = .{
                                             .x = .center,
                                             .y = .center,
@@ -2175,14 +2195,14 @@ pub fn awake() !void {
                                         .left = u("00%"),
                                         .width = u("100%"),
                                         .height = u("100%"),
-                                        .color = e.Color.black,
+                                        .color = e.Colour.black,
                                         .translate = .{
                                             .x = .center,
                                             .y = .center,
                                         },
                                     },
                                     .hover = .{
-                                        .color = e.Color.black,
+                                        .color = e.Colour.black,
                                         .background = .{
                                             .image = "sprites/gui/page_btn.png",
                                         },
@@ -2222,7 +2242,7 @@ pub fn awake() !void {
                                         .left = u("-4x"),
                                         .z_index = 10,
                                         .background = .{
-                                            .color = e.Color.blue,
+                                            .color = e.Colour.blue,
                                         },
                                         .translate = .{
                                             .x = .center,
@@ -2293,18 +2313,6 @@ pub fn init() !void {
     //         .id = e.uuid.v7.new(),
     //         .T = .spell,
 
-    //         .rarity = .legendary,
-
-    //         .name = "Spell",
-
-    //         .icon = "sprites/entity/enemies/brute/left_0.png",
-    //     }),
-    // );
-    // _ = pickUpSort(
-    //     usePrefab(.{
-    //         .id = e.uuid.v7.new(),
-    //         .T = .spell,
-
     //         .rarity = .common,
 
     //         .name = "Spell",
@@ -2314,16 +2322,28 @@ pub fn init() !void {
     // );
 
     loadFromSave();
-    std.log.debug("asd", .{});
-    std.log.debug("bag: {any}", .{bag});
+    // _ = pickUpSort(
+    //     usePrefab(.{
+    //         .id = e.uuid.v7.new(),
+    //         .T = .spell,
+
+    //         .rarity = .legendary,
+
+    //         .name = "Spell",
+
+    //         .icon = "sprites/entity/enemies/brute/left_0.png",
+    //     }),
+    // // );
+
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.epics.amethysts.normal_amethyst),
+    // );
 
     equippedbar.autoEquip();
-    std.log.debug("autoequipped", .{});
 
     sortBag();
-    std.log.debug("bag sorted", .{});
+
     try updateGUI();
-    std.log.debug("gui updated", .{});
 }
 
 pub fn update() !void {

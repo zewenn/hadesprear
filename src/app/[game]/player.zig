@@ -14,10 +14,12 @@ const HIT_GLOVE_DISTANCE: f32 = 45;
 const HIT_PLATES_ROTATION: f32 = 42.5;
 const PROJECTILE_LIFETIME: comptime_float = 2;
 
-const WALK_LEFT_0 = "sprites/entity/player/left_0.png";
-const WALK_LEFT_1 = "sprites/entity/player/left_1.png";
-const WALK_RIGHT_0 = "sprites/entity/player/right_0.png";
-const WALK_RIGHT_1 = "sprites/entity/player/right_1.png";
+const WALK_LEFT_0 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/left_0.png";
+const WALK_LEFT_1 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/left_1.png";
+const WALK_RIGHT_0 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/right_0.png";
+const WALK_RIGHT_1 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/right_1.png";
+
+const METAL_MODE = true;
 
 pub var Player = e.entities.Entity{
     .id = "Player",
@@ -192,12 +194,12 @@ pub fn init() !void {
                 .font = .{
                     .size = 22,
                     .shadow = .{
-                        .color = e.Color.dark_green,
+                        .color = e.Colour.dark_green,
                         .offset = e.Vec2(2, 2),
                     },
                 },
                 .z_index = -1,
-                .color = e.Color.green,
+                .color = e.Colour.green,
                 .translate = .{
                     .x = .center,
                     .y = .center,
@@ -215,12 +217,12 @@ pub fn init() !void {
                 .font = .{
                     .size = 22,
                     .shadow = .{
-                        .color = e.Color.dark_purple,
+                        .color = e.Colour.dark_purple,
                         .offset = e.Vec2(2, 2),
                     },
                 },
                 .z_index = -1,
-                .color = e.Color.gray,
+                .color = e.Colour.gray,
                 .translate = .{
                     .x = .center,
                     .y = .center,

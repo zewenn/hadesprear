@@ -164,13 +164,14 @@ pub const prefabs = struct {
             });
         };
         pub const amethysts = struct {
-            pub const test_amethyst: conf.Item = .{
+            pub const normal_amethyst: conf.Item = .{
                 .T = .amethyst,
                 .rarity = .epic,
                 .damage = 10,
                 .weapon_projectile_scale_light = e.Vec2(64, 64),
 
-                .name = "Epic Amethyst",
+                .name = "Amethyst",
+                .icon = "sprites/items/common/amethyst/normal.png",
             };
         };
     };

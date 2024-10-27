@@ -368,6 +368,11 @@ pub const preview = struct {
         showElement();
     }
 
+    pub fn repaint() !void {
+        if (preview.selected_item == null) return;
+        try preview.show(selected_item.?);
+    }
+
     pub fn free() void {
         if (level_number.is_content_heap) {
             e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, level_number.contents.?);
@@ -2374,10 +2379,17 @@ pub fn update() !void {
 
             sortBag();
             try updateGUI();
-            try preview.show(preview.selected_item.?);
+            try preview.repaint();
         }
     } else if (e.isKeyPressed(.key_e) and preview.is_shown) {
         try preview.equippButtonCallback();
+    }
+
+    if (e.isKeyPressed(.key_r) and e.isKeyDown(.key_left_control)) {
+        loadFromSave();
+        sortBag();
+        try updateGUI();
+        try preview.repaint();
     }
 
     delete_mode_last_frame = delete_mode;

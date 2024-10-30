@@ -224,9 +224,10 @@ pub const Hands = struct {
                 );
 
                 _ = light
-                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                    .chain(1, .{ .rotation = -10, .ry = 48, .rx = 24 })
-                    .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .append(.{ .rotation = -10, .ry = 48, .rx = 24 })
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .close();
 
                 try this.right_animator.chain(light);
 
@@ -239,11 +240,12 @@ pub const Hands = struct {
                 );
 
                 _ = heavy
-                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                    .chain(1, .{ .rotation = -10, .ry = -24, .rx = -12 })
-                    .chain(2, .{ .rotation = -10, .ry = 64, .rx = 24 })
-                    .chain(3, .{ .rotation = -10, .ry = 64, .rx = 24 })
-                    .chain(4, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .append(.{ .rotation = -10, .ry = -24, .rx = -12 })
+                    .append(.{ .rotation = -10, .ry = 64, .rx = 24 })
+                    .append(.{ .rotation = -10, .ry = 64, .rx = 24 })
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .close();
 
                 try this.right_animator.chain(heavy);
 
@@ -256,11 +258,12 @@ pub const Hands = struct {
                 );
                 {
                     _ = dash
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(1, .{ .rotation = -10, .ry = -24, .rx = -12 })
-                        .chain(2, .{ .rotation = -10, .ry = 64, .rx = 24 })
-                        .chain(3, .{ .rotation = -10, .ry = 64, .rx = 24 })
-                        .chain(4, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .rotation = -10, .ry = -24, .rx = -12 })
+                        .append(.{ .rotation = -10, .ry = 64, .rx = 24 })
+                        .append(.{ .rotation = -10, .ry = 64, .rx = 24 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
 
                 try this.right_animator.chain(dash);
@@ -281,10 +284,11 @@ pub const Hands = struct {
                 );
                 {
                     _ = light
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(33, .{ .rotation = 0, .ry = 1, .rx = 0 })
-                        .chain(66, .{ .rotation = 10, .ry = 48 })
-                        .chain(99, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .rotation = 0, .ry = 1, .rx = 0 })
+                        .append(.{ .rotation = 10, .ry = 48 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
 
                 try this.right_animator.chain(light);

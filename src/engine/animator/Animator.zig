@@ -249,14 +249,6 @@ pub fn update(self: *Self) void {
         var percent = (anim.timing_fn(0, 1, interpolation_factor) - (anim.timing_fn(0, 1, (loadf32(anim.current_index) / 100)))) / (anim.timing_fn(0, 1, loadf32(anim.next_index) / 100) - (anim.timing_fn(0, 1, (loadf32(anim.current_index) / 100))));
         percent = @max(0, @min(1, percent));
 
-        // std.log.info("\n\n", .{});
-
-        std.log.info("p: {d:.3}", .{interpolation_factor});
-        std.log.info("%: {d:.3}", .{percent});
-        std.log.info("cf: {any}", .{anim.current_frame});
-        std.log.info("c: {any}", .{anim.current_index});
-        std.log.info("n: {any}", .{anim.next_index});
-
         self.applyKeyframe(
             anim.interpolateKeyframes(
                 curr,

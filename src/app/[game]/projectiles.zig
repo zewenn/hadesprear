@@ -196,6 +196,8 @@ pub fn summonMultiple(
         else => weapon.weapon_light,
     };
 
+    const is_crit = e.loadf32(std.crypto.random.intRangeAtMostBiased(i32, 0, 100)) < weapon.crit_rate;
+
     for (strct.projectile_array) |pa| {
         const plus_angle: f32 = if (pa) |p| p else continue;
 
@@ -211,7 +213,7 @@ pub fn summonMultiple(
                 entity.entity_stats.?.damage +
                 bonus_damage +
                 weapon.damage *
-                strct.multiplier,
+                strct.multiplier * if (is_crit) weapon.crit_damage_multiplier else 1,
             .health = strct.projectile_health,
             .bleed_per_second = strct.projectile_bps,
             .sprite = strct.sprite,

@@ -416,8 +416,8 @@ pub const Blessings = enum {
     blood,
     /// Energised on hit @done
     kin,
+    /// Upscale the projectiles @done
+    steel,
     /// Increased crit rate
     death,
-    /// Upscale the projectiles
-    steel,
 };

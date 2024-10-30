@@ -2328,11 +2328,63 @@ pub fn init() !void {
 
     //         .rarity = .legendary,
 
+    //         .spell_blessings = conf.createTypeArrayUnknownLength(
+    //             conf.Blessings,
+    //             @constCast(&[_]?conf.Blessings{
+    //                 .steel,
+    //                 .steel,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fire,
+    //                 .fire,
+    //                 .fire,
+    //                 .fire,
+    //                 .zephyr,
+    //                 .zephyr,
+    //             }),
+    //         ),
+
     //         .name = "Spell",
 
     //         .icon = "sprites/entity/enemies/brute/left_0.png",
     //     }),
-    // // );
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(.{
+    //         .id = e.uuid.v7.new(),
+    //         .T = .spell,
+
+    //         .rarity = .epic,
+
+    //         .spell_blessings = conf.createTypeArrayUnknownLength(
+    //             conf.Blessings,
+    //             @constCast(&[_]?conf.Blessings{
+    //                 .zephyr,
+    //                 .zephyr,
+    //                 .zephyr,
+    //                 .zephyr,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .fracture,
+    //                 .curse,
+    //                 .curse,
+    //                 .curse,
+    //                 .curse,
+    //                 .blood,
+    //                 .blood,
+    //                 .blood,
+    //             }),
+    //         ),
+
+    //         .name = "Spell",
+
+    //         .icon = "sprites/entity/enemies/brute/left_0.png",
+    //     }),
+    // );
 
     // _ = pickUpSort(
     //     usePrefab(prefabs.epics.amethysts.normal_amethyst),

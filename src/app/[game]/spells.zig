@@ -22,6 +22,7 @@ const TMType = e.time.TimeoutHandler(struct {
     energised_strength: usize,
     blood: f32,
     scale: e.Vector2,
+    crit_rate: f32,
 });
 var tm: TMType = undefined;
 
@@ -41,7 +42,7 @@ pub fn summon(spell: conf.Item, entity: *e.Entity, side: conf.ProjectileSide, bo
     if (spell.T != .spell) return;
 
     // curse
-    const projectile_rounds = countBlessing(spell.spell_blessings, .curse);
+    const projectile_rounds = 1 + countBlessing(spell.spell_blessings, .curse);
 
     // fire
     const damage = balancing.powerScaleCurve(10 * countBlessing(spell.spell_blessings, .fire)) * @max(1, bonus_damage);
@@ -62,9 +63,14 @@ pub fn summon(spell: conf.Item, entity: *e.Entity, side: conf.ProjectileSide, bo
     const energised_strength = countBlessing(spell.spell_blessings, .kin);
     const blood = countBlessing(spell.spell_blessings, .blood);
 
+    // Steel
     const steel = e.loadf32(countBlessing(spell.spell_blessings, .steel));
-    const width: f32 = 64 * (steel * 14 / 12);
-    const height = 64 * (steel * 13 / 12);
+    const width: f32 = 64 * (@max(1, steel) * 14 / 12);
+    const height = 64 * (@max(1, steel) * 13 / 12);
+
+    // Death
+    const death = e.loadf32(countBlessing(spell.spell_blessings, .death));
+    const crit_rate = @min(100, death * 10);
 
     for (0..projectile_rounds) |i| {
         try tm.setTimeout(
@@ -83,7 +89,9 @@ pub fn summon(spell: conf.Item, entity: *e.Entity, side: conf.ProjectileSide, bo
                                 .projectile_on_hit_effect = .energised,
                                 .projectile_on_hit_strength_multiplier = e.loadf32(args.energised_strength * 2),
                                 .projectile_scale = args.scale,
+                                .sprite = "sprites/projectiles/player/generic/spell.png",
                             },
+                            .crit_rate = args.crit_rate,
                         }),
                         // 0,
                         args.damage,
@@ -105,6 +113,7 @@ pub fn summon(spell: conf.Item, entity: *e.Entity, side: conf.ProjectileSide, bo
                 .energised_strength = energised_strength,
                 .blood = e.loadf32(blood),
                 .scale = e.Vec2(width, height),
+                .crit_rate = crit_rate,
             },
             @floatCast(e.loadf32(i + 1) * summon_speed),
         );

@@ -389,40 +389,34 @@ pub fn update() !void {
                 );
             }
         }
-        if (e.isKeyPressed(.key_q)) {
+        if (e.isKeyPressed(.key_q) and inventory.equippedbar.spells.q != null) {
             try spells.summon(
-                usePrefab(.{
-                    .id = e.uuid.v7.new(),
-                    .T = .spell,
-
-                    .rarity = .legendary,
-
-                    .name = "Spell",
-
-                    .icon = "sprites/entity/enemies/brute/left_0.png",
-
-                    .spell_blessings = conf.createTypeArrayUnknownLength(
-                        conf.Blessings,
-                        @constCast(&[_]?conf.Blessings{
-                            .curse,
-                            .curse,
-                            .curse,
-                            .curse,
-                            .fracture,
-                            .fracture,
-                            .steel,
-                            .steel,
-                            .steel,
-                            .steel,
-                            .zephyr,
-                            .zephyr,
-                            .zephyr,
-                            .zephyr,
-                            .zephyr,
-                            .zephyr,
-                        }),
-                    ),
-                }),
+                inventory.equippedbar.spells.q.?.*,
+                &Player,
+                .player,
+                Player.entity_stats.?.damage,
+            );
+            std.log.debug("asd", .{});
+        }
+        if (e.isKeyPressed(.key_e) and inventory.equippedbar.spells.e != null) {
+            try spells.summon(
+                inventory.equippedbar.spells.e.?.*,
+                &Player,
+                .player,
+                Player.entity_stats.?.damage,
+            );
+        }
+        if (e.isKeyPressed(.key_r) and inventory.equippedbar.spells.r != null) {
+            try spells.summon(
+                inventory.equippedbar.spells.r.?.*,
+                &Player,
+                .player,
+                Player.entity_stats.?.damage,
+            );
+        }
+        if (e.isKeyPressed(.key_x) and inventory.equippedbar.spells.x != null) {
+            try spells.summon(
+                inventory.equippedbar.spells.x.?.*,
                 &Player,
                 .player,
                 Player.entity_stats.?.damage,

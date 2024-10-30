@@ -128,6 +128,8 @@ pub const Hands = struct {
         dash,
     };
 
+    const ANIM_TIME_MODIFIER = 1.5;
+
     const Self = @This();
 
     left: *e.entities.Entity,
@@ -165,13 +167,14 @@ pub const Hands = struct {
                     allocator,
                     "sword_hit_light",
                     e.Animator.interpolation.ease_in_out,
-                    0.15,
+                    0.05,
                 );
 
                 _ = light
-                    .chain(0, .{ .rotation = 0 })
-                    .chain(1, .{ .rotation = -105 })
-                    .chain(2, .{ .rotation = 0 });
+                    .append(.{ .rotation = 0 })
+                    .append(.{ .rotation = -105 })
+                    .append(.{ .rotation = 0 })
+                    .close();
 
                 try this.right_animator.chain(light);
 
@@ -183,9 +186,10 @@ pub const Hands = struct {
                 );
 
                 _ = heavy
-                    .chain(0, .{ .rotation = 0 })
-                    .chain(1, .{ .rotation = -180 })
-                    .chain(2, .{ .rotation = 0 });
+                    .append(.{ .rotation = 0 })
+                    .append(.{ .rotation = -180 })
+                    .append(.{ .rotation = 0 })
+                    .close();
 
                 try this.right_animator.chain(heavy);
 
@@ -197,10 +201,11 @@ pub const Hands = struct {
                 );
 
                 _ = dash
-                    .chain(0, .{ .rotation = 0, .ry = 0 })
-                    .chain(25, .{ .ry = 24, .rotation = -60 })
-                    .chain(50, .{ .ry = 128, .rx = -1 * right_hand.transform.scale.x / 2, .rotation = -60 })
-                    .chain(100, .{ .ry = 0, .rotation = 0 });
+                    .append(.{ .rotation = 0, .ry = 0 })
+                    .append(.{ .ry = 24, .rotation = -60 })
+                    .append(.{ .ry = 128, .rx = -1 * right_hand.transform.scale.x / 2, .rotation = -60 })
+                    .append(.{ .ry = 0, .rotation = 0 })
+                    .close();
 
                 try this.right_animator.chain(dash);
                 break :Right;
@@ -272,12 +277,14 @@ pub const Hands = struct {
                     "daggers_hit_light",
                     e.Animator.interpolation.ease_in_out,
                     0.15,
+                    // 2.5,
                 );
                 {
                     _ = light
                         .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(1, .{ .rotation = 10, .ry = 48 })
-                        .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .chain(33, .{ .rotation = 0, .ry = 1, .rx = 0 })
+                        .chain(66, .{ .rotation = 10, .ry = 48 })
+                        .chain(99, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.right_animator.chain(light);
@@ -291,9 +298,10 @@ pub const Hands = struct {
                 );
                 {
                     _ = heavy
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(1, .{ .rotation = 0, .ry = 80 })
-                        .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .rotation = 0, .ry = 80 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
 
                 try this.right_animator.chain(heavy);
@@ -307,9 +315,10 @@ pub const Hands = struct {
                 );
                 {
                     _ = dash
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(25, .{ .ry = -24, .rx = 12, .rotation = -360 })
-                        .chain(100, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .ry = -24, .rx = 12, .rotation = -360 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
 
                 try this.right_animator.chain(dash);
@@ -324,10 +333,10 @@ pub const Hands = struct {
                 );
                 {
                     _ = light
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(1, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(2, .{ .rotation = -10, .ry = 48 })
-                        .chain(3, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .rotation = -10, .ry = 48, .rx = 0 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
 
                 try this.left_animator.chain(light);
@@ -341,9 +350,10 @@ pub const Hands = struct {
                 );
                 {
                     _ = heavy
-                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                        .chain(2, .{ .rotation = 0, .ry = 80 })
-                        .chain(3, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .append(.{ .rotation = 0, .ry = 80 })
+                        .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .close();
                 }
                 try this.left_animator.chain(heavy);
 
@@ -356,9 +366,10 @@ pub const Hands = struct {
                 );
 
                 _ = dash
-                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
-                    .chain(25, .{ .ry = -24, .rx = 12, .rotation = -360 })
-                    .chain(100, .{ .rotation = 0, .ry = 0, .rx = 0 });
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .append(.{ .ry = -24, .rx = 12, .rotation = -360 })
+                    .append(.{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .close();
 
                 try this.left_animator.chain(dash);
                 break :Left;
@@ -367,7 +378,7 @@ pub const Hands = struct {
             break :DaggersAnimation;
         }
         // Claymore animation
-        SwordAnimation: {
+        Claymore: {
             Right: {
                 var light = e.Animator.Animation.init(
                     allocator,
@@ -377,9 +388,10 @@ pub const Hands = struct {
                 );
 
                 _ = light
-                    .chain(0, .{ .rotation = 0, .ry = 0 })
-                    .chain(1, .{ .rotation = -360, .ry = 64 })
-                    .chain(2, .{ .rotation = -360, .ry = 0 });
+                    .append(.{ .rotation = 0, .ry = 0 })
+                    .append(.{ .rotation = -360, .ry = 64 })
+                    .append(.{ .rotation = -360, .ry = 0 })
+                    .close();
 
                 try this.right_animator.chain(light);
 
@@ -391,10 +403,11 @@ pub const Hands = struct {
                 );
 
                 _ = heavy
-                    .chain(0, .{ .rotation = 0, .ry = 0 })
-                    .chain(1, .{ .rotation = -720, .ry = 128 })
-                    .chain(2, .{ .rotation = -720, .ry = 64 })
-                    .chain(3, .{ .rotation = -720, .ry = 0 });
+                    .append(.{ .rotation = 0, .ry = 0 })
+                    .append(.{ .rotation = -360, .ry = 128 })
+                    .append(.{ .rotation = -360, .ry = 64 })
+                    .append(.{ .rotation = -360, .ry = 0 })
+                    .close();
 
                 try this.right_animator.chain(heavy);
 
@@ -406,18 +419,19 @@ pub const Hands = struct {
                 );
 
                 _ = dash
-                    .chain(0, .{ .rotation = 0, .ry = 0 })
-                    .chain(1, .{ .ry = 0, .rotation = 180 })
-                    .chain(2, .{ .ry = 24, .rotation = -90 })
-                    .chain(3, .{ .ry = 24, .rotation = -90 })
-                    .chain(4, .{ .ry = 24, .rotation = -90 })
-                    .chain(5, .{ .ry = 0, .rotation = 0 });
+                    .append(.{ .rotation = 0, .ry = 0 })
+                    .append(.{ .ry = 0, .rotation = 180 })
+                    .append(.{ .ry = 24, .rotation = -90 })
+                    .append(.{ .ry = 24, .rotation = -90 })
+                    .append(.{ .ry = 24, .rotation = -90 })
+                    .append(.{ .ry = 0, .rotation = 0 })
+                    .close();
 
                 try this.right_animator.chain(dash);
                 break :Right;
             }
 
-            break :SwordAnimation;
+            break :Claymore;
         }
         return this;
     }
@@ -539,33 +553,29 @@ pub const Hands = struct {
         }
 
         if (self.left_animator.animations.getPtr(self.light_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
-            anim.recalculateTransitionTimePerKeyFrame();
+            anim.transition_time = @max(0.2, item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER);
+            // std.log.info("tt: {d}", .{anim.transition_time});
         }
         if (self.right_animator.animations.getPtr(self.light_hit_anim)) |anim| {
-            anim.transition_time = item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration;
-            anim.recalculateTransitionTimePerKeyFrame();
+            anim.transition_time = @max(0.2, item.attack_speed * item.weapon_light.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER);
         }
 
         if (!std.mem.eql(u8, self.heavy_hit_anim, self.light_hit_anim)) {
             if (self.left_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
-                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration;
-                anim.recalculateTransitionTimePerKeyFrame();
+                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER;
             }
             if (self.right_animator.animations.getPtr(self.heavy_hit_anim)) |anim| {
-                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration;
-                anim.recalculateTransitionTimePerKeyFrame();
+                anim.transition_time = item.attack_speed * item.weapon_heavy.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER;
             }
         }
 
         if (!std.mem.eql(u8, self.dash_hit_anim, self.light_hit_anim)) {
             if (self.left_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
-                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration;
-                anim.recalculateTransitionTimePerKeyFrame();
+                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER;
             }
             if (self.right_animator.animations.getPtr(self.dash_hit_anim)) |anim| {
-                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration;
-                anim.recalculateTransitionTimePerKeyFrame();
+                anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration * ANIM_TIME_MODIFIER;
+                // anim.transition_time = item.attack_speed * item.weapon_dash.attack_speed_modifier * self.animation_attack_speed_ration * 10;
             }
         }
     }

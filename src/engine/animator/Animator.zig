@@ -60,6 +60,7 @@ pub fn play(self: *Self, id: []const u8) !void {
 
     animation.playing = true;
     animation.current_frame = 0;
+    animation.start_time = loadf32(time.gameTime);
     animation.last_frame_at = time.gameTime;
     animation.next_frame_at = time.gameTime + animation.transition_time_ms_per_frame;
 }
@@ -218,15 +219,9 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
 pub fn update(self: *Self) void {
     for (self.playing.items) |anim| {
-        if (time.gameTime > anim.next_frame_at) {
-            anim.next();
-            if (!anim.playing) {
-                self.stop(anim.id);
-                break;
-            }
-
-            anim.last_frame_at = time.gameTime;
-            anim.next_frame_at = time.gameTime + anim.transition_time_ms_per_frame;
+        if (anim.cached_transition_time != anim.transition_time) {
+            anim.cached_transition_time = anim.transition_time;
+            anim.transition_time_ms_per_frame = anim.transition_time / loadf32(anim.max_frames);
         }
 
         const current_kf = anim.getCurrent();
@@ -242,18 +237,43 @@ pub fn update(self: *Self) void {
         const curr = current_kf.?;
         const nxt = next_kf.?;
 
-        const p: f32 = @min(1, loadf32(anim.current_frame) / loadf32(anim.max_frames));
+        // (gameTime - startTime) / (
+        //         anim.length
+        //         * (next_kf_percent + 0.001)
+        //     )
+        var interpolation_factor = ((loadf32(time.gameTime) - anim.start_time) / (anim.transition_time));
+        // var interpolation_factor = (loadf32(time.gameTime) - anim.start_time) / (anim.transition_time);
+        // var interpolation_factor = loadf32(loadf32(anim.current_frame) * anim.transition_time_ms_per_frame) / (anim.transition_time);
+        interpolation_factor = @max(0, @min(interpolation_factor, 1));
 
-        std.log.info("p: {d}", .{p});
-        std.log.info("c: {d}", .{curr.rotation.?});
-        std.log.info("n: {d}", .{nxt.rotation.?});
+        var percent = (anim.timing_fn(0, 1, interpolation_factor) - (anim.timing_fn(0, 1, (loadf32(anim.current_index) / 100)))) / (anim.timing_fn(0, 1, loadf32(anim.next_index) / 100) - (anim.timing_fn(0, 1, (loadf32(anim.current_index) / 100))));
+        percent = @max(0, @min(1, percent));
+
+        // std.log.info("\n\n", .{});
+
+        std.log.info("p: {d:.3}", .{interpolation_factor});
+        std.log.info("%: {d:.3}", .{percent});
+        std.log.info("cf: {any}", .{anim.current_frame});
+        std.log.info("c: {any}", .{anim.current_index});
+        std.log.info("n: {any}", .{anim.next_index});
 
         self.applyKeyframe(
             anim.interpolateKeyframes(
                 curr,
                 nxt,
-                p,
+                percent,
             ),
         );
+
+        if (percent == 1) {
+            anim.next(interpolation_factor * 100);
+            if (!anim.playing) {
+                self.stop(anim.id);
+                break;
+            }
+
+            anim.last_frame_at = time.gameTime;
+            anim.next_frame_at = time.gameTime + anim.transition_time_ms_per_frame;
+        }
     }
 }

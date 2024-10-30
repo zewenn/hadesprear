@@ -521,7 +521,7 @@ pub fn update() !void {
         rotator_vector0.y += Hand0.transform.rotation.x;
     }
 
-    const finished0 = rotator_vector0.rotate(std.math.degreesToRadians(90)).negate();
+    const finished0 = rotator_vector0.rotate(std.math.degreesToRadians(-90));
 
     var rotator_vector1 = e.Vector2.init(HAND_DISTANCE, 0);
     if (hands.playing_right) {
@@ -529,7 +529,7 @@ pub fn update() !void {
         rotator_vector1.y += Hand1.transform.rotation.x;
     }
 
-    const finished1 = rotator_vector1.rotate(std.math.degreesToRadians(90)).negate();
+    const finished1 = rotator_vector1.rotate(std.math.degreesToRadians(-90));
 
     Hand0.transform.anchor = finished0;
     Hand1.transform.anchor = finished1;

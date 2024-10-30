@@ -2308,9 +2308,6 @@ pub fn init() !void {
     //     usePrefab(prefabs.legendaries.weapons.daggers),
     // );
     // _ = pickUpSort(
-    //     usePrefab(prefabs.legendaries.weapons.claymore),
-    // );
-    // _ = pickUpSort(
     //     usePrefab(.{
     //         .id = e.uuid.v7.new(),
     //         .T = .spell,
@@ -2339,6 +2336,9 @@ pub fn init() !void {
 
     // _ = pickUpSort(
     //     usePrefab(prefabs.epics.amethysts.normal_amethyst),
+    // );
+    // _ = pickUpSort(
+    //     usePrefab(prefabs.legendaries.weapons.claymore),
     // );
 
     equippedbar.autoEquip();

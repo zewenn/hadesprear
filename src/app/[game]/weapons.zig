@@ -168,24 +168,10 @@ pub const Hands = struct {
                     0.15,
                 );
 
-                light.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                    },
-                );
-                light.chain(
-                    1,
-                    .{
-                        .rotation = -105,
-                    },
-                );
-                light.chain(
-                    2,
-                    .{
-                        .rotation = 0,
-                    },
-                );
+                _ = light
+                    .chain(0, .{ .rotation = 0 })
+                    .chain(1, .{ .rotation = -105 })
+                    .chain(2, .{ .rotation = 0 });
 
                 try this.right_animator.chain(light);
 
@@ -196,24 +182,10 @@ pub const Hands = struct {
                     0.25,
                 );
 
-                heavy.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                    },
-                );
-                heavy.chain(
-                    1,
-                    .{
-                        .rotation = -180,
-                    },
-                );
-                heavy.chain(
-                    2,
-                    .{
-                        .rotation = 0,
-                    },
-                );
+                _ = heavy
+                    .chain(0, .{ .rotation = 0 })
+                    .chain(1, .{ .rotation = -180 })
+                    .chain(2, .{ .rotation = 0 });
 
                 try this.right_animator.chain(heavy);
 
@@ -224,31 +196,11 @@ pub const Hands = struct {
                     0.25,
                 );
 
-                dash.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                    },
-                );
-                dash.chain(
-                    25,
-                    .{
-                        .ry = 24,
-                        .rotation = -60,
-                    },
-                );
-                dash.chain(
-                    50,
-                    .{ .ry = 128, .rx = -1 * right_hand.transform.scale.x / 2, .rotation = -60 },
-                );
-                dash.chain(
-                    100,
-                    .{
-                        .ry = 0,
-                        .rotation = 0,
-                    },
-                );
+                _ = dash
+                    .chain(0, .{ .rotation = 0, .ry = 0 })
+                    .chain(25, .{ .ry = 24, .rotation = -60 })
+                    .chain(50, .{ .ry = 128, .rx = -1 * right_hand.transform.scale.x / 2, .rotation = -60 })
+                    .chain(100, .{ .ry = 0, .rotation = 0 });
 
                 try this.right_animator.chain(dash);
                 break :Right;
@@ -266,30 +218,10 @@ pub const Hands = struct {
                     0.15,
                 );
 
-                light.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
-                light.chain(
-                    1,
-                    .{
-                        .rotation = -10,
-                        .ry = 48,
-                        .rx = 24,
-                    },
-                );
-                light.chain(
-                    2,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
+                _ = light
+                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .chain(1, .{ .rotation = -10, .ry = 48, .rx = 24 })
+                    .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
 
                 try this.right_animator.chain(light);
 
@@ -301,46 +233,12 @@ pub const Hands = struct {
                     // 5,
                 );
 
-                heavy.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
-                heavy.chain(
-                    1,
-                    .{
-                        .rotation = -10,
-                        .ry = -24,
-                        .rx = -12,
-                    },
-                );
-                heavy.chain(
-                    2,
-                    .{
-                        .rotation = -10,
-                        .ry = 64,
-                        .rx = 24,
-                    },
-                );
-                heavy.chain(
-                    3,
-                    .{
-                        .rotation = -10,
-                        .ry = 64,
-                        .rx = 24,
-                    },
-                );
-                heavy.chain(
-                    4,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
+                _ = heavy
+                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .chain(1, .{ .rotation = -10, .ry = -24, .rx = -12 })
+                    .chain(2, .{ .rotation = -10, .ry = 64, .rx = 24 })
+                    .chain(3, .{ .rotation = -10, .ry = 64, .rx = 24 })
+                    .chain(4, .{ .rotation = 0, .ry = 0, .rx = 0 });
 
                 try this.right_animator.chain(heavy);
 
@@ -352,46 +250,12 @@ pub const Hands = struct {
                     // 5,
                 );
                 {
-                    dash.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    dash.chain(
-                        1,
-                        .{
-                            .rotation = -10,
-                            .ry = -24,
-                            .rx = -12,
-                        },
-                    );
-                    dash.chain(
-                        2,
-                        .{
-                            .rotation = -10,
-                            .ry = 64,
-                            .rx = 24,
-                        },
-                    );
-                    dash.chain(
-                        3,
-                        .{
-                            .rotation = -10,
-                            .ry = 64,
-                            .rx = 24,
-                        },
-                    );
-                    dash.chain(
-                        4,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = dash
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(1, .{ .rotation = -10, .ry = -24, .rx = -12 })
+                        .chain(2, .{ .rotation = -10, .ry = 64, .rx = 24 })
+                        .chain(3, .{ .rotation = -10, .ry = 64, .rx = 24 })
+                        .chain(4, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.right_animator.chain(dash);
@@ -410,29 +274,10 @@ pub const Hands = struct {
                     0.15,
                 );
                 {
-                    light.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    light.chain(
-                        1,
-                        .{
-                            .rotation = 10,
-                            .ry = 48,
-                        },
-                    );
-                    light.chain(
-                        2,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = light
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(1, .{ .rotation = 10, .ry = 48 })
+                        .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.right_animator.chain(light);
@@ -445,29 +290,10 @@ pub const Hands = struct {
                     // 5,
                 );
                 {
-                    heavy.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    heavy.chain(
-                        1,
-                        .{
-                            .rotation = 0,
-                            .ry = 80,
-                        },
-                    );
-                    heavy.chain(
-                        2,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = heavy
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(1, .{ .rotation = 0, .ry = 80 })
+                        .chain(2, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.right_animator.chain(heavy);
@@ -480,30 +306,10 @@ pub const Hands = struct {
                     // 5,
                 );
                 {
-                    dash.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    dash.chain(
-                        25,
-                        .{
-                            .ry = -24,
-                            .rx = 12,
-                            .rotation = -360,
-                        },
-                    );
-                    dash.chain(
-                        100,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = dash
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(25, .{ .ry = -24, .rx = 12, .rotation = -360 })
+                        .chain(100, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.right_animator.chain(dash);
@@ -517,37 +323,11 @@ pub const Hands = struct {
                     0.2,
                 );
                 {
-                    light.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    light.chain(
-                        1,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    light.chain(
-                        2,
-                        .{
-                            .rotation = -10,
-                            .ry = 48,
-                        },
-                    );
-                    light.chain(
-                        3,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = light
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(1, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(2, .{ .rotation = -10, .ry = 48 })
+                        .chain(3, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
 
                 try this.left_animator.chain(light);
@@ -560,29 +340,10 @@ pub const Hands = struct {
                     // 5,
                 );
                 {
-                    heavy.chain(
-                        0,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
-                    heavy.chain(
-                        2,
-                        .{
-                            .rotation = 0,
-                            .ry = 80,
-                        },
-                    );
-                    heavy.chain(
-                        3,
-                        .{
-                            .rotation = 0,
-                            .ry = 0,
-                            .rx = 0,
-                        },
-                    );
+                    _ = heavy
+                        .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                        .chain(2, .{ .rotation = 0, .ry = 80 })
+                        .chain(3, .{ .rotation = 0, .ry = 0, .rx = 0 });
                 }
                 try this.left_animator.chain(heavy);
 
@@ -594,30 +355,10 @@ pub const Hands = struct {
                     // 5,
                 );
 
-                dash.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
-                dash.chain(
-                    25,
-                    .{
-                        .ry = -24,
-                        .rx = 12,
-                        .rotation = -360,
-                    },
-                );
-                dash.chain(
-                    100,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                        .rx = 0,
-                    },
-                );
+                _ = dash
+                    .chain(0, .{ .rotation = 0, .ry = 0, .rx = 0 })
+                    .chain(25, .{ .ry = -24, .rx = 12, .rotation = -360 })
+                    .chain(100, .{ .rotation = 0, .ry = 0, .rx = 0 });
 
                 try this.left_animator.chain(dash);
                 break :Left;
@@ -635,27 +376,10 @@ pub const Hands = struct {
                     0.5,
                 );
 
-                light.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                    },
-                );
-                light.chain(
-                    1,
-                    .{
-                        .rotation = -360,
-                        .ry = 64,
-                    },
-                );
-                light.chain(
-                    2,
-                    .{
-                        .rotation = -360,
-                        .ry = 0,
-                    },
-                );
+                _ = light
+                    .chain(0, .{ .rotation = 0, .ry = 0 })
+                    .chain(1, .{ .rotation = -360, .ry = 64 })
+                    .chain(2, .{ .rotation = -360, .ry = 0 });
 
                 try this.right_animator.chain(light);
 
@@ -666,34 +390,11 @@ pub const Hands = struct {
                     0.25,
                 );
 
-                heavy.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                    },
-                );
-                heavy.chain(
-                    1,
-                    .{
-                        .rotation = -720,
-                        .ry = 128,
-                    },
-                );
-                heavy.chain(
-                    2,
-                    .{
-                        .rotation = -720,
-                        .ry = 64,
-                    },
-                );
-                heavy.chain(
-                    3,
-                    .{
-                        .rotation = -720,
-                        .ry = 0,
-                    },
-                );
+                _ = heavy
+                    .chain(0, .{ .rotation = 0, .ry = 0 })
+                    .chain(1, .{ .rotation = -720, .ry = 128 })
+                    .chain(2, .{ .rotation = -720, .ry = 64 })
+                    .chain(3, .{ .rotation = -720, .ry = 0 });
 
                 try this.right_animator.chain(heavy);
 
@@ -704,48 +405,13 @@ pub const Hands = struct {
                     0.25,
                 );
 
-                dash.chain(
-                    0,
-                    .{
-                        .rotation = 0,
-                        .ry = 0,
-                    },
-                );
-                dash.chain(
-                    1,
-                    .{
-                        .ry = 0,
-                        .rotation = 180,
-                    },
-                );
-                dash.chain(
-                    2,
-                    .{
-                        .ry = 24,
-                        .rotation = -90,
-                    },
-                );
-                dash.chain(
-                    3,
-                    .{
-                        .ry = 24,
-                        .rotation = -90,
-                    },
-                );
-                dash.chain(
-                    4,
-                    .{
-                        .ry = 24,
-                        .rotation = -90,
-                    },
-                );
-                dash.chain(
-                    5,
-                    .{
-                        .ry = 0,
-                        .rotation = 0,
-                    },
-                );
+                _ = dash
+                    .chain(0, .{ .rotation = 0, .ry = 0 })
+                    .chain(1, .{ .ry = 0, .rotation = 180 })
+                    .chain(2, .{ .ry = 24, .rotation = -90 })
+                    .chain(3, .{ .ry = 24, .rotation = -90 })
+                    .chain(4, .{ .ry = 24, .rotation = -90 })
+                    .chain(5, .{ .ry = 0, .rotation = 0 });
 
                 try this.right_animator.chain(dash);
                 break :Right;

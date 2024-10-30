@@ -124,48 +124,48 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.42,
         );
         {
-            invlunerable_anim.chain(
+            _ = invlunerable_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/invulnerable/anim_0.png",
                 },
-            );
-            invlunerable_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/invulnerable/anim_1.png",
                 },
-            );
-            invlunerable_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
                     .d1f32 = -16,
                     .sprite = "sprites/effects/invulnerable/anim_2.png",
                 },
-            );
-            invlunerable_anim.chain(
+            )
+                .chain(
                 3,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/invulnerable/anim_3.png",
                 },
-            );
-
-            invlunerable_anim.chain(
+            )
+                .chain(
                 4,
                 .{
                     // Used to modify position.y
                     .d1f32 = 8,
                     .sprite = "sprites/effects/invulnerable/anim_4.png",
                 },
-            );
-            invlunerable_anim.chain(
+            )
+                .chain(
                 5,
                 .{
                     // Used to modify position.y
@@ -183,23 +183,24 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.21,
         );
         {
-            healing_anim.chain(
+            _ = healing_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/healing/anim_0.png",
                 },
-            );
-            healing_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/healing/anim_1.png",
                 },
-            );
-            healing_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
@@ -217,23 +218,24 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.21,
         );
         {
-            energised_anim.chain(
+            _ = energised_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/energised/anim_0.png",
                 },
-            );
-            energised_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/energised/anim_1.png",
                 },
-            );
-            energised_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
@@ -251,23 +253,24 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.21,
         );
         {
-            slowed_anim.chain(
+            _ = slowed_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/slowed/anim_0.png",
                 },
-            );
-            slowed_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/slowed/anim_1.png",
                 },
-            );
-            slowed_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
@@ -285,23 +288,24 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.21,
         );
         {
-            rooted_anim.chain(
+            _ = rooted_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/rooted/anim_0.png",
                 },
-            );
-            rooted_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/rooted/anim_1.png",
                 },
-            );
-            rooted_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
@@ -319,40 +323,40 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.35,
         );
         {
-            stunned_anim.chain(
+            _ = stunned_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/stunned/anim_0.png",
                 },
-            );
-            stunned_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/stunned/anim_1.png",
                 },
-            );
-            stunned_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y
                     .d1f32 = -16,
                     .sprite = "sprites/effects/stunned/anim_2.png",
                 },
-            );
-            stunned_anim.chain(
+            )
+                .chain(
                 3,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/stunned/anim_3.png",
                 },
-            );
-
-            stunned_anim.chain(
+            )
+                .chain(
                 4,
                 .{
                     // Used to modify position.y
@@ -370,23 +374,24 @@ pub fn new(entity_id: []const u8) !*EffectShower {
             0.21,
         );
         {
-            asleep_anim.chain(
+            _ = asleep_anim
+                .chain(
                 0,
                 .{
                     // Used to modify position.y
                     .d1f32 = 0,
                     .sprite = "sprites/effects/asleep/anim_0.png",
                 },
-            );
-            asleep_anim.chain(
+            )
+                .chain(
                 1,
                 .{
                     // Used to modify position.y
                     .d1f32 = -8,
                     .sprite = "sprites/effects/asleep/anim_1.png",
                 },
-            );
-            asleep_anim.chain(
+            )
+                .chain(
                 2,
                 .{
                     // Used to modify position.y

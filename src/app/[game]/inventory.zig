@@ -1200,7 +1200,8 @@ pub fn awake() !void {
             0.25,
         );
         {
-            slide_down.chain(
+            _ = slide_down
+                .chain(
                 0,
                 .{
                     .y = -100,
@@ -1211,9 +1212,9 @@ pub fn awake() !void {
                         .a = 0,
                     },
                 },
-            );
-            slide_down.chain(
-                1,
+            )
+                .chain(
+                100,
                 .{
                     .y = 0,
                     .tint = .{
@@ -1234,7 +1235,8 @@ pub fn awake() !void {
             0.25,
         );
         {
-            slide_up.chain(
+            _ = slide_up
+                .chain(
                 0,
                 .{
                     .y = 0,
@@ -1245,9 +1247,9 @@ pub fn awake() !void {
                         .a = @intFromFloat(@round(@as(f32, 255) * @as(f32, 0.85))),
                     },
                 },
-            );
-            slide_up.chain(
-                1,
+            )
+                .chain(
+                100,
                 .{
                     .y = -100,
                     .tint = .{

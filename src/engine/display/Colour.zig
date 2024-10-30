@@ -35,7 +35,7 @@ pub const blank = 0x00000000;
 pub const magenta = violet;
 // pub const ray_white = Color.init(245, 245, 245, 255);
 
-pub const RENDER_FILL_BACKGROUND: HEX = 0x9d2ed9ff;
+pub const RENDER_FILL_BACKGROUND: HEX = white;
 
 var cache: std.AutoHashMap(HEX, rlColor) = undefined;
 var alloc: Allocator = undefined;

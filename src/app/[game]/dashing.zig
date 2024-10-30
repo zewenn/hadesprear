@@ -126,7 +126,7 @@ pub fn spawnShadow(target: *e.Entity, lifetime: f32) !void {
         .display = .{
             .sprite = target.*.display.sprite,
             .scaling = target.*.display.scaling,
-            .tint = e.Colour.black,
+            .tint = e.Colour.dark_purple,
             .layer = .trail_effects,
         },
     };

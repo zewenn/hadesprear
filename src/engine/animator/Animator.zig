@@ -11,6 +11,8 @@ pub const Number = interpolation.Number;
 const time = @import("../time.m.zig");
 const z = @import("../z/z.m.zig");
 
+const loadf32 = @import("../engine.m.zig").loadf32;
+
 const Self = @This();
 
 entity: *entities.Entity,
@@ -58,8 +60,8 @@ pub fn play(self: *Self, id: []const u8) !void {
 
     animation.playing = true;
     animation.current_frame = 0;
-    animation.last_keyframe_at = time.gameTime;
-    animation.next_keyframe_at = time.gameTime + animation.transition_time_ms_per_kf;
+    animation.last_frame_at = time.gameTime;
+    animation.next_frame_at = time.gameTime + animation.transition_time_ms_per_frame;
 }
 
 pub fn isPlaying(self: *Self, id: []const u8) bool {
@@ -216,15 +218,15 @@ pub fn applyKeyframe(self: *Self, kf: Keyframe) void {
 
 pub fn update(self: *Self) void {
     for (self.playing.items) |anim| {
-        if (time.gameTime > anim.next_keyframe_at) {
+        if (time.gameTime > anim.next_frame_at) {
             anim.next();
             if (!anim.playing) {
                 self.stop(anim.id);
                 break;
             }
 
-            anim.last_keyframe_at = time.gameTime;
-            anim.next_keyframe_at = time.gameTime + anim.transition_time_ms_per_kf;
+            anim.last_frame_at = time.gameTime;
+            anim.next_frame_at = time.gameTime + anim.transition_time_ms_per_frame;
         }
 
         const current_kf = anim.getCurrent();
@@ -240,13 +242,11 @@ pub fn update(self: *Self) void {
         const curr = current_kf.?;
         const nxt = next_kf.?;
 
-        const p: f32 = 1 - @as(
-            f32,
-            @floatCast(anim.next_keyframe_at - time.gameTime),
-        ) / @as(
-            f32,
-            @floatCast(anim.transition_time_ms_per_kf),
-        );
+        const p: f32 = @min(1, loadf32(anim.current_frame) / loadf32(anim.max_frames));
+
+        std.log.info("p: {d}", .{p});
+        std.log.info("c: {d}", .{curr.rotation.?});
+        std.log.info("n: {d}", .{nxt.rotation.?});
 
         self.applyKeyframe(
             anim.interpolateKeyframes(

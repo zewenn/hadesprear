@@ -375,6 +375,8 @@ pub const Item = struct {
     icon: []const u8 = "sprites/missingno.png",
     weapon_sprite_left: []const u8 = "sprites/missingno.png",
     weapon_sprite_right: []const u8 = "sprites/missingno.png",
+
+    // useless_field: ?u8 = null,
 };
 
 // ========================================================================

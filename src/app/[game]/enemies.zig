@@ -169,7 +169,8 @@ pub fn update() !void {
                     0.25,
                 );
 
-                walk_left_anim.chain(
+                _ = walk_left_anim
+                    .chain(
                     0,
                     .{
                         .rotation = 0,
@@ -181,8 +182,8 @@ pub fn update() !void {
                             else => MELEE_LEFT_0,
                         },
                     },
-                );
-                walk_left_anim.chain(
+                )
+                    .chain(
                     50,
                     .{
                         .rotation = -5,
@@ -194,8 +195,8 @@ pub fn update() !void {
                             else => MELEE_LEFT_1,
                         },
                     },
-                );
-                walk_left_anim.chain(
+                )
+                    .chain(
                     100,
                     .{
                         .rotation = 0,
@@ -219,7 +220,8 @@ pub fn update() !void {
                     0.25,
                 );
 
-                walk_right_anim.chain(
+                _ = walk_right_anim
+                    .chain(
                     0,
                     .{
                         .rotation = 0,
@@ -231,8 +233,8 @@ pub fn update() !void {
                             else => MELEE_RIGHT_0,
                         },
                     },
-                );
-                walk_right_anim.chain(
+                )
+                    .chain(
                     50,
                     .{
                         .rotation = 5,
@@ -244,8 +246,8 @@ pub fn update() !void {
                             else => MELEE_RIGHT_1,
                         },
                     },
-                );
-                walk_right_anim.chain(
+                )
+                    .chain(
                     100,
                     .{
                         .rotation = 0,

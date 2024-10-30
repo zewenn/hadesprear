@@ -20,9 +20,9 @@ keyframes: std.AutoHashMap(u8, Keyframe),
 
 transition_time: Number,
 
-transition_time_ms_per_kf: f64 = 0,
-last_keyframe_at: f64 = 0,
-next_keyframe_at: f64 = 0,
+transition_time_ms_per_frame: f64 = 0,
+last_frame_at: f64 = 0,
+next_frame_at: f64 = 0,
 
 playing: bool = false,
 loop: bool = false,
@@ -31,6 +31,7 @@ mode: Modes = .forwards,
 current_frame: u8 = 0,
 keys: std.ArrayList(u8),
 keys_slice: ?[]u8 = null,
+max_frames: u8 = 100,
 
 alloc: *Allocator,
 
@@ -47,6 +48,7 @@ pub fn init(
         .keyframes = std.AutoHashMap(u8, Keyframe).init(allocator.*),
         .keys = std.ArrayList(u8).init(allocator.*),
         .transition_time = transition_time,
+        .transition_time_ms_per_frame = transition_time / 100,
     };
 }
 
@@ -57,7 +59,7 @@ fn backwardsComp(_: void, a: u8, b: u8) bool {
     return b > a;
 }
 
-pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
+pub fn chain(self: *Self, percent: u8, kf: Keyframe) *Self {
     if (self.keyframes.get(percent) != null) z.panicWithArgs(
         "Animation \"{s}\" already has key \"{d}\" but the program tried to set it again.",
         .{ self.id, percent },
@@ -73,10 +75,6 @@ pub fn chain(self: *Self, percent: u8, kf: Keyframe) void {
     }
     self.keys_slice = keys_clone.toOwnedSlice() catch unreachable;
 
-    self.recalculateTransitionTimePerKeyFrame();
-}
-
-pub fn recalculateTransitionTimePerKeyFrame(self: *Self) void {
     switch (self.mode) {
         .forwards => std.sort.insertion(
             u8,
@@ -92,7 +90,13 @@ pub fn recalculateTransitionTimePerKeyFrame(self: *Self) void {
         ),
     }
 
-    self.transition_time_ms_per_kf = @as(
+    self.transition_time_ms_per_frame = self.transition_time / @as(f32, @floatFromInt(self.max_frames));
+
+    return self;
+}
+
+pub fn recalculateTransitionTimePerKeyFrame(self: *Self) void {
+    self.transition_time_ms_per_frame = @as(
         f64,
         @floatCast(self.transition_time),
     ) / @as(
@@ -110,28 +114,29 @@ pub fn deinit(self: *Self) void {
 }
 
 pub fn getNext(self: *Self) ?Keyframe {
-    if (self.keys_slice.?.len <= self.current_frame + 1) return null;
-
-    const key = self.keys_slice.?[self.current_frame + 1];
-    return self.keyframes.get(key);
+    for (self.keys_slice.?) |frame| {
+        if (self.current_frame < frame) return self.keyframes.get(frame);
+    }
+    return null;
 }
 
 pub fn getCurrent(self: *Self) ?Keyframe {
-    if (self.keys_slice.?.len <= self.current_frame) return null;
-
-    const key = self.keys_slice.?[self.current_frame];
-    return self.keyframes.get(key);
+    var last: u8 = 0;
+    for (self.keys_slice.?) |frame| {
+        if (self.current_frame >= frame) last = frame;
+    }
+    return self.keyframes.get(last);
 }
 
 pub fn next(self: *Self) void {
     self.current_frame += 1;
 
-    if (self.keys_slice.?.len <= self.current_frame) {
+    if (self.max_frames < self.current_frame) {
         if (self.loop) {
             self.current_frame = 0;
             return;
         }
-        self.current_frame = @as(u8, @intCast(self.keys_slice.?.len)) - 1;
+        self.current_frame = 100;
         self.playing = false;
     }
 }

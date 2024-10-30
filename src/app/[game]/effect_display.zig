@@ -125,54 +125,13 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = invlunerable_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/invulnerable/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/invulnerable/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -16,
-                    .sprite = "sprites/effects/invulnerable/anim_2.png",
-                },
-            )
-                .chain(
-                3,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/invulnerable/anim_3.png",
-                },
-            )
-                .chain(
-                4,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 8,
-                    .sprite = "sprites/effects/invulnerable/anim_4.png",
-                },
-            )
-                .chain(
-                5,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/invulnerable/anim_5.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/invulnerable/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/invulnerable/anim_1.png" })
+                .append(.{ .d1f32 = -16, .sprite = "sprites/effects/invulnerable/anim_2.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/invulnerable/anim_3.png" })
+                .append(.{ .d1f32 = 8, .sprite = "sprites/effects/invulnerable/anim_4.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/invulnerable/anim_5.png" })
+                .close();
         }
         try Animator.chain(invlunerable_anim);
 
@@ -184,30 +143,10 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = healing_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/healing/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/healing/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/healing/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/healing/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/healing/anim_1.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/healing/anim_0.png" })
+                .close();
         }
         try Animator.chain(healing_anim);
 
@@ -219,30 +158,10 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = energised_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/energised/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/energised/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/energised/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/energised/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/energised/anim_1.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/energised/anim_0.png" })
+                .close();
         }
         try Animator.chain(energised_anim);
 
@@ -254,30 +173,10 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = slowed_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/slowed/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/slowed/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/slowed/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/slowed/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/slowed/anim_1.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/slowed/anim_0.png" })
+                .close();
         }
         try Animator.chain(slowed_anim);
 
@@ -289,30 +188,10 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = rooted_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/rooted/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/rooted/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/rooted/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/rooted/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/rooted/anim_1.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/rooted/anim_0.png" })
+                .close();
         }
         try Animator.chain(rooted_anim);
 
@@ -324,46 +203,12 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = stunned_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/stunned/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/stunned/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -16,
-                    .sprite = "sprites/effects/stunned/anim_2.png",
-                },
-            )
-                .chain(
-                3,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/stunned/anim_3.png",
-                },
-            )
-                .chain(
-                4,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 8,
-                    .sprite = "sprites/effects/stunned/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/stunned/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/stunned/anim_1.png" })
+                .append(.{ .d1f32 = -16, .sprite = "sprites/effects/stunned/anim_2.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/stunned/anim_3.png" })
+                .append(.{ .d1f32 = 8, .sprite = "sprites/effects/stunned/anim_0.png" })
+                .close();
         }
         try Animator.chain(stunned_anim);
 
@@ -375,30 +220,10 @@ pub fn new(entity_id: []const u8) !*EffectShower {
         );
         {
             _ = asleep_anim
-                .chain(
-                0,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/asleep/anim_0.png",
-                },
-            )
-                .chain(
-                1,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = -8,
-                    .sprite = "sprites/effects/asleep/anim_1.png",
-                },
-            )
-                .chain(
-                2,
-                .{
-                    // Used to modify position.y
-                    .d1f32 = 0,
-                    .sprite = "sprites/effects/asleep/anim_0.png",
-                },
-            );
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/asleep/anim_0.png" })
+                .append(.{ .d1f32 = -8, .sprite = "sprites/effects/asleep/anim_1.png" })
+                .append(.{ .d1f32 = 0, .sprite = "sprites/effects/asleep/anim_0.png" })
+                .close();
         }
         try Animator.chain(asleep_anim);
     }

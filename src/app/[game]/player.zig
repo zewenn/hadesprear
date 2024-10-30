@@ -8,6 +8,8 @@ const enemies = @import("enemies.zig");
 const dashing = @import("dashing.zig");
 const inventory = @import("inventory.zig");
 const weapons = @import("weapons.zig");
+const spells = @import("spells.zig");
+const usePrefab = @import("items.zig").usePrefab;
 
 const HAND_DISTANCE: comptime_float = 24;
 const HIT_GLOVE_DISTANCE: f32 = 45;
@@ -388,7 +390,43 @@ pub fn update() !void {
             }
         }
         if (e.isKeyPressed(.key_q)) {
-            weapons.applyEffect(@ptrCast(&Player), .energised, 10);
+            try spells.summon(
+                usePrefab(.{
+                    .id = e.uuid.v7.new(),
+                    .T = .spell,
+
+                    .rarity = .legendary,
+
+                    .name = "Spell",
+
+                    .icon = "sprites/entity/enemies/brute/left_0.png",
+
+                    .spell_blessings = conf.createTypeArrayUnknownLength(
+                        conf.Blessings,
+                        @constCast(&[_]?conf.Blessings{
+                            .curse,
+                            .curse,
+                            .curse,
+                            .curse,
+                            .fracture,
+                            .fracture,
+                            .steel,
+                            .steel,
+                            .steel,
+                            .steel,
+                            .zephyr,
+                            .zephyr,
+                            .zephyr,
+                            .zephyr,
+                            .zephyr,
+                            .zephyr,
+                        }),
+                    ),
+                }),
+                &Player,
+                .player,
+                Player.entity_stats.?.damage,
+            );
         }
 
         const norm_vector = move_vector.normalize();

@@ -125,8 +125,6 @@ pub fn close(self: *Self) void {
     for (self.unregistered_kfs.?.items, 0..) |kf, index| {
         const percent = @as(u8, @intCast(index)) * kf_percent_distance;
 
-        std.log.info("Percent: {d}", .{percent});
-
         self.keyframes.put(
             percent,
             kf,
@@ -135,8 +133,6 @@ pub fn close(self: *Self) void {
 
         self.keys.append(percent) catch z.panic("Couldn't add key to keylist");
     }
-
-    std.log.info("keys: {any}", .{self.keys.items});
 
     var keys_clone = self.keys.clone() catch unreachable;
     defer keys_clone.deinit();
@@ -149,7 +145,6 @@ pub fn close(self: *Self) void {
     self.sortKeys();
 
     self.transition_time_ms_per_frame = self.transition_time / @as(f32, @floatFromInt(self.max_frames));
-    std.log.info("keys: {any}", .{self.keys_slice});
 }
 
 pub fn deinit(self: *Self) void {

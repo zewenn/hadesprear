@@ -103,11 +103,13 @@ pub fn TimeoutHandler(comptime T: type) type {
         }
 
         pub fn setTimeout(self: *Self, callback: FunctionType, args: T, timeout: f64) !void {
-            try self.waiters.append(Waiter{
-                .end_time = gameTime + timeout,
-                .callback = callback,
-                .args = args,
-            });
+            try self.waiters.append(
+                Waiter{
+                    .end_time = gameTime + timeout,
+                    .callback = callback,
+                    .args = args,
+                },
+            );
         }
 
         pub fn update(self: *Self) anyerror!void {

@@ -300,6 +300,16 @@ pub fn createTypeArray(comptime T: type, comptime size: usize, comptime list: [s
     return @as([size]?T, list) ++ ([_]?T{null} ** (16 - size));
 }
 
+pub fn createTypeArrayUnknownLength(comptime T: type, comptime list: []?T) [16]?T {
+    var ls: [16]?T = [_]?T{null} ** 16;
+
+    for (list, 0..) |item, index| {
+        ls[index] = item;
+    }
+
+    return ls;
+}
+
 pub fn newItem(item: Item) Item {
     var res = item;
     res.weapon_light = WeaponAttackLightStats(res.weapon_light);
@@ -315,7 +325,7 @@ pub const AttackTypes = enum {
     dash,
 };
 
-pub const SpellSlots = enum {q, e, r, x};
+pub const SpellSlots = enum { q, e, r, x };
 
 pub const Item = struct {
     /// If id is 0 the Item is a prefab and should not be modified without cloning
@@ -385,6 +395,8 @@ pub const Item = struct {
 //
 // ========================================================================
 
+// @spells
+
 pub const SpellTypes = enum {
     spawn,
     lingering,
@@ -392,20 +404,20 @@ pub const SpellTypes = enum {
 };
 
 pub const Blessings = enum {
-    /// Pure damage increase
-    war,
-    /// Multiple Projectiles, +1/blessing
-    death,
-    /// Slowing / Rooting / Stunning
-    ice,
-    /// Protection to the Summoner
-    mind,
-    /// Piercing
-    water,
-    /// Energised on hit
-    lightning,
-    /// Bonus healing
-    earth,
+    /// Pure damage increase @done
+    fire,
+    /// Multiple Projectiles, +1/fracture blessing @done
+    fracture,
+    /// Summon speed @done
+    zephyr,
+    /// Projectile Rounds @done
+    curse,
+    /// Healing @done
+    blood,
+    /// Energised on hit @done
+    kin,
     /// Increased crit rate
-    hunt,
+    death,
+    /// Upscale the projectiles
+    steel,
 };

@@ -289,14 +289,8 @@ fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void 
         try playAnim(ANIMS.ENERGISED, animator);
         return;
     }
-
-    if (istats.is_slowed) {
-        try playAnim(ANIMS.SLOWED, animator);
-        return;
-    }
-
-    if (istats.is_rooted) {
-        try playAnim(ANIMS.ROOTED, animator);
+    if (istats.is_asleep) {
+        try playAnim(ANIMS.ASLEEP, animator);
         return;
     }
 
@@ -305,8 +299,13 @@ fn setShowerTo(item: *e.Entity, entity: *e.Entity, animator: *e.Animator) !void 
         return;
     }
 
-    if (istats.is_asleep) {
-        try playAnim(ANIMS.ASLEEP, animator);
+    if (istats.is_rooted) {
+        try playAnim(ANIMS.ROOTED, animator);
+        return;
+    }
+
+    if (istats.is_slowed) {
+        try playAnim(ANIMS.SLOWED, animator);
         return;
     }
 }

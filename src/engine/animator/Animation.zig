@@ -180,7 +180,7 @@ pub fn getCurrent(self: *Self) ?Keyframe {
 pub fn next(self: *Self, increment_to: anytype) void {
     self.current_frame = @as(u8, @intFromFloat(loadf32(increment_to)));
 
-    if (self.max_frames < self.current_frame) {
+    if (self.max_frames <= self.current_frame) {
         if (self.loop) {
             self.current_frame = 0;
             return;

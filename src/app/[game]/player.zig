@@ -255,13 +255,13 @@ pub fn update() !void {
     }
 
     if (e.isKeyDown(.key_r)) {
-        Player.entity_stats.?.is_slowed = if (e.isKeyDown(.key_one)) true else false;
+        Player.entity_stats.?.is_slowed = e.isKeyDown(.key_one);
 
-        Player.entity_stats.?.is_rooted = if (e.isKeyDown(.key_two)) true else false;
+        Player.entity_stats.?.is_rooted = e.isKeyDown(.key_two);
 
-        Player.entity_stats.?.is_stunned = if (e.isKeyDown(.key_three)) true else false;
+        Player.entity_stats.?.is_stunned = e.isKeyDown(.key_three);
 
-        Player.entity_stats.?.is_asleep = if (e.isKeyDown(.key_four)) true else false;
+        Player.entity_stats.?.is_asleep = e.isKeyDown(.key_four);
     }
 
     Player.entity_stats.?.health = e.zlib.math.clamp(
@@ -396,7 +396,6 @@ pub fn update() !void {
                 .player,
                 Player.entity_stats.?.damage,
             );
-            std.log.debug("asd", .{});
         }
         if (e.isKeyPressed(.key_e) and inventory.equippedbar.spells.e != null) {
             try spells.summon(
@@ -433,6 +432,8 @@ pub fn update() !void {
             Player.transform.position.x += norm_vector.x * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
             Player.transform.position.y += norm_vector.y * Player.entity_stats.?.movement_speed * @as(f32, @floatCast(e.time.deltaTime));
         }
+
+        if (Player.entity_stats.?.is_stunned or Player.entity_stats.?.is_asleep) break :Input;
 
         if (e.isKeyPressed(.key_space)) {
             try dashing.applyDash(

@@ -302,7 +302,7 @@
         "T": "weapon",
         "rarity": "legendary",
         "weapon_type": "claymore",
-        "equipped": false,
+        "equipped": true,
         "equipped_spell_slot": null,
         "unequippable": true,
         "level": 0,

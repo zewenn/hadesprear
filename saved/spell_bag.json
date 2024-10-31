@@ -154,7 +154,7 @@
         "rarity": "epic",
         "weapon_type": "sword",
         "equipped": true,
-        "equipped_spell_slot": "e",
+        "equipped_spell_slot": "x",
         "unequippable": true,
         "level": 0,
         "cost_per_level": 16,

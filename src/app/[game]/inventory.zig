@@ -1373,7 +1373,7 @@ pub fn awake() !void {
             .id = "InventoryParentBackground",
             .style = .{
                 .background = .{
-                    .color = 0x00000088,
+                    .color = 0x000000cc,
                 },
                 .top = u("-100%"),
                 .left = u("50%"),

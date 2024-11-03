@@ -27,13 +27,15 @@ fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
 
     return (
     //
-        lsh_transform.position.y * camera.zoom -
-        if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
+        lsh_transform.position.y * camera.zoom
+    // -
+    // if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
     //
     ) < (
     //
-        rsh_transform.position.y * camera.zoom -
-        if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
+        rsh_transform.position.y * camera.zoom
+    // -
+    // if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
     //
     );
 }
@@ -82,6 +84,10 @@ pub fn update() !void {
             if (cached.transform.rotation.equals(transform.rotation) == 0) break :Decide false;
             if (!std.mem.eql(u8, cached.display.sprite, display.sprite)) break :Decide false;
             if (cached.display.scaling != display.scaling) break :Decide false;
+            if ((cached.display.background_tile_size == null) != (display.background_tile_size == null)) break :Decide false;
+            if (display.background_tile_size) |dbts| {
+                if (dbts.equals(cached.display.background_tile_size.?) == 0) break :Decide false;
+            }
 
             if (cached.img == null) break :Decide false;
             if (cached.texture == null) break :Decide false;
@@ -99,16 +105,20 @@ pub fn update() !void {
                 std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
                 continue;
             }
+
+            const w = if (display.background_tile_size) |dbts| dbts.x else transform.scale.x;
+            const h = if (display.background_tile_size) |dbts| dbts.y else transform.scale.y;
+
             switch (display.scaling) {
                 .normal => rl.imageResize(
                     &img,
-                    @intFromFloat(transform.scale.x),
-                    @intFromFloat(transform.scale.y),
+                    @intFromFloat(w * camera.zoom),
+                    @intFromFloat(h * camera.zoom),
                 ),
                 .pixelate => rl.imageResizeNN(
                     &img,
-                    @intFromFloat(transform.scale.x * camera.zoom),
-                    @intFromFloat(transform.scale.y * camera.zoom),
+                    @intFromFloat(w * camera.zoom),
+                    @intFromFloat(h * camera.zoom),
                 ),
             }
             if (entity.cached_display) |cached| {

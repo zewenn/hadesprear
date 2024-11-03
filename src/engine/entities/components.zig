@@ -64,6 +64,7 @@ pub const Display = struct {
         trail_effects = 18,
         foreground = 20,
         showers = 30,
+        walls,
     };
 
     sprite: []const u8,
@@ -71,6 +72,8 @@ pub const Display = struct {
     tint: u32 = 0xffffffff,
     ignore_world_pos: bool = false,
     layer: layers = .foreground,
+
+    background_tile_size: ?rl.Vector2 = null,
 };
 
 pub const Collider = struct {

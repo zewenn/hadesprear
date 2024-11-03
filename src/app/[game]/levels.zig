@@ -182,10 +182,11 @@ pub fn startRound() !void {
     if (loaded == null) return;
 
     for (loaded.?.rounds[round]) |spawndata| {
-        try enemies.spawnArchetype(
+        try enemies.spawnWithIndicator(
             spawndata.enemy_archetype,
             spawndata.enemy_subtype,
             spawndata.spawn_at,
+            0.25,
         );
     }
 

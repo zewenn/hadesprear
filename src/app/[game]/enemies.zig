@@ -7,6 +7,7 @@ const e = @import("../../engine/engine.m.zig");
 const weapons = @import("weapons.zig");
 const prefabs = @import("items.zig").prefabs;
 const usePrefab = @import("items.zig").usePrefab;
+const quickspawn = @import("quickspawn.zig");
 
 const dashing = @import("dashing.zig");
 const projectiles = @import("projectiles.zig");
@@ -66,6 +67,14 @@ const manager = e.zlib.HeapManager(EnemyStruct, (struct {
     }
 }).callback);
 
+const TMType = e.time.TimeoutHandler(struct {
+    archetype: conf.EnemyArchetypes,
+    subtype: conf.EnemySubtypes,
+    at: e.Vector2,
+    spawn_display: *e.Entity,
+});
+var tm: TMType = undefined;
+
 const MELEE_LEFT_0 = "sprites/entity/enemies/melee/left_0.png";
 const MELEE_LEFT_1 = "sprites/entity/enemies/melee/left_1.png";
 const MELEE_RIGHT_0 = "sprites/entity/enemies/melee/right_0.png";
@@ -99,6 +108,7 @@ const TANK_RIGHT_1 = "sprites/entity/enemies/tank/right_1.png";
 
 pub fn awake() !void {
     manager.init(e.ALLOCATOR);
+    tm = TMType.init(e.ALLOCATOR);
 }
 
 pub fn init() !void {
@@ -106,6 +116,7 @@ pub fn init() !void {
 }
 
 pub fn update() !void {
+    try tm.update();
     const items = try manager.items();
     defer manager.alloc.free(items);
 
@@ -518,6 +529,7 @@ pub fn deinit() !void {
         manager.removeFreeId(item);
     }
     manager.deinit();
+    tm.deinit();
 }
 
 pub fn spawnArchetype(archetype: conf.EnemyArchetypes, subtype: conf.EnemySubtypes, at: e.Vector2) !void {
@@ -715,4 +727,46 @@ pub fn getWeaponOfArchetype(archetype: conf.EnemyArchetypes, subtype: conf.Enemy
     weapon.weapon_light.sprite = "sprites/projectiles/enemy/generic/light.png";
 
     return weapon;
+}
+
+pub fn spawnWithIndicator(
+    archetype: conf.EnemyArchetypes,
+    subtype: conf.EnemySubtypes,
+    at: e.Vector2,
+    delay: f64,
+) !void {
+    const spawn_display = try quickspawn.spawn(e.Entity{
+        .id = ".",
+        .tags = ".",
+        .transform = .{
+            .position = at,
+        },
+        .display = .{
+            .layer = .spawners,
+            .scaling = .pixelate,
+            // TODO: add sprite
+            // .sprite = "",
+        },
+    });
+
+    try tm.setTimeout(
+        (struct {
+            pub fn callback(args: TMType.ARGSTYPE) !void {
+                quickspawn.destruct(args.spawn_display);
+
+                try spawnArchetype(
+                    args.archetype,
+                    args.subtype,
+                    args.at,
+                );
+            }
+        }).callback,
+        .{
+            .archetype = archetype,
+            .subtype = subtype,
+            .at = at,
+            .spawn_display = spawn_display,
+        },
+        delay,
+    );
 }

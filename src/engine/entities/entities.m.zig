@@ -91,6 +91,10 @@ pub fn make(comptime T: type) type {
             return null;
         }
 
+        pub fn tagged(entity: *Entity, tag: []const u8) bool {
+            return std.mem.containsAtLeast(u8, entity.tags, 1, tag);
+        }
+
         /// Caller owns the returned memory.
         /// Returns all entities with the given tag.
         pub fn search(tag: []const u8) ![]*Entity {

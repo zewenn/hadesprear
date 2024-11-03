@@ -61,13 +61,14 @@ pub const Display = struct {
     };
     pub const layers = enum(u8) {
         background = 10,
+        spawners = 17,
         trail_effects = 18,
         foreground = 20,
         showers = 30,
         walls,
     };
 
-    sprite: []const u8,
+    sprite: []const u8 = "sprites/missingno.png",
     scaling: scalings = .normal,
     tint: u32 = 0xffffffff,
     ignore_world_pos: bool = false,

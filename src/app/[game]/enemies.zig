@@ -27,7 +27,7 @@ const EnemyStruct = struct {
     health_display: *e.GUI.GUIElement = undefined,
 };
 
-const manager = e.zlib.HeapManager(EnemyStruct, (struct {
+pub const manager = e.zlib.HeapManager(EnemyStruct, (struct {
     pub fn callback(alloc: Allocator, item: *EnemyStruct) !void {
         if (item.hands) |*hands| {
             hands.deinit();

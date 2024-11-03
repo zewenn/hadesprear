@@ -5,7 +5,11 @@ const e = @import("../../engine/engine.m.zig");
 const enemies = @import("enemies.zig");
 
 var loaded: ?conf.Level = null;
-var round: usize = 0;
+var round: usize = 0xff15;
+var actual_round: usize = 0;
+
+const TMType = e.time.TimeoutHandler(struct {});
+var tm: TMType = undefined;
 
 pub const TestLevel = conf.Level{
     .rounds = @constCast(&[_][]conf.EnemySpawner{
@@ -19,6 +23,28 @@ pub const TestLevel = conf.Level{
                 .enemy_archetype = .angler,
                 .enemy_subtype = .normal,
                 .spawn_at = e.Vec2(-600, -156),
+            },
+        }),
+        @constCast(&[_]conf.EnemySpawner{
+            conf.EnemySpawner{
+                .enemy_archetype = .brute,
+                .enemy_subtype = .normal,
+                .spawn_at = e.Vec2(64, 128),
+            },
+            conf.EnemySpawner{
+                .enemy_archetype = .angler,
+                .enemy_subtype = .normal,
+                .spawn_at = e.Vec2(-600, -156),
+            },
+            conf.EnemySpawner{
+                .enemy_archetype = .angler,
+                .enemy_subtype = .normal,
+                .spawn_at = e.Vec2(-300, -186),
+            },
+            conf.EnemySpawner{
+                .enemy_archetype = .angler,
+                .enemy_subtype = .normal,
+                .spawn_at = e.Vec2(-100, -200),
             },
         }),
     }),
@@ -124,19 +150,30 @@ pub const TestLevel = conf.Level{
     }),
 };
 
-pub fn awake() !void {}
+pub fn awake() !void {
+    tm = TMType.init(e.ALLOCATOR);
+}
 
 pub fn init() !void {}
 
-pub fn update() !void {}
+pub fn update() !void {
+    try tm.update();
+    if (round == 0xff15) return;
+    if (loaded == null) return;
+
+    const enemies_in_scene = enemies.manager.len();
+    if (enemies_in_scene == 0) try startRound();
+}
 
 pub fn deinit() !void {
     unload();
+    tm.deinit();
 }
 
 pub fn load(level: conf.Level) !void {
     if (loaded) |_| unload();
     loaded = level;
+    round = 0;
 
     const loadedptr = &(loaded.?);
 
@@ -161,7 +198,7 @@ pub fn load(level: conf.Level) !void {
 
 pub fn unload() void {
     if (loaded == null) return;
-    round = 0;
+    round = 0xff15;
 
     const loadedptr = &(loaded.?);
 
@@ -180,6 +217,7 @@ pub fn unload() void {
 
 pub fn startRound() !void {
     if (loaded == null) return;
+    if (round == 0xff15) return;
 
     for (loaded.?.rounds[round]) |spawndata| {
         try enemies.spawnWithIndicator(
@@ -189,7 +227,20 @@ pub fn startRound() !void {
             0.75,
         );
     }
+    if (round != 0xff15)
+        actual_round = round;
+    round = 0xff15;
 
-    if (round < loaded.?.rounds.len - 1)
-        round += 1;
+    try tm.setTimeout(
+        (struct {
+            pub fn callback(_: TMType.ARGSTYPE) !void {
+                if (actual_round < loaded.?.rounds.len - 1) {
+                    actual_round += 1;
+                    round = actual_round;
+                }
+            }
+        }).callback,
+        .{},
+        1,
+    );
 }

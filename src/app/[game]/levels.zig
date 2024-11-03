@@ -186,7 +186,7 @@ pub fn startRound() !void {
             spawndata.enemy_archetype,
             spawndata.enemy_subtype,
             spawndata.spawn_at,
-            0.25,
+            0.75,
         );
     }
 

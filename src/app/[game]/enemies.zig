@@ -745,7 +745,7 @@ pub fn spawnWithIndicator(
             .layer = .spawners,
             .scaling = .pixelate,
             // TODO: add sprite
-            // .sprite = "",
+            .sprite = "sprites/backgrounds/enemy_spawn.png",
         },
     });
 

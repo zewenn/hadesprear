@@ -1,11 +1,11 @@
 [
     {
-        "id": 261104308620482248960269748920515531265,
+        "id": 299489930847855980727670154117032153601,
         "T": "spell",
         "rarity": "legendary",
         "weapon_type": "sword",
-        "equipped": true,
-        "equipped_spell_slot": "q",
+        "equipped": false,
+        "equipped_spell_slot": null,
         "unequippable": true,
         "level": 0,
         "cost_per_level": 16,
@@ -149,12 +149,12 @@
         "weapon_sprite_right": "sprites/missingno.png"
     },
     {
-        "id": 232117108442605068576959983943080186369,
+        "id": 221018286632189325249932503784126386689,
         "T": "spell",
         "rarity": "epic",
         "weapon_type": "sword",
         "equipped": true,
-        "equipped_spell_slot": "e",
+        "equipped_spell_slot": "q",
         "unequippable": true,
         "level": 0,
         "cost_per_level": 16,

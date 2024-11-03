@@ -437,6 +437,13 @@ pub const Level = struct {
     walls: []Entity,
 };
 
+pub const LoadedLevel = struct {
+    rounds: [][]EnemySpawner,
+    reward_tier: Rarity,
+    backgrounds: []*Entity,
+    walls: []*Entity,
+};
+
 pub const EnemySpawner = struct {
     enemy_archetype: EnemyArchetypes,
     enemy_subtype: EnemySubtypes,

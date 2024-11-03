@@ -1,17 +1,53 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
+
 const conf = @import("../../config.zig");
 
 const e = @import("../../engine/engine.m.zig");
 const enemies = @import("enemies.zig");
 
-var loaded: ?conf.Level = null;
+var loaded: ?conf.LoadedLevel = null;
 var round: usize = 0xff15;
 var actual_round: usize = 0;
 
 const TMType = e.time.TimeoutHandler(struct {});
 var tm: TMType = undefined;
 
-pub const TestLevel = conf.Level{
+const manager = e.zlib.HeapManager(e.Entity, (struct {
+    pub fn callback(alloc: Allocator, item: *e.Entity) !void {
+        e.entities.remove(item.id);
+        alloc.free(item.id);
+    }
+}).callback);
+
+pub fn levelEntity(entity: e.Entity, tags: []const u8) !*e.Entity {
+    const resptr = try manager.appendReturn(entity);
+    resptr.tags = tags;
+    resptr.id = try e.UUIDV7();
+
+    return resptr;
+}
+
+pub fn makeLoadedLevel(from: conf.Level) !conf.LoadedLevel {
+    var backgrounds = try e.ALLOCATOR.alloc(*e.Entity, from.backgrounds.len);
+    for (from.backgrounds, 0..) |bg, index| {
+        backgrounds[index] = try levelEntity(bg, "background");
+    }
+
+    var walls = try e.ALLOCATOR.alloc(*e.Entity, from.walls.len);
+    for (from.walls, 0..) |wall, index| {
+        walls[index] = try levelEntity(wall, "wall");
+    }
+
+    return conf.LoadedLevel{
+        .rounds = from.rounds,
+        .reward_tier = from.reward_tier,
+        .backgrounds = backgrounds,
+        .walls = walls,
+    };
+}
+
+pub var TestLevel = conf.Level{
     .rounds = @constCast(&[_][]conf.EnemySpawner{
         @constCast(&[_]conf.EnemySpawner{
             conf.EnemySpawner{
@@ -152,6 +188,7 @@ pub const TestLevel = conf.Level{
 
 pub fn awake() !void {
     tm = TMType.init(e.ALLOCATOR);
+    manager.init(e.ALLOCATOR);
 }
 
 pub fn init() !void {}
@@ -168,28 +205,28 @@ pub fn update() !void {
 pub fn deinit() !void {
     unload();
     tm.deinit();
+
+    const items = try manager.items();
+    defer manager.alloc.free(items);
+
+    for (items) |item| {
+        manager.removeFreeId(item);
+    }
+    manager.deinit();
 }
 
 pub fn load(level: conf.Level) !void {
     if (loaded) |_| unload();
-    loaded = level;
+    loaded = try makeLoadedLevel(level);
     round = 0;
 
     const loadedptr = &(loaded.?);
 
-    for (loadedptr.backgrounds) |*entity| {
-        entity.id = try e.UUIDV7();
-        entity.tags = "background";
-        entity.display.layer = .background;
-
+    for (loadedptr.backgrounds) |entity| {
         try e.entities.add(entity);
     }
 
-    for (loadedptr.walls) |*entity| {
-        entity.id = try e.UUIDV7();
-        entity.tags = "wall";
-        // entity.display.layer = .walls;
-
+    for (loadedptr.walls) |entity| {
         if (entity.collider == null) @panic("Walls must have colliders");
 
         try e.entities.add(entity);
@@ -202,15 +239,15 @@ pub fn unload() void {
 
     const loadedptr = &(loaded.?);
 
-    for (loadedptr.backgrounds) |*entity| {
-        e.entities.remove(entity.id);
-        e.ALLOCATOR.free(entity.id);
+    for (loadedptr.backgrounds) |entity| {
+        manager.removeFreeId(entity);
     }
+    e.ALLOCATOR.free(loadedptr.backgrounds);
 
-    for (loadedptr.walls) |*entity| {
-        e.entities.remove(entity.id);
-        e.ALLOCATOR.free(entity.id);
+    for (loadedptr.walls) |entity| {
+        manager.removeFreeId(entity);
     }
+    e.ALLOCATOR.free(loadedptr.walls);
 
     loaded = null;
 }

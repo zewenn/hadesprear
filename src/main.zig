@@ -31,7 +31,14 @@ pub fn main() !void {
     e.setTargetFPS(256);
     e.setExitKey(.key_kp_7);
 
+    var borderless = false;
+
     while (!e.windowShouldClose()) {
+        if (e.isKeyPressed(.key_f11)) {
+            borderless = !borderless;
+
+            e.window.toggleBorderless();
+        }
         e.update() catch {};
     }
 }

@@ -228,7 +228,7 @@ pub fn build(b: *std.Build) !void {
     const raylib_artifact = raylib_dep.artifact("raylib");
 
     const uuid = uuid_dep.module("uuid");
-    const uudi_artifact = uuid_dep.artifact("uuid-zig");
+    const uuid_artifact = uuid_dep.artifact("uuid-zig");
 
     //web exports are completely separate
     if (target.query.os_tag == .emscripten) {
@@ -258,7 +258,7 @@ pub fn build(b: *std.Build) !void {
     exe.linkLibrary(raylib_artifact);
     exe.root_module.addImport("raylib", raylib);
 
-    exe.linkLibrary(uudi_artifact);
+    exe.linkLibrary(uuid_artifact);
     exe.root_module.addImport("uuid", uuid);
 
     const run_cmd = b.addRunArtifact(exe);

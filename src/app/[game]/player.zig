@@ -312,6 +312,7 @@ pub fn update() !void {
 
     var move_vector = e.Vec2(0, 0);
     Input: {
+        e.camera.apply_shake = e.isKeyDown(.key_u);
         if (e.isKeyDown(.key_w)) {
             move_vector.y -= 1;
         }

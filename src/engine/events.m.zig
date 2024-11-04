@@ -1,4 +1,5 @@
 const std = @import("std");
+const Allocator = @import("std").mem.Allocator;
 const z = @import("./z/z.m.zig");
 
 pub const EngineEvents = enum {
@@ -16,11 +17,11 @@ const map_fn_struct_type = struct {
 const map_type = std.AutoHashMap(EngineEvents, std.ArrayListAligned(map_fn_struct_type, null));
 
 var event_map: map_type = undefined;
-var allocator_ptr: *std.mem.Allocator = undefined;
+var alloc: Allocator = undefined;
 
-pub fn init(allocator: *std.mem.Allocator) void {
-    event_map = map_type.init(allocator.*);
-    allocator_ptr = allocator;
+pub fn init(allocator: Allocator) void {
+    event_map = map_type.init(allocator);
+    alloc = allocator;
 }
 
 pub fn deinit() void {
@@ -57,7 +58,7 @@ pub fn on(comptime id: EngineEvents, func: map_fn_type) !void {
         return;
     }
 
-    var new_array = std.ArrayList(map_fn_struct_type).init(allocator_ptr.*);
+    var new_array = std.ArrayList(map_fn_struct_type).init(alloc);
     try new_array.append(map_fn_struct_type{ .unsafe_func = func });
     try event_map.put(id, new_array);
 }

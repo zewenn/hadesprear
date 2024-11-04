@@ -1,5 +1,6 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
+pub const builtin = @import("builtin");
 
 pub const zlib = @import("./z/z.m.zig");
 
@@ -109,11 +110,14 @@ pub fn UUIDV7() ![]u8 {
     return id;
 }
 
-pub fn init(allocator: *Allocator) !void {
-    ALLOCATOR = allocator.*;
-
-    arena_alloc = std.heap.ArenaAllocator.init(allocator.*);
+pub fn init(allocator: Allocator) !void {
+    arena_alloc = std.heap.ArenaAllocator.init(allocator);
     ARENA = arena_alloc.allocator();
+
+    if (builtin.mode == .Debug)
+        ALLOCATOR = allocator
+    else
+        ALLOCATOR = ARENA;
 
     time.init(ALLOCATOR);
     Colour.init(ALLOCATOR);
@@ -121,13 +125,13 @@ pub fn init(allocator: *Allocator) !void {
 
     entities.init(ALLOCATOR);
 
-    events.init(allocator);
+    events.init(ALLOCATOR);
 
-    scenes.init(allocator);
+    scenes.init(ALLOCATOR);
 
-    try assets.init(allocator);
+    try assets.init(ALLOCATOR);
 
-    GUI.init(allocator);
+    GUI.init(ALLOCATOR);
 
     try @import("../.temp/script_run.zig").register();
 

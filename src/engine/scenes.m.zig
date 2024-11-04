@@ -25,11 +25,11 @@ const map_type = std.StringHashMap(std.ArrayList(Script));
 pub var current: ?[]const u8 = null;
 
 var script_map: map_type = undefined;
-var allocator_ptr: *std.mem.Allocator = undefined;
+var alloc: Allocator = undefined;
 
-pub fn init(allocator: *std.mem.Allocator) void {
-    script_map = map_type.init(allocator.*);
-    allocator_ptr = allocator;
+pub fn init(allocator: Allocator) void {
+    script_map = map_type.init(allocator);
+    alloc = allocator;
 }
 
 pub fn deinit() void {
@@ -64,7 +64,7 @@ pub fn register(comptime id: String, script: Script) !void {
         return;
     }
 
-    var new_array = std.ArrayList(Script).init(allocator_ptr.*);
+    var new_array = std.ArrayList(Script).init(alloc);
     try new_array.append(script);
     try script_map.put(id, new_array);
 }

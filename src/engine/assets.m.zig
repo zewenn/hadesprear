@@ -15,7 +15,7 @@ var image_map: std.StringHashMap(Image) = undefined;
 var wave_map: std.StringHashMap(Wave) = undefined;
 var font_map: std.StringHashMap(Font) = undefined;
 
-var alloc: *Allocator = undefined;
+var alloc: Allocator = undefined;
 
 pub inline fn compile() !void {
     var content_arr: std.ArrayListAligned([]const u8, null) = undefined;
@@ -32,12 +32,12 @@ pub inline fn compile() !void {
     std.mem.copyForwards([]const u8, &files, x2);
 }
 
-pub fn init(allocator: *Allocator) !void {
+pub fn init(allocator: Allocator) !void {
     z.dprint("[MODULE] ASSETS: LOADING...", .{});
     alloc = allocator;
-    image_map = std.StringHashMap(Image).init(alloc.*);
-    wave_map = std.StringHashMap(Wave).init(alloc.*);
-    font_map = std.StringHashMap(Font).init(alloc.*);
+    image_map = std.StringHashMap(Image).init(alloc);
+    wave_map = std.StringHashMap(Wave).init(alloc);
+    font_map = std.StringHashMap(Font).init(alloc);
 
     // const testimg = try Image.loadFromMemory(files[0], 4);
     // std.debug.print("{any}", .{getPixelData(&testimg, .{ .x = 0, .y = 0 })});

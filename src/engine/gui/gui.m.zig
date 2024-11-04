@@ -30,11 +30,11 @@ pub const BUTTON_MATRIX_DEPTH = BM3D.BUTTON_MATRIX_DEPTH;
 pub var hovered_button: ?*GUIElement = null;
 pub var keyboard_cursor_position = rl.Vector2.init(0, 0);
 
-var alloc: *Allocator = undefined;
+var alloc: Allocator = undefined;
 
-pub fn init(allocator: *Allocator) void {
+pub fn init(allocator: Allocator) void {
     alloc = allocator;
-    manager.init(alloc.*);
+    manager.init(alloc);
 
     BM3D.clear();
 }
@@ -211,7 +211,7 @@ pub fn clear() !void {
 }
 
 pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*:0]const u8) !*GUIElement {
-    var childrn = std.ArrayList(*GUIElement).init(alloc.*);
+    var childrn = std.ArrayList(*GUIElement).init(alloc);
 
     for (children) |child| {
         try childrn.append(child);
@@ -223,7 +223,7 @@ pub fn Element(options: GUIElement.Options, children: []*GUIElement, content: [*
 
     try manager.append(Parent);
 
-    const getFMT = try std.fmt.allocPrint(alloc.*, "#{s}", .{Parent.options.id});
+    const getFMT = try std.fmt.allocPrint(alloc, "#{s}", .{Parent.options.id});
     defer alloc.free(getFMT);
 
     const el_ptr = select(getFMT).?;

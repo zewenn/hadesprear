@@ -1,5 +1,7 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
+const release = @import("release.zig");
+
 pub const builtin = @import("builtin");
 
 pub const zlib = @import("./z/z.m.zig");
@@ -114,10 +116,12 @@ pub fn init(allocator: Allocator) !void {
     arena_alloc = std.heap.ArenaAllocator.init(allocator);
     ARENA = arena_alloc.allocator();
 
-    if (builtin.mode == .Debug)
-        ALLOCATOR = allocator
-    else
+    if (builtin.mode == .Debug) {
+        ALLOCATOR = allocator;
+    } else {
         ALLOCATOR = ARENA;
+        release.callPlatformAPIs();
+    }
 
     time.init(ALLOCATOR);
     Colour.init(ALLOCATOR);

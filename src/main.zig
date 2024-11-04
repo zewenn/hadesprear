@@ -13,14 +13,6 @@ pub fn main() !void {
 
     e.setTraceLogLevel(.log_error);
 
-    if (e.builtin.os.tag == .windows) {
-        const wapi = @cImport({
-            @cInclude("windows.h");
-        });
-
-        _ = wapi.FreeConsole();
-    }
-
     e.window.init(
         "HadeSpear",
         e.Vec2(

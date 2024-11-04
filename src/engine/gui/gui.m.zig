@@ -143,8 +143,8 @@ pub fn remove(element: *GUIElement) !void {
     }
 }
 
-pub fn deinit() !void {
-    const items = try manager.items();
+pub fn deinit() void {
+    const items = manager.items() catch return;
     defer manager.alloc.free(items);
 
     for (items) |item| {

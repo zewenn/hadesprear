@@ -9,7 +9,10 @@ pub const EngineEvents = enum {
 };
 
 const map_fn_type = *const fn () anyerror!void;
-const map_fn_struct_type = struct { func: map_fn_type };
+const map_fn_struct_type = struct {
+    unsafe_func: map_fn_type,
+    fail_count: u8 = 0,
+};
 const map_type = std.AutoHashMap(EngineEvents, std.ArrayListAligned(map_fn_struct_type, null));
 
 var event_map: map_type = undefined;
@@ -48,24 +51,31 @@ pub fn on(comptime id: EngineEvents, func: map_fn_type) !void {
     const data = event_map.getPtr(id);
 
     if (data) |d| {
-        try d.append(map_fn_struct_type{ .func = func });
+        try d.append(map_fn_struct_type{
+            .unsafe_func = func,
+        });
         return;
     }
 
     var new_array = std.ArrayList(map_fn_struct_type).init(allocator_ptr.*);
-    try new_array.append(map_fn_struct_type{ .func = func });
+    try new_array.append(map_fn_struct_type{ .unsafe_func = func });
     try event_map.put(id, new_array);
 }
 
-pub fn call(comptime id: EngineEvents) !void {
-    const data = event_map.get(id);
+pub fn call(comptime id: EngineEvents) void {
+    const data: *std.ArrayList(map_fn_struct_type) = if (event_map.getPtr(id)) |t| t else return;
 
-    if (data == null) {
-        return;
-    }
+    for (data.items, 0..) |*func_struct, index| {
+        if (func_struct.fail_count >= 3) {
+            _ = data.swapRemove(index);
+            std.log.err("CRITICAL EVENT FAIL: REMOVING FUNCTION", .{});
+            break;
+        }
 
-    for (data.?.items) |func_struct| {
-        try func_struct.func();
+        func_struct.unsafe_func() catch {
+            func_struct.fail_count += 1;
+            std.log.err("Event function failiure: {any}", .{func_struct.unsafe_func});
+        };
     }
 }
 

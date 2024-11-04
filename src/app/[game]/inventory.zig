@@ -2489,8 +2489,13 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    try e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json");
-    try e.saveloader.save(e.ALLOCATOR, spell_bag, "saved/spell_bag.json");
+    std.log.debug("Inventory {x}", .{@intFromPtr(&deinit)});
+    e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json") catch {
+        std.log.err("Failed to save gamestate", .{});
+    };
+    e.saveloader.save(e.ALLOCATOR, spell_bag, "saved/spell_bag.json") catch {
+        std.log.err("Failed to save gamestate", .{});
+    };
 
     e.ALLOCATOR.free(item_slots);
     e.ALLOCATOR.free(spell_slots);

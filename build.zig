@@ -214,6 +214,18 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const exe = b.addExecutable(.{
+        .name = "HadeSpear",
+        .root_source_file = b.path("src/main.zig"),
+        .optimize = optimize,
+        .target = target,
+    });
+
+    exe.addSystemFrameworkPath(
+        .{ .cwd_relative = "/System/Library/Frameworks" },
+    );
+    // step.addSystemFrameworkPath(.{ .cwd_relative = "/System/Library/Frameworks" });
+
     const raylib_dep = b.dependency("raylib-zig", .{
         .target = target,
         .optimize = optimize,
@@ -226,6 +238,9 @@ pub fn build(b: *std.Build) !void {
 
     const raylib = raylib_dep.module("raylib");
     const raylib_artifact = raylib_dep.artifact("raylib");
+    raylib.addSystemFrameworkPath(
+        .{ .cwd_relative = "/System/Library/Frameworks" },
+    );
 
     const uuid = uuid_dep.module("uuid");
     const uuid_artifact = uuid_dep.artifact("uuid-zig");
@@ -248,24 +263,17 @@ pub fn build(b: *std.Build) !void {
         return;
     }
 
-    const exe = b.addExecutable(.{
-        .name = "HadeSpear",
-        .root_source_file = b.path("src/main.zig"),
-        .optimize = optimize,
-        .target = target,
-    });
-
     exe.linkLibrary(raylib_artifact);
     exe.root_module.addImport("raylib", raylib);
 
     exe.linkLibrary(uuid_artifact);
     exe.root_module.addImport("uuid", uuid);
 
+    b.installArtifact(exe);
+
     const run_cmd = b.addRunArtifact(exe);
     const run_step = b.step("run", "Run HadeSpear");
     run_step.dependOn(&run_cmd.step);
-
-    b.installArtifact(exe);
 }
 
 const Segment = struct {

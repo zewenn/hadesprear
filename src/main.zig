@@ -26,10 +26,10 @@ pub fn main() !void {
 
     try e.compile();
     try e.init(&allocator);
-    defer e.deinit() catch {};
+    defer e.deinit();
 
     e.setTargetFPS(256);
-    e.setExitKey(.key_kp_7);
+    e.setExitKey(.key_backspace);
 
     var borderless = false;
 

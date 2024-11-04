@@ -9,6 +9,7 @@ const GUI = @import("./gui/gui.m.zig");
 
 pub const Script = struct {
     const fn_type: type = *const fn () anyerror!void;
+    const fn_type_safe: type = *const fn () void;
     const Self = @This();
 
     eAwake: ?fn_type = null,
@@ -70,7 +71,7 @@ pub fn register(comptime id: String, script: Script) !void {
 
 pub fn load(comptime id: String) !void {
     if (current) |_| {
-        try events.call(.Deinit);
+        events.call(.Deinit);
     }
 
     current = id;
@@ -100,8 +101,8 @@ pub fn load(comptime id: String) !void {
         }
     }
 
-    try events.call(.Awake);
-    try events.call(.Init);
+    events.call(.Awake);
+    events.call(.Init);
 }
 
 pub fn delete(comptime id: String) !void {

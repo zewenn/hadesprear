@@ -12,7 +12,7 @@ const Timeout = struct {
 
 var timeouts: std.ArrayList(Timeout) = undefined;
 
-var alloc: *Allocator = undefined;
+var alloc: Allocator = undefined;
 
 /// The current time in seconds
 pub var currentTime: f64 = 0;
@@ -39,10 +39,10 @@ pub fn DeltaTime() f32 {
     return @as(f32, @floatCast(deltaTime));
 }
 
-pub fn init(allocator: *Allocator) void {
+pub fn init(allocator: Allocator) void {
     alloc = allocator;
 
-    timeouts = std.ArrayList(Timeout).init(allocator.*);
+    timeouts = std.ArrayList(Timeout).init(allocator);
     gameTime = rl.getTime();
 }
 

@@ -74,8 +74,8 @@ pub fn make(comptime T: type) type {
         var entities: EntityArrayType = undefined;
         pub var alloc: Allocator = undefined;
 
-        pub fn init(allocator: *Allocator) void {
-            alloc = allocator.*;
+        pub fn init(allocator: Allocator) void {
+            alloc = allocator;
 
             entities = EntityArrayType.init(alloc);
         }

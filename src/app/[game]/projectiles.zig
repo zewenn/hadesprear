@@ -140,7 +140,10 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    const items = try manager.items();
+    const items = manager.items() catch {
+        std.log.err("Failed to get items from the manager", .{});
+        return;
+    };
     defer manager.alloc.free(items);
 
     for (items) |item| {

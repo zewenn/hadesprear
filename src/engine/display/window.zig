@@ -6,6 +6,7 @@ const rl = @import("raylib");
 pub var size = rl.Vector2.init(0, 0);
 pub var borderless = false;
 pub var fullscreen = false;
+pub var vsync = false;
 
 pub fn init(title: [*:0]const u8, startSize: rl.Vector2) void {
     rl.initWindow(
@@ -69,6 +70,15 @@ pub fn toggleFullscreen() void {
     rl.toggleFullscreen();
 }
 
+pub fn toggleVsync() void {
+    vsync = !vsync;
+
+    if (vsync)
+        rl.setTargetFPS(rl.getMonitorRefreshRate(rl.getCurrentMonitor()))
+    else
+        rl.setTargetFPS(256);
+}
+
 pub fn makeResizable() void {
-    rl.setWindowState(.{ .window_resizable = true, .vsync_hint = true });
+    rl.setWindowState(.{ .window_resizable = true });
 }

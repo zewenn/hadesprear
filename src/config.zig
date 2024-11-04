@@ -325,6 +325,12 @@ pub const AttackTypes = enum {
     dash,
 };
 
+pub const Rarity = enum {
+    common,
+    epic,
+    legendary,
+};
+
 pub const SpellSlots = enum { q, e, r, x };
 
 pub const Item = struct {
@@ -332,11 +338,7 @@ pub const Item = struct {
     id: u128 = 0,
 
     T: ItemTypes = .weapon,
-    rarity: enum {
-        common,
-        epic,
-        legendary,
-    } = .common,
+    rarity: Rarity = .common,
 
     // This is obviously not applicable to any non-weapons
     weapon_type: enum {
@@ -420,4 +422,30 @@ pub const Blessings = enum {
     steel,
     /// Increased crit rate
     death,
+};
+
+// ========================================================================
+//
+//                                LEVELS
+//
+// ========================================================================
+
+pub const Level = struct {
+    rounds: [][]EnemySpawner,
+    reward_tier: Rarity,
+    backgrounds: []Entity,
+    walls: []Entity,
+};
+
+pub const LoadedLevel = struct {
+    rounds: [][]EnemySpawner,
+    reward_tier: Rarity,
+    backgrounds: []*Entity,
+    walls: []*Entity,
+};
+
+pub const EnemySpawner = struct {
+    enemy_archetype: EnemyArchetypes,
+    enemy_subtype: EnemySubtypes,
+    spawn_at: rl.Vector2,
 };

@@ -11,6 +11,8 @@ const weapons = @import("weapons.zig");
 const spells = @import("spells.zig");
 const usePrefab = @import("items.zig").usePrefab;
 
+const levels = @import("levels.zig");
+
 const HAND_DISTANCE: comptime_float = 24;
 const HIT_GLOVE_DISTANCE: f32 = 45;
 const HIT_PLATES_ROTATION: f32 = 42.5;
@@ -21,7 +23,7 @@ const WALK_LEFT_1 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else ""
 const WALK_RIGHT_0 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/right_0.png";
 const WALK_RIGHT_1 = "sprites/entity/player" ++ (if (METAL_MODE) "/metal" else "") ++ "/right_1.png";
 
-const METAL_MODE = true;
+const METAL_MODE = false;
 
 pub var Player = e.entities.Entity{
     .id = "Player",
@@ -89,20 +91,6 @@ var dash_charges_display: *e.GUI.GUIElement = undefined;
 
 var mouse_rotation: f32 = 0;
 
-fn summonProjectiles(
-    T: conf.AttackTypes,
-    shoot_angle: f32,
-) !void {
-    try projectiles.summonMultiple(
-        T,
-        &Player,
-        inventory.equippedbar.current_weapon.*,
-        inventory.equippedbar.get(.damage),
-        shoot_angle,
-        .player,
-    );
-}
-
 // ===================== [Events] =====================
 
 pub fn awake() !void {
@@ -163,7 +151,7 @@ pub fn awake() !void {
                 .chain(
                 50,
                 .{
-                    .rotation = 15,
+                    .rotation = 5,
                     .sprite = WALK_RIGHT_1,
                 },
             )
@@ -324,6 +312,10 @@ pub fn update() !void {
 
     var move_vector = e.Vec2(0, 0);
     Input: {
+        if (e.isKeyPressed(.key_u)) {
+            e.camera.trauma = 100;
+        }
+
         if (e.isKeyDown(.key_w)) {
             move_vector.y -= 1;
         }
@@ -336,58 +328,70 @@ pub fn update() !void {
         if (e.isKeyDown(.key_d)) {
             move_vector.x += 1;
         }
-        if (e.isKeyPressed(.key_f)) {
-            if (e.isKeyDown(.key_zero)) {
-                for (0..10) |_| {
-                    try enemies.spawnArchetype(
-                        .brute,
-                        .normal,
-                        e.Vec2(0, 0),
-                    );
-                }
-            }
+        if (e.isKeyPressed(.key_f)) KeyF: {
             if (e.isKeyDown(.key_one)) {
-                try enemies.spawnArchetype(
-                    .minion,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
+                levels.unload();
+                break :KeyF;
             }
+
             if (e.isKeyDown(.key_two)) {
-                try enemies.spawnArchetype(
-                    .brute,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
+                try levels.startRound();
+                break :KeyF;
             }
-            if (e.isKeyDown(.key_three)) {
-                try enemies.spawnArchetype(
-                    .angler,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
-            }
-            if (e.isKeyDown(.key_four)) {
-                try enemies.spawnArchetype(
-                    .tank,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
-            }
-            if (e.isKeyDown(.key_five)) {
-                try enemies.spawnArchetype(
-                    .shaman,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
-            }
-            if (e.isKeyDown(.key_six)) {
-                try enemies.spawnArchetype(
-                    .knight,
-                    .normal,
-                    e.Vec2(0, 0),
-                );
-            }
+
+            try levels.load(levels.TestLevel);
+            break :KeyF;
+            // if (e.isKeyDown(.key_zero)) {
+            //     for (0..10) |_| {
+            //         try enemies.spawnArchetype(
+            //             .brute,
+            //             .normal,
+            //             e.Vec2(0, 0),
+            //         );
+            //     }
+            // }
+            // if (e.isKeyDown(.key_one)) {
+            //     try enemies.spawnArchetype(
+            //         .minion,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
+            // if (e.isKeyDown(.key_two)) {
+            //     try enemies.spawnArchetype(
+            //         .brute,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
+            // if (e.isKeyDown(.key_three)) {
+            //     try enemies.spawnArchetype(
+            //         .angler,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
+            // if (e.isKeyDown(.key_four)) {
+            //     try enemies.spawnArchetype(
+            //         .tank,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
+            // if (e.isKeyDown(.key_five)) {
+            //     try enemies.spawnArchetype(
+            //         .shaman,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
+            // if (e.isKeyDown(.key_six)) {
+            //     try enemies.spawnArchetype(
+            //         .knight,
+            //         .normal,
+            //         e.Vec2(0, 0),
+            //     );
+            // }
         }
         if (e.isKeyPressed(.key_q) and inventory.equippedbar.spells.q != null) {
             try spells.summon(
@@ -498,22 +502,52 @@ pub fn update() !void {
         if (Player.shooting_stats.?.timeout_end >= e.time.gameTime) break :Input;
 
         if (shoot_heavy) {
-            try summonProjectiles(.heavy, shoot_angle);
+            try projectiles.summonMultiple(
+                .heavy,
+                &Player,
+                inventory.equippedbar.current_weapon.*,
+                Player.entity_stats.?.damage,
+                shoot_angle,
+                .player,
+            );
             try hands.play(.heavy);
+
+            e.camera.trauma = 40;
+            try e.camera.resetShakeAfter(0.25, 10);
 
             break :Input;
         }
 
         if (Player.dash_modifiers.?.dash_end + 0.1 >= e.time.gameTime and shoot) {
-            try summonProjectiles(.dash, shoot_angle);
+            try projectiles.summonMultiple(
+                .dash,
+                &Player,
+                inventory.equippedbar.current_weapon.*,
+                Player.entity_stats.?.damage,
+                shoot_angle,
+                .player,
+            );
             try hands.play(.dash);
+
+            e.camera.trauma = 30;
+            try e.camera.resetShakeAfter(0.25, 5);
 
             break :Input;
         }
 
         if (shoot) {
-            try summonProjectiles(.light, shoot_angle);
+            try projectiles.summonMultiple(
+                .light,
+                &Player,
+                inventory.equippedbar.current_weapon.*,
+                Player.entity_stats.?.damage,
+                shoot_angle,
+                .player,
+            );
             try hands.play(.light);
+
+            e.camera.trauma = 30;
+            try e.camera.resetShakeAfter(0.25, 5);
         }
 
         break :Input;

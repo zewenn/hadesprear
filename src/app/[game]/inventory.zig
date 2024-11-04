@@ -1373,7 +1373,7 @@ pub fn awake() !void {
             .id = "InventoryParentBackground",
             .style = .{
                 .background = .{
-                    .color = 0x00000088,
+                    .color = 0x000000cc,
                 },
                 .top = u("-100%"),
                 .left = u("50%"),
@@ -2321,70 +2321,89 @@ pub fn init() !void {
     // );
 
     loadFromSave();
-    // _ = pickUpSort(
-    //     usePrefab(.{
-    //         .id = e.uuid.v7.new(),
-    //         .T = .spell,
+    if (bag[0] == null) {
+        _ = pickUpSort(
+            usePrefab(prefabs.legendaries.weapons.legendary_sword),
+        );
+        _ = pickUpSort(
+            usePrefab(prefabs.epics.weapons.piercing_sword),
+        );
+        _ = pickUpSort(
+            usePrefab(prefabs.epics.amethysts.normal_amethyst),
+        );
+        _ = pickUpSort(
+            usePrefab(prefabs.legendaries.weapons.staff),
+        );
+        _ = pickUpSort(
+            usePrefab(prefabs.legendaries.weapons.daggers),
+        );
+    }
+    if (spell_bag[0] == null) {
+        _ = pickUpSort(
+            usePrefab(.{
+                .id = e.uuid.v7.new(),
+                .T = .spell,
 
-    //         .rarity = .legendary,
+                .rarity = .legendary,
 
-    //         .spell_blessings = conf.createTypeArrayUnknownLength(
-    //             conf.Blessings,
-    //             @constCast(&[_]?conf.Blessings{
-    //                 .steel,
-    //                 .steel,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fire,
-    //                 .fire,
-    //                 .fire,
-    //                 .fire,
-    //                 .zephyr,
-    //                 .zephyr,
-    //             }),
-    //         ),
+                .spell_blessings = conf.createTypeArrayUnknownLength(
+                    conf.Blessings,
+                    @constCast(&[_]?conf.Blessings{
+                        .steel,
+                        .steel,
+                        .fracture,
+                        .fracture,
+                        .fracture,
+                        .fracture,
+                        .fracture,
+                        .fracture,
+                        .fire,
+                        .fire,
+                        .fire,
+                        .fire,
+                        .zephyr,
+                        .zephyr,
+                    }),
+                ),
 
-    //         .name = "Spell",
+                .name = "Spell",
 
-    //         .icon = "sprites/entity/enemies/brute/left_0.png",
-    //     }),
-    // );
-    // _ = pickUpSort(
-    //     usePrefab(.{
-    //         .id = e.uuid.v7.new(),
-    //         .T = .spell,
+                .icon = "sprites/entity/enemies/brute/left_0.png",
+            }),
+        );
+        _ = pickUpSort(
+            usePrefab(.{
+                .id = e.uuid.v7.new(),
+                .T = .spell,
 
-    //         .rarity = .epic,
+                .rarity = .epic,
 
-    //         .spell_blessings = conf.createTypeArrayUnknownLength(
-    //             conf.Blessings,
-    //             @constCast(&[_]?conf.Blessings{
-    //                 .zephyr,
-    //                 .zephyr,
-    //                 .zephyr,
-    //                 .zephyr,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .fracture,
-    //                 .curse,
-    //                 .curse,
-    //                 .curse,
-    //                 .curse,
-    //                 .blood,
-    //                 .blood,
-    //                 .blood,
-    //             }),
-    //         ),
+                .spell_blessings = conf.createTypeArrayUnknownLength(
+                    conf.Blessings,
+                    @constCast(&[_]?conf.Blessings{
+                        .zephyr,
+                        .zephyr,
+                        .zephyr,
+                        .zephyr,
+                        .fracture,
+                        .fracture,
+                        .fracture,
+                        .curse,
+                        .curse,
+                        .curse,
+                        .curse,
+                        .blood,
+                        .blood,
+                        .blood,
+                    }),
+                ),
 
-    //         .name = "Spell",
+                .name = "Spell",
 
-    //         .icon = "sprites/entity/enemies/brute/left_0.png",
-    //     }),
-    // );
+                .icon = "sprites/entity/enemies/brute/left_0.png",
+            }),
+        );
+    }
 
     // _ = pickUpSort(
     //     usePrefab(prefabs.epics.amethysts.normal_amethyst),
@@ -2470,8 +2489,13 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    try e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json");
-    try e.saveloader.save(e.ALLOCATOR, spell_bag, "saved/spell_bag.json");
+    std.log.debug("Inventory {x}", .{@intFromPtr(&deinit)});
+    e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json") catch {
+        std.log.err("Failed to save gamestate", .{});
+    };
+    e.saveloader.save(e.ALLOCATOR, spell_bag, "saved/spell_bag.json") catch {
+        std.log.err("Failed to save gamestate", .{});
+    };
 
     e.ALLOCATOR.free(item_slots);
     e.ALLOCATOR.free(spell_slots);

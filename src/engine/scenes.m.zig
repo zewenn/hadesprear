@@ -9,6 +9,7 @@ const GUI = @import("./gui/gui.m.zig");
 
 pub const Script = struct {
     const fn_type: type = *const fn () anyerror!void;
+    const fn_type_safe: type = *const fn () void;
     const Self = @This();
 
     eAwake: ?fn_type = null,
@@ -24,11 +25,11 @@ const map_type = std.StringHashMap(std.ArrayList(Script));
 pub var current: ?[]const u8 = null;
 
 var script_map: map_type = undefined;
-var allocator_ptr: *std.mem.Allocator = undefined;
+var alloc: Allocator = undefined;
 
-pub fn init(allocator: *std.mem.Allocator) void {
-    script_map = map_type.init(allocator.*);
-    allocator_ptr = allocator;
+pub fn init(allocator: Allocator) void {
+    script_map = map_type.init(allocator);
+    alloc = allocator;
 }
 
 pub fn deinit() void {
@@ -63,14 +64,14 @@ pub fn register(comptime id: String, script: Script) !void {
         return;
     }
 
-    var new_array = std.ArrayList(Script).init(allocator_ptr.*);
+    var new_array = std.ArrayList(Script).init(alloc);
     try new_array.append(script);
     try script_map.put(id, new_array);
 }
 
 pub fn load(comptime id: String) !void {
     if (current) |_| {
-        try events.call(.Deinit);
+        events.call(.Deinit);
     }
 
     current = id;
@@ -100,8 +101,8 @@ pub fn load(comptime id: String) !void {
         }
     }
 
-    try events.call(.Awake);
-    try events.call(.Init);
+    events.call(.Awake);
+    events.call(.Init);
 }
 
 pub fn delete(comptime id: String) !void {

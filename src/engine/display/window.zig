@@ -70,5 +70,5 @@ pub fn toggleFullscreen() void {
 }
 
 pub fn makeResizable() void {
-    rl.setWindowState(.{ .window_resizable = true });
+    rl.setWindowState(.{ .window_resizable = true, .vsync_hint = true });
 }

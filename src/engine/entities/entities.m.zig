@@ -74,8 +74,8 @@ pub fn make(comptime T: type) type {
         var entities: EntityArrayType = undefined;
         pub var alloc: Allocator = undefined;
 
-        pub fn init(allocator: *Allocator) void {
-            alloc = allocator.*;
+        pub fn init(allocator: Allocator) void {
+            alloc = allocator;
 
             entities = EntityArrayType.init(alloc);
         }
@@ -89,6 +89,10 @@ pub fn make(comptime T: type) type {
                 if (std.mem.eql(u8, item.id, id)) return item;
             }
             return null;
+        }
+
+        pub fn tagged(entity: *Entity, tag: []const u8) bool {
+            return std.mem.containsAtLeast(u8, entity.tags, 1, tag);
         }
 
         /// Caller owns the returned memory.

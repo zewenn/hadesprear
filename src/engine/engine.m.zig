@@ -1,5 +1,8 @@
 const std = @import("std");
 const Allocator = @import("std").mem.Allocator;
+const release = @import("release.zig");
+
+pub const builtin = @import("builtin");
 
 pub const zlib = @import("./z/z.m.zig");
 
@@ -63,6 +66,26 @@ pub fn loadusize(v: anytype) usize {
     };
 }
 
+pub fn loadisize(v: anytype) isize {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .Int, .ComptimeInt => @intCast(v),
+        .Float, .ComptimeFloat => @intFromFloat(@round(v)),
+        .Bool => @intFromBool(v),
+        else => 0,
+    };
+}
+
+/// Generates a random number between a and b.
+/// `a <= i <= b`, with 3 decimal digits
+pub fn Rand(a: anytype, b: anytype) f32 {
+    const ia = loadisize(a) * 1000;
+    const ib = loadisize(b) * 1000;
+
+    const random = std.crypto.random.intRangeAtMost(isize, ia, ib);
+
+    return loadf32(random) * 0.001;
+}
+
 pub fn Vec2(x: anytype, y: anytype) rl.Vector2 {
     return rl.Vector2.init(loadf32(x), loadf32(y));
 }
@@ -89,23 +112,30 @@ pub fn UUIDV7() ![]u8 {
     return id;
 }
 
-pub fn init(allocator: *Allocator) !void {
-    ALLOCATOR = allocator.*;
-
-    arena_alloc = std.heap.ArenaAllocator.init(allocator.*);
+pub fn init(allocator: Allocator) !void {
+    arena_alloc = std.heap.ArenaAllocator.init(allocator);
     ARENA = arena_alloc.allocator();
 
-    time.init(allocator);
+    if (builtin.mode == .Debug) {
+        ALLOCATOR = allocator;
+    } else {
+        ALLOCATOR = ARENA;
+        release.callPlatformAPIs();
+    }
+
+    time.init(ALLOCATOR);
     Colour.init(ALLOCATOR);
+    camera.init(ALLOCATOR);
 
-    entities.init(allocator);
+    entities.init(ALLOCATOR);
 
-    events.init(allocator);
-    scenes.init(allocator);
+    events.init(ALLOCATOR);
 
-    try assets.init(allocator);
+    scenes.init(ALLOCATOR);
 
-    GUI.init(allocator);
+    try assets.init(ALLOCATOR);
+
+    GUI.init(ALLOCATOR);
 
     try @import("../.temp/script_run.zig").register();
 
@@ -114,10 +144,10 @@ pub fn init(allocator: *Allocator) !void {
     try scenes.load("default");
 }
 
-pub fn deinit() !void {
-    try events.call(.Deinit);
+pub fn deinit() void {
+    events.call(.Deinit);
 
-    try GUI.deinit();
+    GUI.deinit();
 
     assets.deinit();
 
@@ -125,8 +155,9 @@ pub fn deinit() !void {
     events.deinit();
 
     entities.deinit();
-    Colour.deinit();
 
+    camera.deinit();
+    Colour.deinit();
     time.deinit();
 
     arena_alloc.deinit();
@@ -146,7 +177,7 @@ pub fn update() !void {
     // std.log.info("GUI: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 
     // last_farme_at = rl.getTime();
-    try events.call(.Update);
+    events.call(.Update);
 
     // std.log.info("EVENTS: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 

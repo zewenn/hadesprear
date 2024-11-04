@@ -4,20 +4,72 @@ const Allocator = @import("std").mem.Allocator;
 const rl = @import("raylib");
 const window = @import("./window.zig");
 
+const zlib = @import("../z/z.m.zig");
+const time = @import("../time.m.zig");
+
+const loadf32 = @import("../engine.m.zig").loadf32;
+
 pub var position = rl.Vector2.init(0, 0);
 pub var zoom: f32 = 0.75;
 pub var last_zoom: f32 = 0.1;
 
 pub var following: ?*rl.Vector2 = null;
 
+pub var apply_shake = true;
+pub var shake_freq: f32 = 15;
+pub var default_shake_freq: f32 = 15;
+pub var shake_strength: f32 = 8;
+pub var default_shake_strength: f32 = 8;
+
+pub var trauma: f32 = 0;
+pub var recoverySpeed: f32 = 50;
+
+const TMType = time.TimeoutHandler(struct {});
+pub var tm: TMType = undefined;
+
 pub fn follow(vec: *rl.Vector2) void {
     following = vec;
 }
 
+pub fn init(allocator: Allocator) void {
+    tm = TMType.init(allocator);
+}
+
+pub fn deinit() void {
+    tm.deinit();
+}
+
+pub inline fn resetShakeAfter(after: f64, scale_by_percent: f32) !void {
+    shake_freq = default_shake_freq * (1 + scale_by_percent / 100);
+    shake_strength = default_shake_strength * (1 + scale_by_percent / 100);
+    try tm.setTimeout(
+        (struct {
+            pub fn callback(_: TMType.ARGSTYPE) !void {
+                shake_freq = default_shake_freq;
+                shake_strength = default_shake_strength;
+            }
+        }).callback,
+        .{},
+        after,
+    );
+}
+
 pub fn update() void {
+    const shake_vec = if (apply_shake) Shake: {
+        if (trauma == 0) break :Shake rl.Vector2.init(0, 0);
+        const perlin_noise = (zlib.perlin.noise(f32, .{
+            .x = loadf32(time.gameTime) * loadf32(shake_freq),
+            .y = loadf32(time.gameTime) * loadf32(shake_freq),
+        }) * shake_strength - 1) * trauma / recoverySpeed;
+
+        break :Shake rl.Vector2.init(perlin_noise, perlin_noise);
+    } else rl.Vector2.init(0, 0);
+
     if (following) |v| {
-        position = v.*;
+        position = v.*.add(shake_vec);
     }
+
+    trauma = @max(0, trauma - recoverySpeed * 2 * time.DeltaTime());
 }
 
 pub fn worldPositionToScreenPosition(world_position: rl.Vector2) rl.Vector2 {

@@ -9,7 +9,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    var allocator = gpa.allocator();
+    const allocator = gpa.allocator();
 
     e.setTraceLogLevel(.log_error);
 
@@ -25,13 +25,20 @@ pub fn main() !void {
     e.window.makeResizable();
 
     try e.compile();
-    try e.init(&allocator);
-    defer e.deinit() catch {};
+    try e.init(allocator);
+    defer e.deinit();
 
     e.setTargetFPS(256);
-    e.setExitKey(.key_kp_7);
+    e.setExitKey(.key_backspace);
+
+    var borderless = false;
 
     while (!e.windowShouldClose()) {
+        if (e.isKeyPressed(.key_f11)) {
+            borderless = !borderless;
+
+            e.window.toggleBorderless();
+        }
         e.update() catch {};
     }
 }

@@ -33,6 +33,8 @@ pub fn nullAssertOptionalPointer(comptime T: type, ptr: *?T) !*T {
 pub const math = @import("math.zig");
 pub const arrays = @import("arrays.zig");
 
+pub const perlin = @import("perlin.zig");
+
 pub const debug = @import("./debug.zig");
 pub const print = debug.print;
 pub const println = debug.println;

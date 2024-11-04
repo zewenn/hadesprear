@@ -29,14 +29,10 @@ pub fn main() !void {
     defer e.deinit();
 
     e.setTargetFPS(256);
-    e.setExitKey(.key_backspace);
-
-    var borderless = false;
+    e.setExitKey(.key_kp_7);
 
     while (!e.windowShouldClose()) {
         if (e.isKeyPressed(.key_f11)) {
-            borderless = !borderless;
-
             e.window.toggleBorderless();
         }
         e.update() catch {};

@@ -180,7 +180,7 @@ var is_preview_heap_loaded = false;
 var item_slots: []*GUI.GUIElement = undefined;
 var spell_slots: []*GUI.GUIElement = undefined;
 
-const SLOT_SIZE: f32 = 24 * 5;
+const SLOT_SIZE: f32 = 24 * 4;
 const SPACING_SIZE: f32 = SLOT_SIZE / 4;
 const PREVIEW_FONT_COLOR: e.Colour.HEX = e.Colour.white;
 
@@ -2489,7 +2489,6 @@ pub fn update() !void {
 }
 
 pub fn deinit() !void {
-    std.log.debug("Inventory {x}", .{@intFromPtr(&deinit)});
     e.saveloader.save(e.ALLOCATOR, bag, "saved/bag.json") catch {
         std.log.err("Failed to save gamestate", .{});
     };
@@ -2515,7 +2514,7 @@ fn loadFromSave() void {
     // ------------------------------------------------------------------------------------
     const loaded_bag = e.saveloader.load([]?Item, e.ARENA, "saved/bag.json");
 
-    const loaded_bag_unwrapped = if (loaded_bag) |x| x else return;
+    const loaded_bag_unwrapped: []?Item = if (loaded_bag) |x| x else return;
     defer e.ARENA.free(loaded_bag_unwrapped);
 
     std.mem.copyForwards(?Item, bag, loaded_bag_unwrapped);
@@ -2524,7 +2523,7 @@ fn loadFromSave() void {
     // ------------------------------------------------------------------------------------
     const loaded_spell_bag = e.saveloader.load([]?Item, e.ARENA, "saved/spell_bag.json");
 
-    const loaded_spell_bag_unwrapped = if (loaded_spell_bag) |x| x else return;
+    const loaded_spell_bag_unwrapped: []?Item = if (loaded_spell_bag) |x| x else return;
     defer e.ARENA.free(loaded_spell_bag_unwrapped);
 
     std.mem.copyForwards(?Item, spell_bag, loaded_spell_bag_unwrapped);

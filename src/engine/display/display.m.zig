@@ -661,5 +661,6 @@ fn drawTetxure(
             transform.rotation.z,
             rl.Color.lime,
         );
+        rl.drawFPS(10, 10);
     }
 }

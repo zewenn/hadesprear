@@ -97,6 +97,7 @@ pub fn init(allocator: *Allocator) !void {
 
     time.init(allocator);
     Colour.init(ALLOCATOR);
+    camera.init(ALLOCATOR);
 
     entities.init(allocator);
 
@@ -125,8 +126,9 @@ pub fn deinit() !void {
     events.deinit();
 
     entities.deinit();
-    Colour.deinit();
 
+    camera.deinit();
+    Colour.deinit();
     time.deinit();
 
     arena_alloc.deinit();

@@ -1,5 +1,7 @@
-// Simple Perlin noise library for Zig
-// Ported from <https://rosettacode.org/wiki/Perlin_noise#Go>
+/// Simple Perlin noise library for Zig
+/// Ported from <https://rosettacode.org/wiki/Perlin_noise#Go>
+
+// Original code from: https://github.com/mgord9518/perlin-zig.git
 
 const std = @import("std");
 const math = std.math;

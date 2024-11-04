@@ -4,7 +4,7 @@
         "T": "weapon",
         "rarity": "legendary",
         "weapon_type": "sword",
-        "equipped": false,
+        "equipped": true,
         "equipped_spell_slot": null,
         "unequippable": true,
         "level": 10,

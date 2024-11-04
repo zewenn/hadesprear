@@ -312,7 +312,10 @@ pub fn update() !void {
 
     var move_vector = e.Vec2(0, 0);
     Input: {
-        e.camera.apply_shake = e.isKeyDown(.key_u);
+        if (e.isKeyPressed(.key_u)) {
+            e.camera.trauma = 100;
+        }
+
         if (e.isKeyDown(.key_w)) {
             move_vector.y -= 1;
         }
@@ -509,6 +512,9 @@ pub fn update() !void {
             );
             try hands.play(.heavy);
 
+            e.camera.trauma = 40;
+            try e.camera.resetShakeAfter(0.25, 10);
+
             break :Input;
         }
 
@@ -523,6 +529,9 @@ pub fn update() !void {
             );
             try hands.play(.dash);
 
+            e.camera.trauma = 30;
+            try e.camera.resetShakeAfter(0.25, 5);
+
             break :Input;
         }
 
@@ -536,6 +545,9 @@ pub fn update() !void {
                 .player,
             );
             try hands.play(.light);
+
+            e.camera.trauma = 30;
+            try e.camera.resetShakeAfter(0.25, 5);
         }
 
         break :Input;

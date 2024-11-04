@@ -102,6 +102,11 @@ pub fn update() !void {
                 }
             }
 
+            if (std.mem.eql(u8, other.id, "Player")) {
+                e.camera.trauma = 50;
+                try e.camera.resetShakeAfter(0.25, 25);
+            }
+
             if (projectile_data.health <= 0 or other.entity_stats.?.health <= 0) OnHit: {
                 switch (projectile_data.on_hit_target) {
                     .enemy => {

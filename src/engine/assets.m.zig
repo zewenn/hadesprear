@@ -8,12 +8,17 @@ pub const Sound = rl.Sound;
 pub const Wave = rl.Wave;
 pub const Font = rl.Font;
 
+const json = std.json;
+
+const saveloader = @import("saveloader.zig");
+
 const filenames = @import("../.temp/filenames.zig").Filenames;
 var files: [filenames.len][]const u8 = undefined;
 
 var image_map: std.StringHashMap(Image) = undefined;
 var wave_map: std.StringHashMap(Wave) = undefined;
 var font_map: std.StringHashMap(Font) = undefined;
+var json_map: std.StringHashMap([]const u8) = undefined;
 
 var alloc: Allocator = undefined;
 
@@ -38,6 +43,7 @@ pub fn init(allocator: Allocator) !void {
     image_map = std.StringHashMap(Image).init(alloc);
     wave_map = std.StringHashMap(Wave).init(alloc);
     font_map = std.StringHashMap(Font).init(alloc);
+    json_map = std.StringHashMap([]const u8).init(alloc);
 
     // const testimg = try Image.loadFromMemory(files[0], 4);
     // std.debug.print("{any}", .{getPixelData(&testimg, .{ .x = 0, .y = 0 })});
@@ -57,6 +63,10 @@ pub fn init(allocator: Allocator) !void {
         if (std.mem.eql(u8, name[name.len - 3 .. name.len], "wav")) {
             const wave = rl.loadWaveFromMemory(".wav", data);
             try wave_map.put(name, wave);
+        }
+
+        if (std.mem.eql(u8, name[name.len - 4 .. name.len], "json")) {
+            try json_map.put(name, data);
         }
 
         // Fonts
@@ -106,6 +116,14 @@ pub fn get(T: type, id: []const u8) ?T {
     return null;
 }
 
+pub fn getJson(T: type, allocator: Allocator, id: []const u8) !T {
+    if (!json_map.contains(id)) @panic("JSON doen't exist");
+
+    const json_contents = json_map.get(id).?;
+
+    return try json.parseFromSliceLeaky(T, allocator, json_contents, .{ .allocate = .alloc_always });
+}
+
 pub fn deinit() void {
     var kIt = image_map.keyIterator();
     while (kIt.next()) |key| {
@@ -130,4 +148,6 @@ pub fn deinit() void {
         }
     }
     font_map.deinit();
+
+    json_map.deinit();
 }

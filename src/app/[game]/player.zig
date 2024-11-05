@@ -315,19 +315,26 @@ pub fn update() !void {
         // @test
         if (e.isKeyPressed(.key_u)) {
             std.log.debug("asd", .{});
+            // try levels.loadFromMatrix(
+            //     ([_][200]u8{
+            //         ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
+            //     } ++
+            //         ([_][200]u8{
+            //         ([_]u8{1} ** 1) ++ ([_]u8{0} ** 8) ++ ([_]u8{1} ** 1) ++ ([_]u8{0} ** 190),
+            //     } ** 8) ++
+            //         [_][200]u8{
+            //         ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
+            //     }) ++
+            //         ([_][200]u8{
+            //         ([_]u8{0} ** 200),
+            //     } ** 190),
+            // );
             try levels.loadFromMatrix(
-                ([_][200]u8{
-                    ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
-                } ++
-                    ([_][200]u8{
-                    ([_]u8{1} ** 1) ++ ([_]u8{0} ** 8) ++ ([_]u8{1} ** 1) ++ ([_]u8{0} ** 190),
-                } ** 8) ++
-                    [_][200]u8{
-                    ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
-                }) ++
-                    ([_][200]u8{
-                    ([_]u8{0} ** 200),
-                } ** 190),
+                try e.assets.getJson(
+                    [200][200]u8,
+                    e.ARENA,
+                    "levels/test.json",
+                ),
             );
         }
 
@@ -544,8 +551,8 @@ pub fn update() !void {
             );
             try hands.play(.dash);
 
-            e.camera.trauma = 30;
-            try e.camera.resetShakeAfter(0.25, 5);
+            e.camera.trauma = 45;
+            try e.camera.resetShakeAfter(0.25, 15);
 
             break :Input;
         }

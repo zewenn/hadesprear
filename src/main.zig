@@ -24,9 +24,12 @@ pub fn main() !void {
 
     e.window.makeResizable();
 
-    try e.compile();
     try e.init(allocator);
     defer e.deinit();
+
+    if (e.builtin.mode != .Debug) {
+        e.zlib.debug.debugDisplay = false;
+    }
 
     e.setTargetFPS(256);
     e.setExitKey(.key_kp_7);

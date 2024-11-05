@@ -37,10 +37,6 @@ pub const entities = @import("../config.zig").entities;
 pub const components = @import("./entities/components.zig");
 pub const Entity = entities.Entity;
 
-pub inline fn compile() !void {
-    try assets.compile();
-}
-
 pub const window = display.window;
 pub const camera = display.camera;
 
@@ -122,6 +118,8 @@ pub fn init(allocator: Allocator) !void {
         ALLOCATOR = ARENA;
         release.callPlatformAPIs();
     }
+
+    try assets.compile(ALLOCATOR);
 
     time.init(ALLOCATOR);
     Colour.init(ALLOCATOR);

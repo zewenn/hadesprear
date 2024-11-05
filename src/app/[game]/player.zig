@@ -312,8 +312,23 @@ pub fn update() !void {
 
     var move_vector = e.Vec2(0, 0);
     Input: {
+        // @test
         if (e.isKeyPressed(.key_u)) {
-            e.camera.trauma = 100;
+            std.log.debug("asd", .{});
+            try levels.loadFromMatrix(
+                ([_][200]u8{
+                    ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
+                } ++
+                    ([_][200]u8{
+                    ([_]u8{1} ** 1) ++ ([_]u8{0} ** 8) ++ ([_]u8{1} ** 1) ++ ([_]u8{0} ** 190),
+                } ** 8) ++
+                    [_][200]u8{
+                    ([_]u8{1} ** 10) ++ ([_]u8{0} ** 190),
+                }) ++
+                    ([_][200]u8{
+                    ([_]u8{0} ** 200),
+                } ** 190),
+            );
         }
 
         if (e.isKeyDown(.key_w)) {

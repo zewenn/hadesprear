@@ -10,6 +10,8 @@ var loaded: ?conf.LoadedLevel = null;
 var round: usize = 0xff15;
 var actual_round: usize = 0;
 
+var Player: *e.Entity = undefined;
+
 const TMType = e.time.TimeoutHandler(struct {});
 var tm: TMType = undefined;
 
@@ -44,6 +46,7 @@ pub fn makeLoadedLevel(from: conf.Level) !conf.LoadedLevel {
         .reward_tier = from.reward_tier,
         .backgrounds = backgrounds,
         .walls = walls,
+        .player_pos = from.player_pos,
     };
 }
 
@@ -109,13 +112,13 @@ pub var TestLevel = conf.Level{
             .transform = .{
                 .position = e.Vec2(0, 640 - 96),
                 .rotation = e.Vec3(0, 0, 0),
-                .scale = e.Vec2(2560, 48 * 4),
+                .scale = e.Vec2(2560, 192),
             },
             .display = .{
                 .scaling = .pixelate,
                 .sprite = "sprites/backgrounds/w16x48.png",
                 .layer = .foreground,
-                .background_tile_size = e.Vec2(64, 48 * 4),
+                .background_tile_size = e.Vec2(64, 192),
             },
             .collider = e.components.Collider{
                 .dynamic = false,
@@ -129,13 +132,13 @@ pub var TestLevel = conf.Level{
             .transform = .{
                 .position = e.Vec2(0, -640 - 96),
                 .rotation = e.Vec3(0, 0, 0),
-                .scale = e.Vec2(2560, 48 * 4),
+                .scale = e.Vec2(2560, 192),
             },
             .display = .{
                 .scaling = .pixelate,
                 .sprite = "sprites/backgrounds/w16x48.png",
                 .layer = .foreground,
-                .background_tile_size = e.Vec2(64, 48 * 4),
+                .background_tile_size = e.Vec2(64, 192),
             },
             .collider = e.components.Collider{
                 .dynamic = false,
@@ -191,7 +194,9 @@ pub fn awake() !void {
     manager.init(e.ALLOCATOR);
 }
 
-pub fn init() !void {}
+pub fn init() !void {
+    Player = e.entities.get("Player").?;
+}
 
 pub fn update() !void {
     try tm.update();
@@ -222,6 +227,10 @@ pub fn load(level: conf.Level) !void {
     if (loaded) |_| unload();
     loaded = try makeLoadedLevel(level);
     round = 0;
+
+    std.log.debug("player_pos: {any}", .{level.player_pos});
+
+    Player.transform.position = level.player_pos.multiply(e.Vec2(64, 64));
 
     const loadedptr = &(loaded.?);
 
@@ -259,6 +268,8 @@ pub fn startRound() !void {
     if (loaded == null) return;
     if (round == 0xff15) return;
 
+    if (loaded.?.rounds.len == 0) return;
+
     for (loaded.?.rounds[round]) |spawndata| {
         try enemies.spawnWithIndicator(
             spawndata.enemy_archetype,
@@ -267,6 +278,7 @@ pub fn startRound() !void {
             0.75,
         );
     }
+
     if (round != 0xff15)
         actual_round = round;
     round = 0xff15;
@@ -283,4 +295,156 @@ pub fn startRound() !void {
         .{},
         1,
     );
+}
+
+pub fn loadFromMatrix(matrix: [200][200]u8) !void {
+    // const EMPTY_ID = 0;
+    const WALL_ID = 1;
+
+    var walls_horizontal = std.ArrayList(e.Rectangle).init(e.ALLOCATOR);
+    defer walls_horizontal.deinit();
+
+    var walls_vertical = std.ArrayList(e.Rectangle).init(e.ALLOCATOR);
+    defer walls_vertical.deinit();
+
+    const player_pos = e.Vec2(5, 5);
+    // const BACKGROUND_ID = 2;
+
+    for (matrix, 0..) |row, ri| {
+        var current_width: f32 = 0;
+
+        for (row, 0..) |col, ci| {
+            if (col != WALL_ID) {
+                if (current_width >= 2) {
+                    walls_horizontal.append(
+                        e.Rect(
+                            e.loadf32(ci) - current_width,
+                            ri,
+                            current_width,
+                            1,
+                        ),
+                    ) catch {
+                        std.log.info("Failed to append!", .{});
+                    };
+                }
+
+                current_width = 0;
+                continue;
+            }
+
+            if (col == WALL_ID) current_width += 1;
+        }
+    }
+
+    var current_height: f32 = 0;
+    for (0..matrix[0].len) |ci| {
+        for (matrix, 0..) |row, ri| {
+            const col = row[ci];
+
+            if (col != WALL_ID) {
+                if (current_height >= 2) {
+                    walls_vertical.append(
+                        e.Rect(
+                            ci,
+                            e.loadf32(ri) - current_height,
+                            1,
+                            current_height,
+                        ),
+                    ) catch {
+                        std.log.info("Failed to append!", .{});
+                    };
+                }
+
+                current_height = 0;
+                continue;
+            }
+
+            if (col == WALL_ID) current_height += 1;
+        }
+    }
+
+    std.log.info("Horizontal", .{});
+    for (walls_horizontal.items) |wall| {
+        std.log.info(
+            "Wall: x: {d} | y: {d} | w: {d} | h: {d}",
+            .{ wall.x, wall.y, wall.width, wall.height },
+        );
+    }
+    std.log.info("Vertical", .{});
+    for (walls_vertical.items) |wall| {
+        std.log.info(
+            "Wall: x: {d} | y: {d} | w: {d} | h: {d}",
+            .{ wall.x, wall.y, wall.width, wall.height },
+        );
+    }
+
+    var wallsarr = std.ArrayList(e.Entity).init(e.ALLOCATOR);
+    defer wallsarr.deinit();
+
+    for (walls_horizontal.items) |rect| {
+        try wallsarr.append(
+            e.Entity{
+                .id = ".",
+                .tags = ".",
+                .transform = .{
+                    .position = e.Vec2(
+                        rect.x * 64 + rect.width * 64 / 2,
+                        rect.y * 64 - 96 + rect.height * 64 / 2,
+                    ),
+                    .rotation = e.Vec3(0, 0, 0),
+                    .scale = e.Vec2(rect.width * 64, 192),
+                },
+                .display = .{
+                    .scaling = .pixelate,
+                    .sprite = "sprites/backgrounds/w16x48.png",
+                    .layer = .foreground,
+                    .background_tile_size = e.Vec2(64, 192),
+                },
+                .collider = e.components.Collider{
+                    .dynamic = false,
+                    .rect = e.Rect(0, -32, rect.width * 64, 32),
+                    .weight = 10,
+                },
+            },
+        );
+    }
+
+    for (walls_vertical.items) |rect| {
+        try wallsarr.append(
+            e.Entity{
+                .id = ".",
+                .tags = ".",
+                .transform = .{
+                    .position = e.Vec2(
+                        rect.x * 64 + rect.width * 64 / 2,
+                        rect.y * 64 - 160 + rect.height * 64 / 2,
+                    ),
+                    .rotation = e.Vec3(0, 0, 0),
+                    .scale = e.Vec2(rect.width * 64, rect.height * 64),
+                },
+                .display = .{
+                    .scaling = .pixelate,
+                    .sprite = "sprites/backgrounds/wt16x16.png",
+                    .layer = .foreground,
+                    .background_tile_size = e.Vec2(64, 64),
+                },
+                .collider = e.components.Collider{
+                    .dynamic = false,
+                    .rect = e.Rect(0, 96, rect.width * 64, rect.height * 64 - 32),
+                    .weight = 10,
+                },
+            },
+        );
+    }
+
+    const walls: []e.Entity = try wallsarr.toOwnedSlice();
+    defer wallsarr.allocator.free(walls);
+
+    try load(.{
+        .rounds = &[_][]conf.EnemySpawner{},
+        .reward_tier = .common,
+        .backgrounds = &[_]e.Entity{},
+        .walls = walls,
+        .player_pos = player_pos,
+    });
 }

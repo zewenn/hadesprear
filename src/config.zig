@@ -435,6 +435,10 @@ pub const Level = struct {
     reward_tier: Rarity,
     backgrounds: []Entity,
     walls: []Entity,
+    player_pos: rl.Vector2 = .{
+        .x = 0,
+        .y = 0,
+    },
 };
 
 pub const LoadedLevel = struct {
@@ -442,6 +446,10 @@ pub const LoadedLevel = struct {
     reward_tier: Rarity,
     backgrounds: []*Entity,
     walls: []*Entity,
+    player_pos: rl.Vector2 = .{
+        .x = 0,
+        .y = 0,
+    },
 };
 
 pub const EnemySpawner = struct {

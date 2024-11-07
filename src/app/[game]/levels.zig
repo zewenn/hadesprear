@@ -187,18 +187,22 @@ pub var TestLevel = conf.Level{
             },
         },
     }),
+    .player_pos = e.Vec2(0, 0),
 };
 
 pub fn awake() !void {
     tm = TMType.init(e.ALLOCATOR);
     manager.init(e.ALLOCATOR);
+
+    try editor_suit.awake();
 }
 
 pub fn init() !void {
-    Player = e.entities.get("Player").?;
+    Player = e.entities.get("Player") orelse @panic("Player does not exist or were not found!");
 }
 
 pub fn update() !void {
+    try editor_suit.update();
     try tm.update();
     if (round == 0xff15) return;
     if (loaded == null) return;
@@ -286,7 +290,10 @@ pub fn startRound() !void {
     try tm.setTimeout(
         (struct {
             pub fn callback(_: TMType.ARGSTYPE) !void {
-                if (actual_round < loaded.?.rounds.len - 1) {
+                const loaded_level = loaded orelse return;
+                if (loaded_level.rounds.len == 0) return;
+
+                if (actual_round < loaded_level.rounds.len - 1) {
                     actual_round += 1;
                     round = actual_round;
                 }
@@ -591,3 +598,55 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
         .player_pos = player_pos,
     });
 }
+
+pub const editor_suit = struct {
+    var enabled = false;
+
+    pub fn getCursorPos() e.Vector2 {
+        const cursor = e.camera
+            .screenPositionToWorldPosition(e.input.mouse_position)
+            .subtract(e.window.size
+            .divide(e.Vec2(2, 2))
+            .divide(e.Vec2(e.camera.zoom, e.camera.zoom)));
+
+        const x: f32 = @divFloor(cursor.x, 64);
+        const y: f32 = @divFloor(cursor.y, 64);
+
+        const x_rem: f32 = @round(@divTrunc(@rem(cursor.x - @round(x), 64), 64));
+        const y_rem: f32 = @round(@divTrunc(@rem(cursor.y - @round(y), 64), 64));
+
+        return e.Vec2(
+            x * 64 + x_rem * 64,
+            y * 64 + y_rem * 64,
+        );
+    }
+
+    var selected_shower: e.Entity = .{
+        .id = "placedownShower",
+        .tags = "",
+        .transform = .{},
+        .display = .{},
+    };
+
+    pub fn awake() !void {
+        try e.entities.add(&selected_shower);
+    }
+
+    pub fn update() !void {
+        if (!enabled) return;
+
+        selected_shower.transform.position = getCursorPos();
+    }
+
+    pub fn deinit() !void {}
+
+    pub fn enable() void {
+        enabled = true;
+        e.input.ui_mode = true;
+    }
+
+    pub fn disable() void {
+        enabled = false;
+        e.input.ui_mode = false;
+    }
+};

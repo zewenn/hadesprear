@@ -89,3 +89,21 @@ pub fn worldPositionToScreenPosition(world_position: rl.Vector2) rl.Vector2 {
 
     return rl.Vector2.init(x, y);
 }
+
+pub fn screenPositionToWorldPosition(screen_position: rl.Vector2) rl.Vector2 {
+    const x = GetX: {
+        var _x: f32 = 0;
+        _x += screen_position.x / zoom;
+        _x += position.x / zoom;
+        break :GetX _x;
+    };
+
+    const y = GetX: {
+        var _y: f32 = 0;
+        _y += screen_position.y / zoom;
+        _y += position.y / zoom;
+        break :GetX _y;
+    };
+
+    return rl.Vector2.init(x, y);
+}

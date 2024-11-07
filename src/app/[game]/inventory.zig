@@ -424,7 +424,7 @@ pub const preview = struct {
 
     pub fn equippButtonCallback() !void {
         const it = preview.selected_item;
-        const item: *Item = if (it) |i| i else return;
+        const item = it orelse return;
         //
         if (!item.unequippable) return;
         //
@@ -800,7 +800,7 @@ pub fn logSortedBag() void {
 }
 
 pub fn autoSelect() !void {
-    const button: *GUI.GUIElement = if (GUI.hovered_button) |x| x else return;
+    const button = GUI.hovered_button orelse return;
 
     if (button.button_interface_ptr == null) return;
 
@@ -2275,7 +2275,7 @@ pub fn awake() !void {
         }),
     );
 
-    const delete_button: *GUI.GUIElement = if (GUI.select("#delete_mode_shower")) |el| el else return;
+    const delete_button: *GUI.GUIElement = GUI.select("#delete_mode_shower") orelse return;
 
     delete_button.options.style.background.image = "sprites/gui/delete_toggle.png";
     delete_button.options.style.translate = .{
@@ -2514,7 +2514,7 @@ fn loadFromSave() void {
     // ------------------------------------------------------------------------------------
     const loaded_bag = e.saveloader.load([]?Item, e.ARENA, "saved/bag.json");
 
-    const loaded_bag_unwrapped: []?Item = if (loaded_bag) |x| x else return;
+    const loaded_bag_unwrapped = loaded_bag orelse return;
     defer e.ARENA.free(loaded_bag_unwrapped);
 
     std.mem.copyForwards(?Item, bag, loaded_bag_unwrapped);
@@ -2523,7 +2523,7 @@ fn loadFromSave() void {
     // ------------------------------------------------------------------------------------
     const loaded_spell_bag = e.saveloader.load([]?Item, e.ARENA, "saved/spell_bag.json");
 
-    const loaded_spell_bag_unwrapped: []?Item = if (loaded_spell_bag) |x| x else return;
+    const loaded_spell_bag_unwrapped = loaded_spell_bag orelse return;
     defer e.ARENA.free(loaded_spell_bag_unwrapped);
 
     std.mem.copyForwards(?Item, spell_bag, loaded_spell_bag_unwrapped);

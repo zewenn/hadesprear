@@ -54,7 +54,7 @@ pub fn chain(self: *Self, anim: Animation) !void {
 pub fn play(self: *Self, id: []const u8) !void {
     const anim = self.animations.getPtr(id);
 
-    const animation: *Animation = if (anim) |a| a else return;
+    const animation = anim orelse return;
 
     try self.playing.append(animation);
 

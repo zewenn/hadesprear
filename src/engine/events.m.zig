@@ -64,7 +64,7 @@ pub fn on(comptime id: EngineEvents, func: map_fn_type) !void {
 }
 
 pub fn call(comptime id: EngineEvents) void {
-    const data: *std.ArrayList(map_fn_struct_type) = if (event_map.getPtr(id)) |t| t else return;
+    const data = event_map.getPtr(id) orelse return;
 
     for (data.items, 0..) |*func_struct, index| {
         if (func_struct.fail_count >= 3) {

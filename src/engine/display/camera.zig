@@ -27,6 +27,8 @@ pub var recoverySpeed: f32 = 50;
 const TMType = time.TimeoutHandler(struct {});
 pub var tm: TMType = undefined;
 
+pub var follow_stopped = false;
+
 pub fn follow(vec: *rl.Vector2) void {
     following = vec;
 }
@@ -65,7 +67,8 @@ pub fn update() void {
         break :Shake rl.Vector2.init(perlin_noise, perlin_noise);
     } else rl.Vector2.init(0, 0);
 
-    if (following) |v| {
+    if (following) |v| Blk: {
+        if (follow_stopped) break :Blk;
         position = v.*.add(shake_vec);
     }
 
@@ -94,14 +97,14 @@ pub fn screenPositionToWorldPosition(screen_position: rl.Vector2) rl.Vector2 {
     const x = GetX: {
         var _x: f32 = 0;
         _x += screen_position.x / zoom;
-        _x += position.x / zoom;
+        _x += position.x;
         break :GetX _x;
     };
 
     const y = GetX: {
         var _y: f32 = 0;
         _y += screen_position.y / zoom;
-        _y += position.y / zoom;
+        _y += position.y;
         break :GetX _y;
     };
 

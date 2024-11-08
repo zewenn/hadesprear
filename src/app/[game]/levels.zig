@@ -19,6 +19,7 @@ const manager = e.zlib.HeapManager(e.Entity, (struct {
     pub fn callback(alloc: Allocator, item: *e.Entity) !void {
         e.entities.remove(item.id);
         alloc.free(item.id);
+        item.deinit();
     }
 }).callback);
 
@@ -53,38 +54,38 @@ pub fn makeLoadedLevel(from: conf.Level) !conf.LoadedLevel {
 pub var TestLevel = conf.Level{
     .rounds = @constCast(&[_][]conf.EnemySpawner{
         @constCast(&[_]conf.EnemySpawner{
-            conf.EnemySpawner{
-                .enemy_archetype = .brute,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(64, 128),
-            },
-            conf.EnemySpawner{
-                .enemy_archetype = .angler,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(-600, -156),
-            },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .brute,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(64, 128),
+            // },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .angler,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(-600, -156),
+            // },
         }),
         @constCast(&[_]conf.EnemySpawner{
-            conf.EnemySpawner{
-                .enemy_archetype = .brute,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(64, 128),
-            },
-            conf.EnemySpawner{
-                .enemy_archetype = .angler,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(-600, -156),
-            },
-            conf.EnemySpawner{
-                .enemy_archetype = .angler,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(-300, -186),
-            },
-            conf.EnemySpawner{
-                .enemy_archetype = .angler,
-                .enemy_subtype = .normal,
-                .spawn_at = e.Vec2(-100, -200),
-            },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .brute,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(64, 128),
+            // },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .angler,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(-600, -156),
+            // },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .angler,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(-300, -186),
+            // },
+            // conf.EnemySpawner{
+            //     .enemy_archetype = .angler,
+            //     .enemy_subtype = .normal,
+            //     .spawn_at = e.Vec2(-100, -200),
+            // },
         }),
     }),
     .reward_tier = .common,
@@ -202,8 +203,14 @@ pub fn init() !void {
 }
 
 pub fn update() !void {
+    if (e.isKeyDown(.key_left_alt) and e.isKeyPressed(.key_e)) {
+        editor_suit.toggle();
+    }
+
     try editor_suit.update();
+
     try tm.update();
+
     if (round == 0xff15) return;
     if (loaded == null) return;
 
@@ -232,11 +239,9 @@ pub fn load(level: conf.Level) !void {
     loaded = try makeLoadedLevel(level);
     round = 0;
 
-    std.log.debug("player_pos: {any}", .{level.player_pos});
+    const loadedptr = &(loaded orelse return);
 
     Player.transform.position = level.player_pos.multiply(e.Vec2(64, 64));
-
-    const loadedptr = &(loaded.?);
 
     for (loadedptr.backgrounds) |entity| {
         try e.entities.add(entity);
@@ -250,10 +255,9 @@ pub fn load(level: conf.Level) !void {
 }
 
 pub fn unload() void {
-    if (loaded == null) return;
-    round = 0xff15;
+    const loadedptr = &(loaded orelse return);
 
-    const loadedptr = &(loaded.?);
+    round = 0xff15;
 
     for (loadedptr.backgrounds) |entity| {
         manager.removeFreeId(entity);
@@ -264,6 +268,16 @@ pub fn unload() void {
         manager.removeFreeId(entity);
     }
     e.ALLOCATOR.free(loadedptr.walls);
+
+    const items = manager.items() catch {
+        std.log.err("Failed to get items from the manager", .{});
+        return;
+    };
+    defer manager.alloc.free(items);
+
+    for (items) |item| {
+        manager.removeFreeId(item);
+    }
 
     loaded = null;
 }
@@ -309,298 +323,327 @@ pub fn sortRectsByY(_: void, lsh: e.Rectangle, rsh: e.Rectangle) bool {
 }
 
 pub fn loadFromMatrix(matrix: [200][200]u8) !void {
-    // const EMPTY_ID = 0;
     const WALL_ID = 1;
-
-    var walls_horizontal = std.ArrayList(e.Rectangle).init(e.ALLOCATOR);
-    defer walls_horizontal.deinit();
-
-    var walls_vertical = std.ArrayList(e.Rectangle).init(e.ALLOCATOR);
-    defer walls_vertical.deinit();
-
-    var backgrounds_arr = std.ArrayList(e.Rectangle).init(e.ALLOCATOR);
-    defer backgrounds_arr.deinit();
-
-    const player_pos = e.Vec2(5, 5);
     const BACKGROUND_ID = 2;
     const BACKGROUND_2_ID = 3;
+    const RectangleArrayList = std.ArrayList(e.Rectangle);
 
-    for (matrix, 0..) |row, ri| {
+    var wall_rectangles_horizontal = RectangleArrayList.init(e.ALLOCATOR);
+    defer wall_rectangles_horizontal.deinit();
+    errdefer wall_rectangles_horizontal.deinit();
+
+    var wall_rectangless_vertical = RectangleArrayList.init(e.ALLOCATOR);
+    defer wall_rectangless_vertical.deinit();
+    errdefer wall_rectangless_vertical.deinit();
+
+    var backgrounds_rectangles_arraylist = RectangleArrayList.init(e.ALLOCATOR);
+    defer backgrounds_rectangles_arraylist.deinit();
+    errdefer backgrounds_rectangles_arraylist.deinit();
+
+    const player_position = e.Vec2(5, 5);
+
+    Rectangles: {
         var current_width: f32 = 0;
+        var current_height: f32 = 0;
 
-        for (row, 0..) |col, ci| {
-            if (col != WALL_ID) {
-                if (current_width >= 2) {
-                    walls_horizontal.append(
-                        e.Rect(
-                            e.loadf32(ci) - current_width,
-                            ri,
-                            current_width,
-                            1,
-                        ),
-                    ) catch {
-                        std.log.info("Failed to append!", .{});
-                    };
-                }
+        // =========================== [HORIZONTAL WALLS] ============================
 
-                current_width = 0;
-                continue;
-            }
-
-            if (col == WALL_ID) current_width += 1;
-        }
-    }
-
-    var current_height: f32 = 0;
-    for (0..matrix[0].len) |ci| {
         for (matrix, 0..) |row, ri| {
-            const col = row[ci];
+            current_width = 0;
 
-            if (col != WALL_ID) {
-                if (current_height >= 2) {
-                    walls_vertical.append(
-                        e.Rect(
-                            ci,
-                            e.loadf32(ri) - current_height,
-                            1,
-                            current_height,
-                        ),
-                    ) catch {
-                        std.log.info("Failed to append!", .{});
-                    };
+            for (row, 0..) |col, ci| {
+                if (col != WALL_ID) {
+                    const condition2 = if (current_width == 0)
+                        false
+                    else if (ri >= 1 and ri <= 198) Ans: {
+                        if (matrix[ri - 1][ci] == WALL_ID and matrix[ri + 1][ci] == WALL_ID)
+                            break :Ans false;
+                        break :Ans true;
+                    } else false;
+
+                    if (current_width >= 2 or condition2) {
+                        wall_rectangles_horizontal.append(
+                            e.Rect(
+                                e.loadf32(ci) - current_width,
+                                ri,
+                                current_width,
+                                1,
+                            ),
+                        ) catch {
+                            std.log.info("Failed to append!", .{});
+                        };
+                    }
+
+                    current_width = 0;
+                    continue;
                 }
 
-                current_height = 0;
-                continue;
+                if (col == WALL_ID) current_width += 1;
             }
-
-            if (col == WALL_ID) current_height += 1;
         }
-    }
 
-    var current_width: f32 = 0;
-    current_height = 1;
+        // ============================ [VERTICAL WALLS] ============================
 
-    for (matrix, 0..) |row, ri| {
-        for (row, 0..) |col, ci| {
-            if (col != BACKGROUND_ID) {
-                if (current_width >= 2) {
-                    backgrounds_arr.append(
-                        e.Rect(
-                            e.loadf32(ci) - current_width,
-                            e.loadf32(ri) - current_height,
-                            current_width,
-                            current_height,
-                        ),
-                    ) catch {
-                        std.log.info("Failed to append!", .{});
-                    };
+        current_height = 0;
+        for (0..matrix[0].len) |ci| {
+            for (matrix, 0..) |row, ri| {
+                const col = row[ci];
+
+                if (col != WALL_ID) {
+                    if (current_height >= 2) {
+                        wall_rectangless_vertical.append(
+                            e.Rect(
+                                ci,
+                                e.loadf32(ri) - current_height,
+                                1,
+                                current_height,
+                            ),
+                        ) catch {
+                            std.log.info("Failed to append!", .{});
+                        };
+                    }
+
+                    current_height = 0;
+                    continue;
                 }
 
-                current_width = 0;
-                continue;
+                if (col == WALL_ID) current_height += 1;
             }
-            current_width += 1;
         }
-    }
 
-    current_width = 0;
-    current_height = 1;
+        // ============================ [BACKGROUND #1] ============================
 
-    for (matrix, 0..) |row, ri| {
-        for (row, 0..) |col, ci| {
-            if (col != BACKGROUND_2_ID) {
-                if (current_width >= 2) {
-                    backgrounds_arr.append(
-                        e.Rect(
-                            e.loadf32(ci) - current_width,
-                            e.loadf32(ri) - current_height,
-                            current_width,
-                            current_height,
-                        ),
-                    ) catch {
-                        std.log.info("Failed to append!", .{});
-                    };
+        current_width = 0;
+        current_height = 1;
+        for (matrix, 0..) |row, ri| {
+            for (row, 0..) |col, ci| {
+                if (col != BACKGROUND_ID) {
+                    if (current_width >= 1) {
+                        backgrounds_rectangles_arraylist.append(
+                            e.Rect(
+                                e.loadf32(ci) - current_width,
+                                e.loadf32(ri) - current_height,
+                                current_width,
+                                current_height,
+                            ),
+                        ) catch {
+                            std.log.info("Failed to append!", .{});
+                        };
+                    }
+
+                    current_width = 0;
+                    continue;
                 }
-
-                current_width = 0;
-                continue;
+                current_width += 1;
             }
-            current_width += 1;
         }
-    }
 
-    const bgclone = try e.zlib.arrays.cloneToOwnedSlice(e.Rectangle, backgrounds_arr);
-    defer e.ALLOCATOR.free(bgclone);
+        // ============================ [BACKGROUND #2] ============================
 
-    std.sort.insertion(
-        e.Rectangle,
-        bgclone,
-        {},
-        sortRectsByY,
-    );
+        current_width = 0;
+        current_height = 1;
+        for (matrix, 0..) |row, ri| {
+            for (row, 0..) |col, ci| {
+                if (col != BACKGROUND_2_ID) {
+                    if (current_width >= 1) {
+                        backgrounds_rectangles_arraylist.append(
+                            e.Rect(
+                                e.loadf32(ci) - current_width,
+                                e.loadf32(ri) - current_height,
+                                current_width,
+                                current_height,
+                            ),
+                        ) catch {
+                            std.log.info("Failed to append!", .{});
+                        };
+                    }
 
-    for (bgclone) |*rect| {
-        const bgclone2 = try e.zlib.arrays.cloneToOwnedSlice(e.Rectangle, backgrounds_arr);
-        defer e.ALLOCATOR.free(bgclone2);
+                    current_width = 0;
+                    continue;
+                }
+                current_width += 1;
+            }
+        }
+
+        // =========================== [BACKGROUND MERGE] ===========================
+
+        const background_rectangles_cloned_slice = try e.zlib.arrays.cloneToOwnedSlice(
+            e.Rectangle,
+            backgrounds_rectangles_arraylist,
+        );
+        defer e.ALLOCATOR.free(background_rectangles_cloned_slice);
 
         std.sort.insertion(
             e.Rectangle,
-            bgclone2,
+            background_rectangles_cloned_slice,
             {},
             sortRectsByY,
         );
 
-        for (bgclone2) |rect2| {
-            if (rect.x != rect2.x) continue;
-            if (rect.width != rect2.width) continue;
-            if (rect.y + rect.height != rect2.y) continue;
-            if (std.meta.eql(rect.*, rect2)) continue;
+        for (background_rectangles_cloned_slice) |*outer_rectangle| {
+            const updated_background_rectangles_cloned_slice = try e.zlib.arrays.cloneToOwnedSlice(
+                e.Rectangle,
+                backgrounds_rectangles_arraylist,
+            );
+            defer e.ALLOCATOR.free(updated_background_rectangles_cloned_slice);
 
-            var delete_index: usize = 0;
+            std.sort.insertion(
+                e.Rectangle,
+                updated_background_rectangles_cloned_slice,
+                {},
+                sortRectsByY,
+            );
 
-            for (backgrounds_arr.items, 0..) |*item, index| {
-                if (std.meta.eql(item.*, rect.*)) {
-                    item.x = rect.x;
-                    item.y = rect.y;
-                    item.height += rect2.height;
-                    rect.height += rect2.height;
-                    item.width = rect.width;
+            for (updated_background_rectangles_cloned_slice) |inner_rectangle| {
+                if (outer_rectangle.x != inner_rectangle.x) continue;
+                if (outer_rectangle.width != inner_rectangle.width) continue;
+                if (outer_rectangle.y + outer_rectangle.height != inner_rectangle.y) continue;
+                if (std.meta.eql(outer_rectangle.*, inner_rectangle)) continue;
+
+                var delete_index: usize = 0;
+
+                for (backgrounds_rectangles_arraylist.items, 0..) |*item, index| {
+                    if (std.meta.eql(item.*, outer_rectangle.*)) {
+                        item.x = outer_rectangle.x;
+                        item.y = outer_rectangle.y;
+                        item.height += inner_rectangle.height;
+                        outer_rectangle.height += inner_rectangle.height;
+                        item.width = outer_rectangle.width;
+                    }
+                    if (std.meta.eql(item.*, inner_rectangle)) {
+                        delete_index = index;
+                    }
                 }
-                if (std.meta.eql(item.*, rect2)) {
-                    delete_index = index;
-                }
+
+                _ = backgrounds_rectangles_arraylist.orderedRemove(delete_index);
             }
-
-            _ = backgrounds_arr.orderedRemove(delete_index);
         }
+
+        break :Rectangles;
     }
 
-    // std.log.info("Horizontal", .{});
-    // for (walls_horizontal.items) |wall| {
-    //     std.log.info(
-    //         "Wall: x: {d} | y: {d} | w: {d} | h: {d}",
-    //         .{ wall.x, wall.y, wall.width, wall.height },
-    //     );
-    // }
-    // std.log.info("Vertical", .{});
-    // for (walls_vertical.items) |wall| {
-    //     std.log.info(
-    //         "Wall: x: {d} | y: {d} | w: {d} | h: {d}",
-    //         .{ wall.x, wall.y, wall.width, wall.height },
-    //     );
-    // }
+    var wall_entities_arraylist = std.ArrayList(e.Entity).init(e.ALLOCATOR);
+    defer wall_entities_arraylist.deinit();
+    errdefer wall_entities_arraylist.deinit();
 
-    // std.log.info("Backgrounds", .{});
-    // for (backgrounds_arr.items) |wall| {
-    //     std.log.info(
-    //         "Background: x: {d} | y: {d} | w: {d} | h: {d}",
-    //         .{ wall.x, wall.y, wall.width, wall.height },
-    //     );
-    // }
+    var background_entities_arraylist = std.ArrayList(e.Entity).init(e.ALLOCATOR);
+    defer background_entities_arraylist.deinit();
+    errdefer background_entities_arraylist.deinit();
 
-    var wallsarr = std.ArrayList(e.Entity).init(e.ALLOCATOR);
-    defer wallsarr.deinit();
+    Entities: {
+        // =========================== [HORIZONTAL WALLS] ============================
 
-    var backsarr = std.ArrayList(e.Entity).init(e.ALLOCATOR);
-    defer wallsarr.deinit();
-
-    for (walls_horizontal.items) |rect| {
-        try wallsarr.append(
-            e.Entity{
-                .id = ".",
-                .tags = ".",
-                .transform = .{
-                    .position = e.Vec2(
-                        rect.x * 64 + rect.width * 64 / 2,
-                        rect.y * 64 - 64 + rect.height * 64 / 2,
-                    ),
-                    .rotation = e.Vec3(0, 0, 0),
-                    .scale = e.Vec2(rect.width * 64, 192),
+        for (wall_rectangles_horizontal.items) |rect| {
+            try wall_entities_arraylist.append(
+                e.Entity{
+                    .id = ".",
+                    .tags = ".",
+                    .transform = .{
+                        .position = e.Vec2(
+                            rect.x * 64 + rect.width * 64 / 2 - 32,
+                            rect.y * 64 - 64 + rect.height * 64 / 2 - 32,
+                        ),
+                        .rotation = e.Vec3(0, 0, 0),
+                        .scale = e.Vec2(rect.width * 64, 192),
+                    },
+                    .display = .{
+                        .scaling = .pixelate,
+                        .sprite = "sprites/backgrounds/w16x48.png",
+                        .layer = .foreground,
+                        .background_tile_size = e.Vec2(64, 192),
+                    },
+                    .collider = e.components.Collider{
+                        .dynamic = false,
+                        .rect = e.Rect(0, -32, rect.width * 64, 32),
+                        .weight = 10,
+                    },
                 },
-                .display = .{
-                    .scaling = .pixelate,
-                    .sprite = "sprites/backgrounds/w16x48.png",
-                    .layer = .foreground,
-                    .background_tile_size = e.Vec2(64, 192),
+            );
+        }
+
+        // ============================ [VERTICAL WALLS] ============================
+
+        for (wall_rectangless_vertical.items) |rect| {
+            try wall_entities_arraylist.append(
+                e.Entity{
+                    .id = ".",
+                    .tags = ".",
+                    .transform = .{
+                        .position = e.Vec2(
+                            rect.x * 64 + rect.width * 64 / 2 - 32,
+                            rect.y * 64 - 128 + rect.height * 64 / 2 - 32,
+                        ),
+                        .rotation = e.Vec3(0, 0, 0),
+                        .scale = e.Vec2(rect.width * 64, rect.height * 64),
+                    },
+                    .display = .{
+                        .scaling = .pixelate,
+                        .sprite = "sprites/backgrounds/wt16x16.png",
+                        .layer = .foreground,
+                        .background_tile_size = e.Vec2(64, 64),
+                    },
+                    .collider = e.components.Collider{
+                        .dynamic = false,
+                        .rect = e.Rect(0, 96, rect.width * 64, rect.height * 64 - 32),
+                        .weight = 10,
+                    },
                 },
-                .collider = e.components.Collider{
-                    .dynamic = false,
-                    .rect = e.Rect(0, -32, rect.width * 64, 32),
-                    .weight = 10,
+            );
+        }
+
+        // ============================= [BACKGROUNDS] ==============================
+
+        for (backgrounds_rectangles_arraylist.items) |rect| {
+            try background_entities_arraylist.append(
+                e.Entity{
+                    .id = ".",
+                    .tags = ".",
+                    .transform = .{
+                        .position = e.Vec2(
+                            rect.x * 64 + rect.width * 64 / 2 - 32,
+                            rect.y * 64 + rect.height * 64 / 2 + 32,
+                        ),
+                        .rotation = e.Vec3(0, 0, 0),
+                        .scale = e.Vec2(rect.width * 64, rect.height * 64),
+                    },
+                    .display = .{
+                        .scaling = .pixelate,
+                        .sprite = "sprites/backgrounds/16x16.png",
+                        .layer = .background,
+                        .background_tile_size = e.Vec2(64, 64),
+                    },
                 },
-            },
-        );
+            );
+        }
+        break :Entities;
     }
 
-    for (walls_vertical.items) |rect| {
-        try wallsarr.append(
-            e.Entity{
-                .id = ".",
-                .tags = ".",
-                .transform = .{
-                    .position = e.Vec2(
-                        rect.x * 64 + rect.width * 64 / 2,
-                        rect.y * 64 - 128 + rect.height * 64 / 2,
-                    ),
-                    .rotation = e.Vec3(0, 0, 0),
-                    .scale = e.Vec2(rect.width * 64, rect.height * 64),
-                },
-                .display = .{
-                    .scaling = .pixelate,
-                    .sprite = "sprites/backgrounds/wt16x16.png",
-                    .layer = .foreground,
-                    .background_tile_size = e.Vec2(64, 64),
-                },
-                .collider = e.components.Collider{
-                    .dynamic = false,
-                    .rect = e.Rect(0, 96, rect.width * 64, rect.height * 64 - 32),
-                    .weight = 10,
-                },
-            },
-        );
-    }
+    const walls: []e.Entity = try wall_entities_arraylist.toOwnedSlice();
+    defer wall_entities_arraylist.allocator.free(walls);
 
-    for (backgrounds_arr.items) |rect| {
-        try backsarr.append(
-            e.Entity{
-                .id = ".",
-                .tags = ".",
-                .transform = .{
-                    .position = e.Vec2(
-                        rect.x * 64 + rect.width * 64 / 2,
-                        rect.y * 64 + rect.height * 64 / 2,
-                    ),
-                    .rotation = e.Vec3(0, 0, 0),
-                    .scale = e.Vec2(rect.width * 64, rect.height * 64),
-                },
-                .display = .{
-                    .scaling = .pixelate,
-                    .sprite = "sprites/backgrounds/16x16.png",
-                    .layer = .background,
-                    .background_tile_size = e.Vec2(64, 64),
-                },
-            },
-        );
-    }
-
-    const walls: []e.Entity = try wallsarr.toOwnedSlice();
-    defer wallsarr.allocator.free(walls);
-
-    const backgrounds: []e.Entity = try backsarr.toOwnedSlice();
-    defer backsarr.allocator.free(backgrounds);
+    const backgrounds: []e.Entity = try background_entities_arraylist.toOwnedSlice();
+    defer background_entities_arraylist.allocator.free(backgrounds);
 
     try load(.{
         .rounds = &[_][]conf.EnemySpawner{},
         .reward_tier = .common,
         .backgrounds = backgrounds,
         .walls = walls,
-        .player_pos = player_pos,
+        .player_pos = player_position,
     });
 }
 
 pub const editor_suit = struct {
     var enabled = false;
+    // 0 - EMPTY
+    // 1 - WALL
+    // 2 - BACKGROUND
+    var placedown_type: u8 = 1;
+    var current_matrix: [200][200]u8 = undefined;
+    var cursor_position: e.Vector2 = e.Vec2(0, 0);
+
+    var last_pos: e.Vector2 = e.Vec2(0, 0);
+    var last_placedown_type: u8 = 0;
 
     pub fn getCursorPos() e.Vector2 {
         const cursor = e.camera
@@ -614,6 +657,9 @@ pub const editor_suit = struct {
 
         const x_rem: f32 = @round(@divTrunc(@rem(cursor.x - @round(x), 64), 64));
         const y_rem: f32 = @round(@divTrunc(@rem(cursor.y - @round(y), 64), 64));
+
+        cursor_position.x = x + x_rem;
+        cursor_position.y = y + y_rem;
 
         return e.Vec2(
             x * 64 + x_rem * 64,
@@ -630,23 +676,75 @@ pub const editor_suit = struct {
 
     pub fn awake() !void {
         try e.entities.add(&selected_shower);
+
+        current_matrix = [_][200]u8{[_]u8{0} ** 200} ** 200;
     }
 
     pub fn update() !void {
         if (!enabled) return;
 
         selected_shower.transform.position = getCursorPos();
+
+        if (cursor_position.x < 0 or cursor_position.y < 0) return;
+
+        if (e.isMouseButtonDown(.mouse_button_left) and
+            (last_pos.equals(cursor_position) == 0 or
+            last_placedown_type != placedown_type))
+        {
+            current_matrix[e.loadusize(cursor_position.y)][e.loadusize(cursor_position.x)] = placedown_type;
+            // std.log.debug("manager.items.len: {d}", .{manager.len()});
+            try loadFromMatrix(current_matrix);
+            // std.log.debug("manager.items.len: {d}", .{manager.len()});
+
+            last_placedown_type = placedown_type;
+            last_pos = cursor_position;
+        }
+
+        var move_vector = e.Vec2(0, 0);
+
+        if (e.isKeyDown(.key_w)) {
+            move_vector.y -= 1;
+        }
+        if (e.isKeyDown(.key_s)) {
+            move_vector.y += 1;
+        }
+        if (e.isKeyDown(.key_a)) {
+            move_vector.x -= 1;
+        }
+        if (e.isKeyDown(.key_d)) {
+            move_vector.x += 1;
+        }
+
+        if (e.isKeyPressed(.key_one)) placedown_type = 1;
+        if (e.isKeyPressed(.key_two)) placedown_type = 2;
+
+        e.camera.position = e.camera.position
+            .add(move_vector
+            .multiply(e.Vec2(
+            350 * e.time.DeltaTime(),
+            350 * e.time.DeltaTime(),
+        )));
     }
 
     pub fn deinit() !void {}
 
     pub fn enable() void {
+        e.camera.follow_stopped = true;
         enabled = true;
         e.input.ui_mode = true;
     }
 
     pub fn disable() void {
+        e.camera.follow_stopped = false;
         enabled = false;
         e.input.ui_mode = false;
+    }
+
+    pub fn toggle() void {
+        if (enabled) {
+            disable();
+            return;
+        }
+        enable();
     }
 };

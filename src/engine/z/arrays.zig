@@ -257,5 +257,8 @@ pub fn searchSliceMatrixForNext(
 }
 
 pub fn cloneToOwnedSlice(comptime T: type, list: std.ArrayList(T)) ![]T {
-    return try @constCast(&try list.clone()).toOwnedSlice();
+    var clone = try list.clone();
+    defer clone.deinit();
+
+    return try clone.toOwnedSlice();
 }

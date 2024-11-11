@@ -601,11 +601,6 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
                 const subtype = (asr - archetype * 1000 - (asr % 10)) / 10;
                 const r = (asr - archetype * 1000 - subtype * 10);
 
-                std.log.info("ars: {d}", .{asr});
-                std.log.info("| a: {d}", .{archetype});
-                std.log.info("| s: {d}", .{subtype});
-                std.log.info("|-r: {d}", .{r});
-
                 const enemy_pos = e.Vec2(ci, ri);
                 try editor_suit.newSpawner(.enemy, enemy_pos, "R{d}", r);
 
@@ -615,11 +610,6 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
                     .spawn_at = enemy_pos
                         .multiply(e.Vec2(64, 64)),
                 });
-
-                // if (col < ENEMIES.MINION_SPAWNER or col > ENEMIES.TANK_SPAWNER) continue;
-
-                // player_position = e.Vec2(ci, ri);
-                // try editor_suit.newSpawner(.player, player_position);
             }
         }
 
@@ -773,6 +763,10 @@ pub const editor_suit = struct {
     var last_pos: e.Vector2 = e.Vec2(0, 0);
     var last_placedown_type: u16 = 0;
 
+    var drag_start_pos: e.Vector2 = e.Vec2(0, 0);
+    var drag_end_pos: e.Vector2 = e.Vec2(0, 0);
+    var dragging: bool = false;
+
     pub fn getCursorPos() e.Vector2 {
         const cursor = e.camera
             .screenPositionToWorldPosition(e.input.mouse_position)
@@ -830,25 +824,46 @@ pub const editor_suit = struct {
             item.gui.options.style.left = e.GUI.toUnit(screen_pos.x);
         }
 
-        if (e.isMouseButtonDown(.mouse_button_left) and
-            (last_pos.equals(cursor_position) == 0 or
-            last_placedown_type != placedown_type))
-        {
-            if (placedown_type == 4) {
-                for (current_matrix, 0..) |row, ri| {
-                    for (row, 0..) |col, ci| {
-                        if (col != 4) continue;
-                        current_matrix[ri][ci] = 2;
+        if (e.isMouseButtonPressed(.mouse_button_left)) {
+            drag_start_pos = cursor_position;
+            dragging = true;
+        }
+
+        if (e.isMouseButtonReleased(.mouse_button_left))  {
+            // if ((last_pos.equals(cursor_position) == 0 or
+            //     last_placedown_type != placedown_type)) break :Blk;
+
+            drag_end_pos = cursor_position;
+            dragging = false;
+
+            const a = e.Vec2(
+                if (drag_end_pos.x < drag_start_pos.x) drag_end_pos.x else drag_start_pos.x,
+                if (drag_end_pos.y < drag_start_pos.y) drag_end_pos.y else drag_start_pos.y,
+            );
+            const b = e.Vec2(
+                if (drag_end_pos.x >= drag_start_pos.x) drag_end_pos.x else drag_start_pos.x,
+                if (drag_end_pos.y >= drag_start_pos.y) drag_end_pos.y else drag_start_pos.y,
+            );
+
+            for (e.loadusize(a.y)..e.loadusize(b.y) + 1) |dy| {
+                for (e.loadusize(a.x)..e.loadusize(b.x) + 1) |dx| {
+                    if (placedown_type == 4) {
+                        for (current_matrix, 0..) |row, ri| {
+                            for (row, 0..) |col, ci| {
+                                if (col != 4) continue;
+                                current_matrix[ri][ci] = 2;
+                            }
+                        }
                     }
+                    current_matrix[e.loadusize(dy)][e.loadusize(dx)] = placedown_type;
+
+                    editor_suit.unload();
+                    try loadFromMatrix(current_matrix);
+
+                    last_placedown_type = placedown_type;
+                    last_pos = cursor_position;
                 }
             }
-            current_matrix[e.loadusize(cursor_position.y)][e.loadusize(cursor_position.x)] = placedown_type;
-
-            editor_suit.unload();
-            try loadFromMatrix(current_matrix);
-
-            last_placedown_type = placedown_type;
-            last_pos = cursor_position;
         }
 
         var move_vector = e.Vec2(0, 0);
@@ -950,7 +965,6 @@ pub const editor_suit = struct {
         });
 
         const guitext = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, to_text);
-        // const screen_pos = e.camera.worldPositionToScreenPosition(pos);
 
         const returned = try editor_suit.manager.appendReturn(.{
             .entity = .{
@@ -965,6 +979,9 @@ pub const editor_suit = struct {
                 .display = .{
                     .scaling = .pixelate,
                     .layer = .editor_spawners,
+                    .sprite = switch (side) {
+                        else => "sprites/missingno.png",
+                    },
                 },
             },
             .gui = try e.GUI.Text(

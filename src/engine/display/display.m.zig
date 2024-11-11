@@ -27,17 +27,11 @@ fn sortEntities(_: void, lsh: *entities.Entity, rsh: *entities.Entity) bool {
 
     return (
     //
-        lsh_transform.position.y * camera.zoom
-    // -
-    // if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2
+        lsh_transform.position.y * camera.zoom +
+        if (lsh_transform.anchor) |anchor| anchor.y else lsh_transform.scale.y * camera.zoom / 2) < (
     //
-    ) < (
-    //
-        rsh_transform.position.y * camera.zoom
-    // -
-    // if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2
-    //
-    );
+        rsh_transform.position.y * camera.zoom +
+        if (rsh_transform.anchor) |anchor| anchor.y else rsh_transform.scale.y * camera.zoom / 2);
 }
 
 fn sortGUIElements(_: void, lsh: *GUI.GUIElement, rsh: *GUI.GUIElement) bool {

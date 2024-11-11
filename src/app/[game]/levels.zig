@@ -9,6 +9,7 @@ const enemies = @import("enemies.zig");
 var loaded: ?conf.LoadedLevel = null;
 var round: usize = 0xff15;
 var actual_round: usize = 0;
+var round_playing = true;
 
 var Player: *e.Entity = undefined;
 
@@ -228,7 +229,7 @@ pub fn update() !void {
     if (loaded == null) return;
 
     const enemies_in_scene = enemies.manager.len();
-    if (enemies_in_scene == 0) try startRound();
+    if (enemies_in_scene == 0 and round_playing) try startRound();
 }
 
 pub fn deinit() !void {
@@ -285,6 +286,14 @@ pub fn unload() void {
     }
     e.ALLOCATOR.free(loadedptr.walls);
 
+    for (loadedptr.rounds) |loaded_round| {
+        for (loaded_round) |spawner| {
+            e.ALLOCATOR.destroy(spawner);
+        }
+        e.ALLOCATOR.free(loaded_round);
+    }
+    e.ALLOCATOR.free(loadedptr.rounds);
+
     const items = manager.items() catch {
         std.log.err("Failed to get items from the manager", .{});
         return;
@@ -295,17 +304,7 @@ pub fn unload() void {
         manager.removeFreeId(item);
     }
 
-    for (loadedptr.rounds) |loaded_round| {
-        for (loaded_round) |spawner| {
-            e.ALLOCATOR.destroy(spawner);
-        }
-        e.ALLOCATOR.free(loaded_round);
-    }
-    e.ALLOCATOR.free(loadedptr.rounds);
-
     loaded = null;
-
-    // editor_suit.unload();
 }
 
 pub fn startRound() !void {
@@ -349,7 +348,7 @@ pub fn sortRectsByY(_: void, lsh: e.Rectangle, rsh: e.Rectangle) bool {
     return lsh.y < rsh.y;
 }
 
-pub fn loadFromMatrix(matrix: [200][200]u8) !void {
+pub fn loadFromMatrix(matrix: [200][200]u16) !void {
     const WALL_ID = 1;
     const BACKGROUND_ID = 2;
     const BACKGROUND_2_ID = 3;
@@ -357,12 +356,13 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
 
     // Enemies are defined in packs of 20
     // for example from 20 to 40
-    const ENEMIES = struct {
-        pub const MINION_SPAWNER = 20;
-        pub const BRUTE_SPAWNER = 21;
-        pub const ANGLER_SPAWNER = 22;
-        pub const TANK_SPAWNER = 23;
-    };
+    // const ENEMIES = struct {
+    //     pub const MINION_SPAWNER = 20;
+    //     pub const BRUTE_SPAWNER = 21;
+    //     pub const ANGLER_SPAWNER = 22;
+    //     pub const TANK_SPAWNER = 23;
+    // };
+    // _ = ENEMIES;
 
     const RectangleArrayList = std.ArrayList(e.Rectangle);
 
@@ -379,12 +379,21 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
     errdefer backgrounds_rectangles_arraylist.deinit();
 
     var player_position = e.Vec2(5, 5);
-    // var spawning_enemies = std.ArrayList(std.ArrayList(conf.EnemySpawner)).init(e.ALLOCATOR);
-    // defer {
-    //     for (spawning_enemies.items) |arr| {
+    var spawning_enemies_array: [10]std.ArrayList(conf.EnemySpawner) = [_]std.ArrayList(conf.EnemySpawner){undefined} ** 10;
+    for (spawning_enemies_array, 0..) |_, index| {
+        spawning_enemies_array[index] = std.ArrayList(conf.EnemySpawner).init(e.ALLOCATOR);
+    }
+    var read_rounds: [10][]conf.EnemySpawner = undefined;
 
-    //     }
-    // }
+    defer {
+        for (read_rounds) |arr| {
+            e.ALLOCATOR.free(arr);
+        }
+
+        for (spawning_enemies_array, 0..) |_, index| {
+            spawning_enemies_array[index].deinit();
+        }
+    }
 
     Rectangles: {
         var current_width: f32 = 0;
@@ -461,7 +470,7 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
         current_height = 1;
         for (matrix, 0..) |row, ri| {
             for (row, 0..) |col, ci| {
-                if (col != BACKGROUND_ID and col != PLAYER_SPAWNER) {
+                if (col != BACKGROUND_ID and col != PLAYER_SPAWNER and @divFloor(col, 40000) != 1) {
                     if (current_width >= 1) {
                         backgrounds_rectangles_arraylist.append(
                             e.Rect(
@@ -570,7 +579,7 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
                 if (col != PLAYER_SPAWNER) continue;
 
                 player_position = e.Vec2(ci, ri);
-                try editor_suit.newSpawner(.player, player_position);
+                try editor_suit.newSpawner(.player, player_position, "{s}", "P");
 
                 break :outer;
             }
@@ -578,15 +587,44 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
 
         // ============================ [ENEMY SPAWNERS] ============================
 
-        for (matrix, 0..) |row, ri| outer: {
+        // MAX 65535 => 0-0-0-00
+        // 4    -  (1->6)  -  (1->99)  -  (0->9)
+        // ENEMYID ARCHETYPE  SUBTYPE    ROUND
+
+        for (matrix, 0..) |row, ri| {
             for (row, 0..) |col, ci| {
-                if (col < ENEMIES.MINION_SPAWNER or col > ENEMIES.TANK_SPAWNER) continue;
+                // Filtering out enemy spawners
+                if (@divFloor(col, 40000) != 1) continue;
 
-                player_position = e.Vec2(ci, ri);
-                try editor_suit.newSpawner(.player, player_position);
+                const asr: u16 = col - 40000;
+                const archetype = (asr - (asr % 1000)) / 1000;
+                const subtype = (asr - archetype * 1000 - (asr % 10)) / 10;
+                const r = (asr - archetype * 1000 - subtype * 10);
 
-                break :outer;
+                std.log.info("ars: {d}", .{asr});
+                std.log.info("| a: {d}", .{archetype});
+                std.log.info("| s: {d}", .{subtype});
+                std.log.info("|-r: {d}", .{r});
+
+                const enemy_pos = e.Vec2(ci, ri);
+                try editor_suit.newSpawner(.enemy, enemy_pos, "R{d}", r);
+
+                try spawning_enemies_array[r].append(conf.EnemySpawner{
+                    .enemy_archetype = @enumFromInt(archetype),
+                    .enemy_subtype = @enumFromInt(subtype),
+                    .spawn_at = enemy_pos
+                        .multiply(e.Vec2(64, 64)),
+                });
+
+                // if (col < ENEMIES.MINION_SPAWNER or col > ENEMIES.TANK_SPAWNER) continue;
+
+                // player_position = e.Vec2(ci, ri);
+                // try editor_suit.newSpawner(.player, player_position);
             }
+        }
+
+        for (spawning_enemies_array, 0..) |_, index| {
+            read_rounds[index] = try spawning_enemies_array[index].toOwnedSlice();
         }
 
         break :Rectangles;
@@ -695,7 +733,7 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
     defer background_entities_arraylist.allocator.free(backgrounds);
 
     try load(.{
-        .rounds = &[_][]conf.EnemySpawner{},
+        .rounds = &read_rounds,
         .reward_tier = .common,
         .backgrounds = backgrounds,
         .walls = walls,
@@ -704,12 +742,20 @@ pub fn loadFromMatrix(matrix: [200][200]u8) !void {
 }
 
 pub const editor_suit = struct {
-    pub const manager = e.zlib.HeapManager(e.Entity, (struct {
-        pub fn callback(alloc: Allocator, item: *e.Entity) !void {
-            e.entities.remove(item.id);
-            alloc.free(item.id);
+    pub const ManagerType = struct {
+        entity: e.Entity,
+        gui: *e.GUI.GUIElement,
+    };
+    pub const manager = e.zlib.HeapManager(ManagerType, (struct {
+        pub fn callback(alloc: Allocator, item: *ManagerType) !void {
+            e.entities.remove(item.entity.id);
+            alloc.free(item.entity.id);
 
-            item.deinit();
+            item.entity.deinit();
+            e.ALLOCATOR.free(item.gui.options.id);
+            if (item.gui.contents) |c|
+                e.zlib.arrays.freeManyItemPointerSentinel(e.ALLOCATOR, c);
+            try e.GUI.remove(item.gui);
         }
     }).callback);
 
@@ -719,16 +765,13 @@ pub const editor_suit = struct {
     // 2 - BACKGROUND
     // 3 - BACKGROUND_2
     // 4 - SPAWN PLAYER
-    // 20 - SPAWN MINION
-    // 21 - SPAWN BRUTE
-    // 22 - SPAWN ANGLER
-    // 23 - SPAWN TANK
-    var placedown_type: u8 = 1;
-    var current_matrix: [200][200]u8 = undefined;
+    // 4xyyz -> ENEMY SPAWNER
+    var placedown_type: u16 = 1;
+    var current_matrix: [200][200]u16 = undefined;
     var cursor_position: e.Vector2 = e.Vec2(0, 0);
 
     var last_pos: e.Vector2 = e.Vec2(0, 0);
-    var last_placedown_type: u8 = 0;
+    var last_placedown_type: u16 = 0;
 
     pub fn getCursorPos() e.Vector2 {
         const cursor = e.camera
@@ -760,7 +803,7 @@ pub const editor_suit = struct {
         try e.entities.append(&selected_shower);
         editor_suit.manager.init(e.ALLOCATOR);
 
-        current_matrix = [_][200]u8{[_]u8{0} ** 200} ** 200;
+        current_matrix = [_][200]u16{[_]u16{0} ** 200} ** 200;
     }
 
     pub fn update() !void {
@@ -772,6 +815,20 @@ pub const editor_suit = struct {
 
         selected_shower.transform.position = cursor_position
             .multiply(e.Vec2(64, 64));
+
+        const items = editor_suit.manager.items() catch {
+            std.log.err("Failed to get items!", .{});
+            return;
+        };
+        defer editor_suit.manager.free(items);
+
+        for (items) |item| {
+            const screen_pos = e.camera.worldPositionToScreenPosition(
+                item.entity.transform.position.add(e.Vec2(24, 24)),
+            );
+            item.gui.options.style.top = e.GUI.toUnit(screen_pos.y);
+            item.gui.options.style.left = e.GUI.toUnit(screen_pos.x);
+        }
 
         if (e.isMouseButtonDown(.mouse_button_left) and
             (last_pos.equals(cursor_position) == 0 or
@@ -814,6 +871,8 @@ pub const editor_suit = struct {
         if (e.isKeyPressed(.key_two)) placedown_type = 2;
         if (e.isKeyPressed(.key_three)) placedown_type = 3;
         if (e.isKeyPressed(.key_four)) placedown_type = 4;
+        if (e.isKeyPressed(.key_five)) placedown_type = 40000;
+        if (e.isKeyPressed(.key_six)) placedown_type = 41131;
 
         e.camera.position = e.camera.position
             .add(move_vector
@@ -851,7 +910,8 @@ pub const editor_suit = struct {
         defer editor_suit.manager.free(items);
 
         for (items) |item| {
-            item.transform.scale = e.Vec2(64, 64);
+            item.entity.transform.scale = e.Vec2(64, 64);
+            item.gui.options.style.display = true;
         }
     }
 
@@ -867,7 +927,8 @@ pub const editor_suit = struct {
         defer editor_suit.manager.free(items);
 
         for (items) |item| {
-            item.transform.scale = e.Vec2(0, 0);
+            item.entity.transform.scale = e.Vec2(0, 0);
+            item.gui.options.style.display = false;
         }
     }
 
@@ -879,26 +940,53 @@ pub const editor_suit = struct {
         enable();
     }
 
-    pub fn newSpawner(side: conf.ProjectileSide, at: e.Vector2) !void {
-        const returned = try editor_suit.manager.appendReturn(.{
-            .id = try e.UUIDV7(),
-            .tags = switch (side) {
-                .player => "player_spawner",
-                .enemy => "enemy_spawner",
-            },
-            .transform = .{
-                .position = at.multiply(switch (enabled) {
-                    true => e.Vec2(64, 64),
-                    false => e.Vec2(0, 0),
-                }),
-            },
-            .display = .{
-                .scaling = .pixelate,
-                .layer = .editor_spawners,
-            },
+    pub fn newSpawner(side: conf.ProjectileSide, at: e.Vector2, comptime fmt: []const u8, text: anytype) !void {
+        const to_text = try std.fmt.allocPrint(e.ALLOCATOR, fmt, .{text});
+        defer e.ALLOCATOR.free(to_text);
+
+        const pos = at.multiply(switch (enabled) {
+            true => e.Vec2(64, 64),
+            false => e.Vec2(0, 0),
         });
 
-        try e.entities.append(returned);
+        const guitext = try e.zlib.arrays.toManyItemPointerSentinel(e.ALLOCATOR, to_text);
+        // const screen_pos = e.camera.worldPositionToScreenPosition(pos);
+
+        const returned = try editor_suit.manager.appendReturn(.{
+            .entity = .{
+                .id = try e.UUIDV7(),
+                .tags = switch (side) {
+                    .player => "player_spawner",
+                    .enemy => "enemy_spawner",
+                },
+                .transform = .{
+                    .position = pos,
+                },
+                .display = .{
+                    .scaling = .pixelate,
+                    .layer = .editor_spawners,
+                },
+            },
+            .gui = try e.GUI.Text(
+                .{
+                    .id = try e.UUIDV7(),
+                    .style = .{
+                        .top = e.GUI.toUnit(250),
+                        .left = e.GUI.toUnit(250),
+                        .color = e.Colour.white,
+                        .font = .{
+                            .shadow = .{
+                                .color = e.Colour.gray,
+                                .offset = e.Vec2(1, 1),
+                            },
+                        },
+                    },
+                },
+                guitext,
+            ),
+        });
+
+        try e.entities.append(&(returned.entity));
     }
 
     pub fn unload() void {

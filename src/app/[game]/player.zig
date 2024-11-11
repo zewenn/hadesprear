@@ -331,7 +331,7 @@ pub fn update() !void {
             // );
             try levels.loadFromMatrix(
                 try e.assets.getJson(
-                    [200][200]u8,
+                    [200][200]u16,
                     e.ARENA,
                     "levels/test.json",
                 ),

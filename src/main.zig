@@ -38,6 +38,11 @@ pub fn main() !void {
         if (e.isKeyPressed(.key_f11)) {
             e.window.toggleBorderless();
         }
+        if (e.builtin.mode == .Debug) {
+            if (e.isKeyPressed(.key_f3)) {
+                e.zlib.debug.debugDisplay = !e.zlib.debug.debugDisplay;
+            }
+        }
         e.update() catch {};
     }
 }

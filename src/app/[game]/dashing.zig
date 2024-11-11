@@ -140,7 +140,7 @@ pub fn spawnShadow(target: *e.Entity, lifetime: f32) !void {
         .lifetime = lifetime,
     });
 
-    try e.entities.add(&(appended.entity));
+    try e.entities.append(&(appended.entity));
 
     try tm.setTimeout(
         (struct {

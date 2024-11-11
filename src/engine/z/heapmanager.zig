@@ -73,6 +73,10 @@ pub fn HeapManager(comptime T: type, comptime freeId: ?*const fn (Allocator, *T)
             return copy.toOwnedSlice();
         }
 
+        pub fn free(memory: anytype) void {
+            alloc.free(memory);
+        }
+
         pub fn len() usize {
             if (!initalised) @panic("Manager was not initalised!");
             return array.items.len;

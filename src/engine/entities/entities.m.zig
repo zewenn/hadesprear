@@ -153,14 +153,14 @@ pub fn make(comptime T: type) type {
             return false;
         }
 
-        pub fn add(entity: *Entity) !void {
+        pub fn append(entity: *Entity) !void {
             try entities.append(entity);
         }
 
         pub fn remove(id: []const u8) void {
             for (entities.items, 0..) |item, i| {
                 if (!std.mem.eql(u8, item.id, id)) continue;
-
+                item.deinit();
                 _ = entities.orderedRemove(i);
                 return;
             }

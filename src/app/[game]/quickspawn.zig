@@ -47,7 +47,7 @@ pub fn spawn(entity: e.Entity) !*e.Entity {
 
     const it = try manager.appendReturn(new);
 
-    try e.entities.add(it);
+    try e.entities.append(it);
 
     return it;
 }

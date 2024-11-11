@@ -233,7 +233,7 @@ pub fn new(entity_id: []const u8) !*EffectShower {
 
     NewPtr.animator = Animator;
 
-    try e.entities.add(&(NewPtr.entity));
+    try e.entities.append(&(NewPtr.entity));
 
     return NewPtr;
 }

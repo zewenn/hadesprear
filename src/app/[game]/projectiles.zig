@@ -61,7 +61,7 @@ pub fn update() !void {
         }
 
         if (!e.entities.exists(entity_ptr.id)) {
-            try e.entities.add(entity_ptr);
+            try e.entities.append(entity_ptr);
         }
 
         const direction_vector = e.Vec2(1, 0)

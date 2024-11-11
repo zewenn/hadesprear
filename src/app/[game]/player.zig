@@ -94,7 +94,7 @@ var mouse_rotation: f32 = 0;
 // ===================== [Events] =====================
 
 pub fn awake() !void {
-    try e.entities.add(&Player);
+    try e.entities.append(&Player);
 
     player_animator = e.Animator.init(&e.ALLOCATOR, &Player);
     {
@@ -167,8 +167,8 @@ pub fn awake() !void {
         }
     }
 
-    try e.entities.add(&Hand0);
-    try e.entities.add(&Hand1);
+    try e.entities.append(&Hand0);
+    try e.entities.append(&Hand1);
 
     hands = try weapons.Hands.init(
         &e.ALLOCATOR,

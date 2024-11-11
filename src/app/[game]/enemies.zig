@@ -155,7 +155,7 @@ pub fn update() !void {
         // ==========================================
 
         if (!e.entities.exists(entity_ptr.id)) {
-            try e.entities.add(entity_ptr);
+            try e.entities.append(entity_ptr);
 
             item.animator = e.Animator.init(
                 &e.ALLOCATOR,
@@ -168,8 +168,8 @@ pub fn update() !void {
                 &item.hand1,
             );
 
-            try e.entities.add(&item.hand0);
-            try e.entities.add(&item.hand1);
+            try e.entities.append(&item.hand0);
+            try e.entities.append(&item.hand1);
 
             var animator = &(item.animator.?);
             {

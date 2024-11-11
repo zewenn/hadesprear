@@ -442,7 +442,7 @@ pub const Level = struct {
 };
 
 pub const LoadedLevel = struct {
-    rounds: [][]EnemySpawner,
+    rounds: [][]*EnemySpawner,
     reward_tier: Rarity,
     backgrounds: []*Entity,
     walls: []*Entity,

@@ -60,12 +60,13 @@ pub const Display = struct {
         normal,
     };
     pub const layers = enum(u8) {
-        background = 10,
-        spawners = 17,
-        trail_effects = 18,
-        foreground = 20,
-        showers = 30,
+        background,
+        spawners,
+        trail_effects,
+        foreground,
+        showers,
         walls,
+        editor_spawners,
     };
 
     sprite: []const u8 = "sprites/missingno.png",

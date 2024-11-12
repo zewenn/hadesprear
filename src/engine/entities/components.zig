@@ -67,6 +67,7 @@ pub const Display = struct {
         showers,
         walls,
         editor_spawners,
+        top,
     };
 
     sprite: []const u8 = "sprites/missingno.png",

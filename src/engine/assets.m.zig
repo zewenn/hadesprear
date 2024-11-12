@@ -91,7 +91,7 @@ pub fn get(T: type, id: []const u8) ?T {
     if (T == rl.Image) {
         if (!image_map.contains(id)) {
             std.log.err("Image does not exist: {s}", .{id});
-            @panic("Image doen't exist");
+            return rl.imageCopy(image_map.get("sprites/missingno.png").?);
         }
 
         if (image_map.getPtr(id)) |img| {

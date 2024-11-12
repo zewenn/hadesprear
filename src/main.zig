@@ -14,7 +14,7 @@ pub fn main() !void {
     e.setTraceLogLevel(.log_error);
 
     e.window.init(
-        "HadeSpear",
+        "OverLife - v0.0.0-a1",
         e.Vec2(
             1440,
             720,

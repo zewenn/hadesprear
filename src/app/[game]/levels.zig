@@ -282,6 +282,7 @@ pub fn unload() void {
     e.ALLOCATOR.free(loadedptr.backgrounds);
 
     for (loadedptr.walls) |entity| {
+        e.ALLOCATOR.free(entity.display.sprite);
         manager.removeFreeId(entity);
     }
     e.ALLOCATOR.free(loadedptr.walls);
@@ -366,13 +367,9 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
 
     const RectangleArrayList = std.ArrayList(e.Rectangle);
 
-    var wall_rectangles_horizontal = RectangleArrayList.init(e.ALLOCATOR);
-    defer wall_rectangles_horizontal.deinit();
-    errdefer wall_rectangles_horizontal.deinit();
-
-    var wall_rectangless_vertical = RectangleArrayList.init(e.ALLOCATOR);
-    defer wall_rectangless_vertical.deinit();
-    errdefer wall_rectangless_vertical.deinit();
+    var wall_rectangles_arraylist = RectangleArrayList.init(e.ALLOCATOR);
+    defer wall_rectangles_arraylist.deinit();
+    errdefer wall_rectangles_arraylist.deinit();
 
     var backgrounds_rectangles_arraylist = RectangleArrayList.init(e.ALLOCATOR);
     defer backgrounds_rectangles_arraylist.deinit();
@@ -405,72 +402,19 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
             current_width = 0;
 
             for (row, 0..) |col, ci| {
-                if (col != WALL_ID) {
-                    const condition2 = if (current_width == 0)
-                        false
-                    else if (ri >= 1 and ri <= 198) Ans: {
-                        if (matrix[ri - 1][ci] == WALL_ID and matrix[ri + 1][ci] == WALL_ID)
-                            break :Ans false;
-                        break :Ans true;
-                    } else false;
-
-                    if (current_width >= 2 or condition2) {
-                        wall_rectangles_horizontal.append(
-                            e.Rect(
-                                e.loadf32(ci) - current_width,
-                                ri,
-                                current_width,
-                                1,
-                            ),
-                        ) catch {
-                            std.log.info("Failed to append!", .{});
-                        };
-                    }
-
-                    current_width = 0;
+                if (col != WALL_ID)
                     continue;
-                }
 
-                if (col == WALL_ID) current_width += 1;
+                try wall_rectangles_arraylist.append(e.Rect(ci, ri, 1, 1));
             }
         }
-
-        // ============================ [VERTICAL WALLS] ============================
-
-        current_height = 0;
-        for (0..matrix[0].len) |ci| {
-            for (matrix, 0..) |row, ri| {
-                const col = row[ci];
-
-                if (col != WALL_ID) {
-                    if (current_height >= 2) {
-                        wall_rectangless_vertical.append(
-                            e.Rect(
-                                ci,
-                                e.loadf32(ri) - current_height,
-                                1,
-                                current_height,
-                            ),
-                        ) catch {
-                            std.log.info("Failed to append!", .{});
-                        };
-                    }
-
-                    current_height = 0;
-                    continue;
-                }
-
-                if (col == WALL_ID) current_height += 1;
-            }
-        }
-
         // ============================ [BACKGROUND #1] ============================
 
         current_width = 0;
         current_height = 1;
         for (matrix, 0..) |row, ri| {
             for (row, 0..) |col, ci| {
-                if (col != BACKGROUND_ID and col != PLAYER_SPAWNER and @divFloor(col, 40000) != 1) {
+                if (col != BACKGROUND_ID and col != PLAYER_SPAWNER and !(39999 < col and col < 50000)) {
                     if (current_width >= 1) {
                         backgrounds_rectangles_arraylist.append(
                             e.Rect(
@@ -631,61 +575,86 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
     Entities: {
         // =========================== [HORIZONTAL WALLS] ============================
 
-        for (wall_rectangles_horizontal.items) |rect| {
-            try wall_entities_arraylist.append(
-                e.Entity{
-                    .id = ".",
-                    .tags = ".",
-                    .transform = .{
-                        .position = e.Vec2(
-                            rect.x * 64 + rect.width * 64 / 2 - 32,
-                            rect.y * 64 - 64 + rect.height * 64 / 2 - 32,
-                        ),
-                        .rotation = e.Vec3(0, 0, 0),
-                        .scale = e.Vec2(rect.width * 64, 192),
-                    },
-                    .display = .{
-                        .scaling = .pixelate,
-                        .sprite = "sprites/backgrounds/w16x48.png",
-                        .layer = .foreground,
-                        .background_tile_size = e.Vec2(64, 192),
-                    },
-                    .collider = e.components.Collider{
-                        .dynamic = false,
-                        .rect = e.Rect(0, -32, rect.width * 64, 32),
-                        .weight = 10,
-                    },
-                },
-            );
-        }
+        for (wall_rectangles_arraylist.items) |rect| {
+            var n_top: usize = 0;
+            var n_bottom: usize = 0;
+            var n_left: usize = 0;
+            var n_right: usize = 0;
 
-        // ============================ [VERTICAL WALLS] ============================
+            const Y = e.loadusize(rect.y);
+            const X = e.loadusize(rect.x);
 
-        for (wall_rectangless_vertical.items) |rect| {
-            try wall_entities_arraylist.append(
-                e.Entity{
-                    .id = ".",
-                    .tags = ".",
-                    .transform = .{
-                        .position = e.Vec2(
-                            rect.x * 64 + rect.width * 64 / 2 - 32,
-                            rect.y * 64 - 128 + rect.height * 64 / 2 - 32,
-                        ),
-                        .rotation = e.Vec3(0, 0, 0),
-                        .scale = e.Vec2(rect.width * 64, rect.height * 64),
-                    },
-                    .display = .{
-                        .scaling = .pixelate,
-                        .sprite = "sprites/backgrounds/wt16x16.png",
-                        .layer = .foreground,
-                        .background_tile_size = e.Vec2(64, 64),
-                    },
-                    .collider = e.components.Collider{
-                        .dynamic = false,
-                        .rect = e.Rect(0, 96, rect.width * 64, rect.height * 64 - 32),
-                        .weight = 10,
-                    },
+            if (rect.x != 0) {
+                n_left = switch (matrix[Y][X - 1]) {
+                    WALL_ID => 1,
+                    0 => 2,
+                    else => 0,
+                };
+            } else n_left = 2;
+            if (rect.x != 199) {
+                n_right = switch (matrix[Y][X + 1]) {
+                    WALL_ID => 1,
+                    0 => 2,
+                    else => 0,
+                };
+            } else n_right = 2;
+            if (rect.y != 0) {
+                n_top = switch (matrix[Y - 1][X]) {
+                    WALL_ID => 1,
+                    0 => 2,
+                    else => 0,
+                };
+            } else n_top = 2;
+            if (rect.y != 199) {
+                n_bottom = switch (matrix[Y + 1][X]) {
+                    WALL_ID => 1,
+                    0 => 2,
+                    else => 0,
+                };
+            } else n_bottom = 2;
+
+            if (n_left == 0 or n_right == 0 or n_top == 0 or n_bottom == 0) {
+                if (n_left == 2) n_left = 1;
+                if (n_right == 2) n_right = 1;
+                if (n_top == 2) n_top = 1;
+                if (n_bottom == 2) n_bottom = 1;
+            }
+
+            const entity = e.Entity{
+                .id = ".",
+                .tags = ".",
+                .transform = .{
+                    .position = e.Vec2(
+                        rect.x * 64 + rect.width * 64 / 2 - 32,
+                        rect.y * 64 + rect.height * 64 / 2 - 32,
+                    ),
+                    .rotation = e.Vec3(0, 0, 0),
+                    .scale = e.Vec2(rect.width * 64, 64),
                 },
+                .display = .{
+                    .scaling = .pixelate,
+                    .sprite = try std.fmt.allocPrint(
+                        e.ALLOCATOR,
+                        "sprites/backgrounds/walls/{d}-{d}-{d}-{d}.png",
+                        .{
+                            n_left,
+                            n_top,
+                            n_right,
+                            n_bottom,
+                        },
+                    ),
+                    .layer = .foreground,
+                    // .background_tile_size = e.Vec2(64, 128),
+                },
+                .collider = e.components.Collider{
+                    .dynamic = false,
+                    .rect = e.Rect(0, -32, rect.width * 64, 32),
+                    .weight = 10,
+                },
+            };
+
+            try wall_entities_arraylist.append(
+                entity,
             );
         }
 
@@ -790,7 +759,12 @@ pub const editor_suit = struct {
         .id = "placedownShower",
         .tags = "",
         .transform = .{},
-        .display = .{},
+        .display = .{
+            .sprite = "sprites/backgrounds/selector_img.png",
+            .scaling = .pixelate,
+            .layer = .top,
+            .background_tile_size = e.Vec2(64, 64),
+        },
     };
 
     pub fn awake() !void {
@@ -801,14 +775,38 @@ pub const editor_suit = struct {
     }
 
     pub fn update() !void {
-        if (!enabled) return;
+        if (!enabled) {
+            selected_shower.transform.scale = e.Vec2(0, 0);
+            return;
+        }
 
         cursor_position = getCursorPos();
 
         if (cursor_position.x < 0 or cursor_position.y < 0) return;
 
-        selected_shower.transform.position = cursor_position
-            .multiply(e.Vec2(64, 64));
+        if (!dragging) {
+            selected_shower.transform.position = cursor_position
+                .multiply(e.Vec2(64, 64));
+            selected_shower.transform.scale = e.Vec2(64, 64);
+        } else {
+            const dv = e.Vec2(
+                @abs(cursor_position.x - drag_start_pos.x) + 1,
+                @abs(cursor_position.y - drag_start_pos.y) + 1,
+            );
+
+            const translate = e.Vec2(
+                (cursor_position.x - drag_start_pos.x) / dv.x,
+                (cursor_position.y - drag_start_pos.y) / dv.y,
+            );
+
+            selected_shower.transform.scale = dv
+                .multiply(e.Vec2(64, 64));
+            selected_shower.transform.position = cursor_position
+                .subtract(dv
+                .divide(e.Vec2(2, 2))
+                .multiply(translate))
+                .multiply(e.Vec2(64, 64));
+        }
 
         const items = editor_suit.manager.items() catch {
             std.log.err("Failed to get items!", .{});
@@ -829,7 +827,7 @@ pub const editor_suit = struct {
             dragging = true;
         }
 
-        if (e.isMouseButtonReleased(.mouse_button_left))  {
+        if (e.isMouseButtonReleased(.mouse_button_left)) {
             // if ((last_pos.equals(cursor_position) == 0 or
             //     last_placedown_type != placedown_type)) break :Blk;
 
@@ -847,6 +845,7 @@ pub const editor_suit = struct {
 
             for (e.loadusize(a.y)..e.loadusize(b.y) + 1) |dy| {
                 for (e.loadusize(a.x)..e.loadusize(b.x) + 1) |dx| {
+                    // No duplicate player spawners
                     if (placedown_type == 4) {
                         for (current_matrix, 0..) |row, ri| {
                             for (row, 0..) |col, ci| {
@@ -856,14 +855,13 @@ pub const editor_suit = struct {
                         }
                     }
                     current_matrix[e.loadusize(dy)][e.loadusize(dx)] = placedown_type;
-
-                    editor_suit.unload();
-                    try loadFromMatrix(current_matrix);
-
-                    last_placedown_type = placedown_type;
-                    last_pos = cursor_position;
                 }
             }
+            editor_suit.unload();
+            try loadFromMatrix(current_matrix);
+
+            last_placedown_type = placedown_type;
+            last_pos = cursor_position;
         }
 
         var move_vector = e.Vec2(0, 0);
@@ -881,8 +879,10 @@ pub const editor_suit = struct {
             move_vector.x += 1;
         }
 
-        if (e.isKeyPressed(.key_zero)) placedown_type = 0;
-        if (e.isKeyPressed(.key_one)) placedown_type = 1;
+        if (e.isKeyPressed(.key_one) and e.isKeyDown(.key_left_alt))
+            placedown_type = 0
+        else if (e.isKeyPressed(.key_one))
+            placedown_type = 1;
         if (e.isKeyPressed(.key_two)) placedown_type = 2;
         if (e.isKeyPressed(.key_three)) placedown_type = 3;
         if (e.isKeyPressed(.key_four)) placedown_type = 4;

@@ -60,15 +60,22 @@ pub fn update() !void {
     for (entity_slice) |entity| {
         const transform = entity.transform;
 
-        const start_transform = camera.worldPositionToScreenPosition(transform.position.subtract(transform.scale));
-        const end_transform = camera.worldPositionToScreenPosition(transform.position.add(transform.scale));
-
-        if ((end_transform.x < 0 or
-            end_transform.y < 0) or
-            (start_transform.x > window.size.x or
-            start_transform.y > window.size.y))
+        // Early continue if entity is not on screen
         {
-            continue;
+            const start_transform = camera.worldPositionToScreenPosition(transform.position
+                .subtract(transform.scale
+                .multiply(rl.Vector2.init(0.5, 0.5))));
+            const end_transform = camera.worldPositionToScreenPosition(transform.position
+                .add(transform.scale
+                .multiply(rl.Vector2.init(0.5, 0.5))));
+
+            if ((end_transform.x < 0 or
+                end_transform.y < 0) or
+                (start_transform.x > window.size.x or
+                start_transform.y > window.size.y))
+            {
+                continue;
+            }
         }
 
         if (transform.scale.x * camera.zoom <= 0 or transform.scale.y * camera.zoom <= 0) continue;

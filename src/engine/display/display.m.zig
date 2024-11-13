@@ -60,6 +60,17 @@ pub fn update() !void {
     for (entity_slice) |entity| {
         const transform = entity.transform;
 
+        const start_transform = camera.worldPositionToScreenPosition(transform.position.subtract(transform.scale));
+        const end_transform = camera.worldPositionToScreenPosition(transform.position.add(transform.scale));
+
+        if ((end_transform.x < 0 or
+            end_transform.y < 0) or
+            (start_transform.x > window.size.x or
+            start_transform.y > window.size.y))
+        {
+            continue;
+        }
+
         if (transform.scale.x * camera.zoom <= 0 or transform.scale.y * camera.zoom <= 0) continue;
 
         const display = entity.display;
@@ -158,7 +169,6 @@ pub fn update() !void {
 
     for (GUIItems) |item| {
         try GUIElements.insert(0, item);
-        // try GUIElements.append(entry.value_ptr);
     }
 
     const sorted_elements = try GUIElements.toOwnedSlice();
@@ -184,21 +194,6 @@ pub fn update() !void {
             transform = t;
         } else continue;
 
-        // const origin: rl.Vector2 = GetOrigin: {
-        //     var anchor = rl.Vector2.init(0, 0);
-
-        //     switch (element.options.style.translate.x) {
-        //         .min => anchor.x = 0,
-        //         .center => anchor.x = transform.scale.x * camera.zoom / 2,
-        //         .max => anchor.x = transform.scale.x * camera.zoom,
-        //     }
-        //     switch (element.options.style.translate.y) {
-        //         .min => anchor.y = 0,
-        //         .center => anchor.y = transform.scale.y * camera.zoom / 2,
-        //         .max => anchor.y = transform.scale.y * camera.zoom,
-        //     }
-        //     break :GetOrigin anchor;
-        // };
         var origin = transform.anchor.?;
 
         BackgroundColorRendering: {

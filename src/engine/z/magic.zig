@@ -15,5 +15,18 @@ pub fn reshape(comptime T: type) type {
 
             return matrix;
         }
+
+        pub fn matrix2(alloc: Allocator, matrix: [][]T) ![]T {
+            var list = std.ArrayList(T).init(alloc);
+            defer list.deinit();
+
+            for (matrix) |row| {
+                for (row) |col| {
+                    try list.append(col);
+                }
+            }
+
+            return list.toOwnedSlice();
+        }
     };
 }

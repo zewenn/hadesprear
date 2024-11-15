@@ -43,6 +43,7 @@ pub const camera = display.camera;
 pub const MISSINGNO = "sprites/missingno.png";
 
 pub const saveloader = @import("./saveloader.zig");
+pub const reshape = zlib.reshape;
 
 pub fn loadf32(v: anytype) f32 {
     return switch (@typeInfo(@TypeOf(v))) {

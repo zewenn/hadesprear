@@ -349,7 +349,7 @@ pub fn sortRectsByY(_: void, lsh: e.Rectangle, rsh: e.Rectangle) bool {
     return lsh.y < rsh.y;
 }
 
-pub fn loadFromMatrix(matrix: [200][200]Tile) !void {
+pub fn loadFromMatrix(matrix: [][]Tile) !void {
     const WALL_ID = 1;
     const BACKGROUND_ID = 2;
     const PLAYER_SPAWNER = 4;
@@ -679,7 +679,7 @@ pub const editor_suit = struct {
     // 4 - SPAWN PLAYER
     // 4xyyz -> ENEMY SPAWNER
     var placedown_type: Tile = .{};
-    var current_matrix: [200][200]Tile = undefined;
+    var current_matrix: [][]Tile = undefined;
     var cursor_position: e.Vector2 = e.Vec2(0, 0);
 
     var last_pos: e.Vector2 = e.Vec2(0, 0);
@@ -724,7 +724,13 @@ pub const editor_suit = struct {
         try e.entities.append(&selected_shower);
         editor_suit.manager.init(e.ALLOCATOR);
 
-        current_matrix = [_][200]Tile{[_]Tile{.{}} ** 200} ** 200;
+        current_matrix = try e.ALLOCATOR.alloc([]Tile, 200);
+        for (current_matrix, 0..) |_, index| {
+            current_matrix[index] = try e.ALLOCATOR.alloc(Tile, 200);
+            for (current_matrix[index], 0..) |_, jndex| {
+                current_matrix[index][jndex] = .{};
+            }
+        }
     }
 
     pub fn update() !void {
@@ -811,9 +817,8 @@ pub const editor_suit = struct {
                 }
             }
             editor_suit.unload();
-            std.log.debug("asd", .{});
+
             try loadFromMatrix(current_matrix);
-            std.log.debug("as2", .{});
 
             last_placedown_type = placedown_type;
             last_pos = cursor_position;
@@ -854,17 +859,23 @@ pub const editor_suit = struct {
             .info = 1,
         };
 
-        if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_s)) {
-            try save(current_matrix, "test");
-            move_vector.y = 0;
-        } else {
-            e.camera.position = e.camera.position
-                .add(move_vector
-                .multiply(e.Vec2(
-                350 * e.time.DeltaTime(),
-                350 * e.time.DeltaTime(),
-            )));
+        if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_q)) {
+            freeCurrentMatrix();
+            current_matrix = try leveldat.load("test");
+            try loadFromMatrix(current_matrix);
         }
+
+        if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_s)) {
+            try leveldat.save(current_matrix, "test");
+            move_vector.y = 0;
+        }
+
+        e.camera.position = e.camera.position
+            .add(move_vector
+            .multiply(e.Vec2(
+            350 * e.time.DeltaTime(),
+            350 * e.time.DeltaTime(),
+        )));
     }
 
     pub fn deinit() !void {
@@ -881,6 +892,8 @@ pub const editor_suit = struct {
         }
 
         editor_suit.manager.deinit();
+
+        freeCurrentMatrix();
     }
 
     pub fn enable() void {
@@ -974,6 +987,13 @@ pub const editor_suit = struct {
         });
 
         try e.entities.append(&(returned.entity));
+    }
+
+    fn freeCurrentMatrix() void {
+        for (current_matrix, 0..) |_, index| {
+            e.ALLOCATOR.free(current_matrix[index]);
+        }
+        e.ALLOCATOR.free(current_matrix);
     }
 
     pub fn unload() void {
@@ -1100,42 +1120,82 @@ pub const Tile = struct {
     }
 };
 
-pub fn save(matrix: [200][200]Tile, filename: []const u8) !void {
-    var list = std.ArrayList(Tile).init(e.ALLOCATOR);
-    defer list.deinit();
+pub const leveldat = struct {
+    pub fn save(matrix: [][]Tile, filename: []const u8) !void {
+        var list = std.ArrayList(Tile).init(e.ALLOCATOR);
+        defer list.deinit();
 
-    for (matrix) |row| {
-        for (row) |tile| {
-            try list.append(tile);
+        for (matrix) |row| {
+            for (row) |tile| {
+                try list.append(tile);
+            }
         }
+
+        const arr = try list.toOwnedSlice();
+        defer e.ALLOCATOR.free(arr);
+
+        const string = try Tile.toString(e.ALLOCATOR, arr);
+        defer e.ALLOCATOR.free(string);
+
+        const bpath = "src/assets/levels/";
+        const ext = ".lvldat";
+        const path = try e.ALLOCATOR.alloc(u8, bpath.len + filename.len + ext.len);
+
+        std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+        std.mem.copyForwards(u8, path[bpath.len .. bpath.len + filename.len], filename);
+        std.mem.copyForwards(u8, path[bpath.len + filename.len ..], ext);
+
+        defer e.ALLOCATOR.free(path);
+
+        const file = try std.fs.cwd().createFile(path, .{});
+        defer file.close();
+
+        try file.writeAll(string);
     }
 
-    const arr = try list.toOwnedSlice();
-    defer e.ALLOCATOR.free(arr);
+    pub fn load(name: []const u8) ![][]Tile {
+        const string: []const u8 = switch (e.builtin.mode) {
+            .Debug => Debug: {
+                const bpath = "src/assets/levels/";
+                const ext = ".lvldat";
+                const path = try e.ALLOCATOR.alloc(u8, bpath.len + name.len + ext.len);
 
-    const string = try Tile.toString(e.ALLOCATOR, arr);
-    defer e.ALLOCATOR.free(string);
+                std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+                std.mem.copyForwards(u8, path[bpath.len .. bpath.len + name.len], name);
+                std.mem.copyForwards(u8, path[bpath.len + name.len ..], ext);
 
-    const bpath = "src/assets/levels/";
-    const ext = ".lvldat";
-    const path = try e.ALLOCATOR.alloc(u8, bpath.len + filename.len + ext.len);
+                defer e.ALLOCATOR.free(path);
 
-    std.mem.copyForwards(u8, path[0..bpath.len], bpath);
-    std.mem.copyForwards(u8, path[bpath.len .. bpath.len + filename.len], filename);
-    std.mem.copyForwards(u8, path[bpath.len + filename.len ..], ext);
+                const file = try std.fs.cwd().openFile(path, .{});
+                defer file.close();
 
-    defer e.ALLOCATOR.free(path);
+                break :Debug try file.readToEndAlloc(e.ALLOCATOR, 1024_000_000_000);
+            },
+            else => Release: {
+                const bpath = "levels/";
+                const ext = ".lvldat";
+                const path = try e.ALLOCATOR.alloc(u8, bpath.len + name.len + ext.len);
 
-    std.log.debug("asd", .{});
+                std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+                std.mem.copyForwards(u8, path[bpath.len .. bpath.len + name.len], name);
+                std.mem.copyForwards(u8, path[bpath.len + name.len ..], ext);
 
-    const file = try std.fs.cwd().createFile(path, .{});
-    defer file.close();
+                break :Release (try e.assets.get.lvldat(e.ALLOCATOR, path)).?;
+            },
+        };
 
-    try file.writeAll(string);
-}
+        defer e.ALLOCATOR.free(string);
 
-pub fn loadMatrixFromFile(filename: []const u8) [200][200]Tile {
-    _ = filename;
-    // TODO: Implement this
-    // current_matrix = [_][200]Tile{[_]Tile{.{}} ** 200} ** 200;
-}
+        const tile_array = try Tile.fromString(e.ALLOCATOR, string);
+        defer e.ALLOCATOR.free(tile_array);
+
+        const tile_matrix = try e.reshape(Tile).array(
+            e.ALLOCATOR,
+            tile_array,
+            200,
+            200,
+        );
+
+        return tile_matrix;
+    }
+};

@@ -111,7 +111,7 @@ pub fn update() !void {
             img = rl.imageCopy(entity.cached_display.?.img.?);
             texture = entity.cached_display.?.texture.?;
         } else {
-            if (assets.get(rl.Image, display.sprite)) |_img| {
+            if (assets.get.image(display.sprite)) |_img| {
                 img = _img;
             } else {
                 std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
@@ -267,7 +267,7 @@ pub fn update() !void {
                 img = rl.imageCopy(element.cached_display.?.img.?);
                 texture = element.cached_display.?.texture.?;
             } else {
-                if (assets.get(rl.Image, display.sprite)) |_img| {
+                if (assets.get.image(display.sprite)) |_img| {
                     img = _img;
                 } else {
                     std.log.info("DISPLAY: IMAGE: MISSING IMAGE \"{s}\"", .{display.sprite});
@@ -350,7 +350,7 @@ pub fn update() !void {
             } else break :FontRendering;
 
             var font: rl.Font = undefined;
-            if (assets.get(rl.Font, style.font.family)) |_font| {
+            if (assets.get.font(style.font.family)) |_font| {
                 font = _font;
             } else break :FontRendering;
 

@@ -62,6 +62,15 @@ pub fn loadusize(v: anytype) usize {
     };
 }
 
+pub fn loadNsize(comptime T: type, v: anytype) T {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .Int, .ComptimeInt => @intCast(v),
+        .Float, .ComptimeFloat => @intFromFloat(@round(v)),
+        .Bool => @intFromBool(v),
+        else => 0,
+    };
+}
+
 pub fn loadisize(v: anytype) isize {
     return switch (@typeInfo(@TypeOf(v))) {
         .Int, .ComptimeInt => @intCast(v),

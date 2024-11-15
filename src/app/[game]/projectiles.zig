@@ -92,6 +92,12 @@ pub fn update() !void {
             if (!e.collision.collides(entity_ptr, other)) {
                 continue;
             }
+
+            // if (std.mem.containsAtLeast(u8, other.tags, 1, "wall")) {
+            //     manager.removeFreeId(entity_ptr);
+            //     continue;
+            // }
+
             projectile_data.health -= projectile_data.bleed_per_second * e.time.DeltaTime();
 
             if (!other.entity_stats.?.is_invalnureable) {

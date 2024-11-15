@@ -329,13 +329,13 @@ pub fn update() !void {
             //         ([_]u8{0} ** 200),
             //     } ** 190),
             // );
-            try levels.loadFromMatrix(
-                try e.assets.getJson(
-                    [200][200]u16,
-                    e.ARENA,
-                    "levels/test.json",
-                ),
-            );
+            // try levels.loadFromMatrix(
+            //     try e.assets.getJson(
+            //         [200][200]u16,
+            //         e.ARENA,
+            //         "levels/test.json",
+            //     ),
+            // );
         }
 
         if (e.isKeyDown(.key_w)) {

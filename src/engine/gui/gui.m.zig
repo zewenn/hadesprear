@@ -16,6 +16,11 @@ pub const Unit = @import("Unit.zig");
 
 pub const manager = zlib.HeapManager(GUIElement, (struct {
     pub fn callback(_: Allocator, item: *GUIElement) !void {
+        if (item.is_hovered) {
+            item.is_hovered = false;
+            hovered_button = null;
+        }
+
         if (!item.heap_id) return;
         alloc.free(item.options.id);
     }
@@ -206,6 +211,9 @@ pub fn clear() !void {
         }
         manager.removeFreeId(item);
     }
+
+    std.log.debug("GUI: {d}", .{manager.len()});
+    hovered_button = null;
 
     BM3D.clear();
 }

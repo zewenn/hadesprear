@@ -6,6 +6,7 @@ pub const EngineEvents = enum {
     Awake,
     Init,
     Update,
+    NextFrame,
     Deinit,
 };
 
@@ -81,5 +82,10 @@ pub fn call(comptime id: EngineEvents) void {
 }
 
 pub fn delete(comptime id: EngineEvents) !void {
+    const arr = event_map.getPtr(id);
+    if (arr) |arrayList| {
+        arrayList.deinit();
+    }
+
     _ = event_map.remove(id);
 }

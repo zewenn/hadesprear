@@ -56,6 +56,7 @@ pub fn awake() !void {
                             .font = .{
                                 .size = 16,
                             },
+                            .color = e.Colour.white,
                         },
                         .hover = .{
                             .font = .{
@@ -67,8 +68,12 @@ pub fn awake() !void {
                     e.Vec2(8, 4),
                     (struct {
                         pub fn callback() !void {
-                            e.input.ui_mode = false;
-                            try e.scenes.load("game");
+                            try e.nextFrame((struct {
+                                pub fn callback() !void {
+                                    e.input.ui_mode = false;
+                                    try e.scenes.load("game");
+                                }
+                            }).callback);
                         }
                     }).callback,
                 ),
@@ -80,11 +85,16 @@ pub fn awake() !void {
 
 pub fn init() !void {
     e.playSound(menu_music);
-    e.input.ui_mode = false;
-    try e.scenes.load("game");
+    //     e.input.ui_mode = false;
+    //     try e.scenes.load("game");
 }
 
-pub fn update() !void {}
+pub fn update() !void {
+    if (e.isKeyPressed(.key_space)) {
+        e.input.ui_mode = false;
+        try e.scenes.load("game");
+    }
+}
 
 pub fn deinit() !void {
     e.stopSound(menu_music);

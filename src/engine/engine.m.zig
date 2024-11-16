@@ -176,6 +176,9 @@ pub fn update() !void {
     try time.tick();
     std.debug.print("FPS: {d:.3}\r", .{1 / time.deltaTime});
 
+    events.call(.NextFrame);
+    try events.delete(.NextFrame);
+
     // last_farme_at = rl.getTime();
     input.update();
     // std.log.info("INPUT: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
@@ -204,4 +207,8 @@ pub fn update() !void {
     // std.log.info("DISPLAY: {d:.3}%", .{(rl.getTime() - last_farme_at) / time.deltaTime * 100});
 
     // std.debug.print("\n\n\n" ** 10, .{});
+}
+
+pub fn nextFrame(callback: *const fn () anyerror!void) !void {
+    try events.on(.NextFrame, callback);
 }

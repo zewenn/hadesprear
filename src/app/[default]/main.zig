@@ -9,7 +9,7 @@ var menu_music: e.Sound = undefined;
 
 pub fn awake() !void {
     e.input.ui_mode = true;
-    menu_music = e.assets.get(e.Sound, "audio/music/main_menu.mp3").?;
+    menu_music = e.assets.get.wave("audio/music/main_menu.mp3").?;
     e.setSoundVolume(menu_music, 0.1);
 
     try GUI.Body(

@@ -34,6 +34,7 @@ pub const math = @import("math.zig");
 pub const arrays = @import("arrays.zig");
 
 pub const perlin = @import("perlin.zig");
+pub const reshape = @import("magic.zig").reshape;
 
 pub const debug = @import("./debug.zig");
 pub const print = debug.print;

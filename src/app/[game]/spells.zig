@@ -48,7 +48,7 @@ pub fn summon(spell: conf.Item, entity: *e.Entity, side: conf.ProjectileSide, bo
     const damage = balancing.powerScaleCurve(10 * countBlessing(spell.spell_blessings, .fire)) * @max(1, bonus_damage);
 
     // zephyr
-    const summon_speed = 1 / e.loadf32(@max(1, countBlessing(spell.spell_blessings, .zephyr)));
+    const summon_speed = 0.5 / e.loadf32(@max(1, countBlessing(spell.spell_blessings, .zephyr)));
 
     // fracture
     const projectile_count: f32 = @min(15, 1 + e.loadf32(countBlessing(spell.spell_blessings, .fracture)));

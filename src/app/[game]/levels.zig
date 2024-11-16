@@ -349,10 +349,9 @@ pub fn sortRectsByY(_: void, lsh: e.Rectangle, rsh: e.Rectangle) bool {
     return lsh.y < rsh.y;
 }
 
-pub fn loadFromMatrix(matrix: [200][200]u16) !void {
+pub fn loadFromMatrix(matrix: [][]Tile) !void {
     const WALL_ID = 1;
     const BACKGROUND_ID = 2;
-    const BACKGROUND_2_ID = 3;
     const PLAYER_SPAWNER = 4;
 
     // Enemies are defined in packs of 20
@@ -396,52 +395,13 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
         var current_width: f32 = 0;
         var current_height: f32 = 0;
 
-        // =========================== [HORIZONTAL WALLS] ============================
-
-        for (matrix, 0..) |row, ri| {
-            current_width = 0;
-
-            for (row, 0..) |col, ci| {
-                if (col != WALL_ID)
-                    continue;
-
-                try wall_rectangles_arraylist.append(e.Rect(ci, ri, 1, 1));
-            }
-        }
         // ============================ [BACKGROUND #1] ============================
 
         current_width = 0;
         current_height = 1;
         for (matrix, 0..) |row, ri| {
             for (row, 0..) |col, ci| {
-                if (col != BACKGROUND_ID and col != PLAYER_SPAWNER and !(39999 < col and col < 50000)) {
-                    if (current_width >= 1) {
-                        backgrounds_rectangles_arraylist.append(
-                            e.Rect(
-                                e.loadf32(ci) - current_width,
-                                e.loadf32(ri) - current_height,
-                                current_width,
-                                current_height,
-                            ),
-                        ) catch {
-                            std.log.info("Failed to append!", .{});
-                        };
-                    }
-
-                    current_width = 0;
-                    continue;
-                }
-                current_width += 1;
-            }
-        }
-
-        // ============================ [BACKGROUND #2] ============================
-
-        current_width = 0;
-        current_height = 1;
-        for (matrix, 0..) |row, ri| {
-            for (row, 0..) |col, ci| {
-                if (col != BACKGROUND_2_ID) {
+                if (col.base != BACKGROUND_ID and col.base != PLAYER_SPAWNER and col.base != 5) {
                     if (current_width >= 1) {
                         backgrounds_rectangles_arraylist.append(
                             e.Rect(
@@ -518,42 +478,32 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
 
         // ============================ [PLAYER SPAWNER] ============================
 
-        for (matrix, 0..) |row, ri| outer: {
-            for (row, 0..) |col, ci| {
-                if (col != PLAYER_SPAWNER) continue;
-
-                player_position = e.Vec2(ci, ri);
-                try editor_suit.newSpawner(.player, player_position, "{s}", "P");
-
-                break :outer;
-            }
-        }
-
-        // ============================ [ENEMY SPAWNERS] ============================
-
-        // MAX 65535 => 0-0-0-00
-        // 4    -  (1->6)  -  (1->99)  -  (0->9)
-        // ENEMYID ARCHETYPE  SUBTYPE    ROUND
-
+        var player_found = false;
         for (matrix, 0..) |row, ri| {
             for (row, 0..) |col, ci| {
-                // Filtering out enemy spawners
-                if (@divFloor(col, 40000) != 1) continue;
+                switch (col.base) {
+                    PLAYER_SPAWNER => {
+                        if (player_found) continue;
+                        player_found = true;
+                        player_position = e.Vec2(ci, ri);
+                        try editor_suit.newSpawner(.player, player_position, "{s}", "P");
+                    },
+                    5 => {
+                        const enemy_pos = e.Vec2(ci, ri);
+                        try editor_suit.newSpawner(.enemy, enemy_pos, "R{d}", col.info);
 
-                const asr: u16 = col - 40000;
-                const archetype = (asr - (asr % 1000)) / 1000;
-                const subtype = (asr - archetype * 1000 - (asr % 10)) / 10;
-                const r = (asr - archetype * 1000 - subtype * 10);
-
-                const enemy_pos = e.Vec2(ci, ri);
-                try editor_suit.newSpawner(.enemy, enemy_pos, "R{d}", r);
-
-                try spawning_enemies_array[r].append(conf.EnemySpawner{
-                    .enemy_archetype = @enumFromInt(archetype),
-                    .enemy_subtype = @enumFromInt(subtype),
-                    .spawn_at = enemy_pos
-                        .multiply(e.Vec2(64, 64)),
-                });
+                        try spawning_enemies_array[@min(9, col.info)].append(conf.EnemySpawner{
+                            .enemy_archetype = @enumFromInt(col.arch),
+                            .enemy_subtype = @enumFromInt(col.sub),
+                            .spawn_at = enemy_pos
+                                .multiply(e.Vec2(64, 64)),
+                        });
+                    },
+                    WALL_ID => {
+                        try wall_rectangles_arraylist.append(e.Rect(ci, ri, 1, 1));
+                    },
+                    else => {},
+                }
             }
         }
 
@@ -585,28 +535,31 @@ pub fn loadFromMatrix(matrix: [200][200]u16) !void {
             const X = e.loadusize(rect.x);
 
             if (rect.x != 0) {
-                n_left = switch (matrix[Y][X - 1]) {
+                n_left = switch (matrix[Y][X - 1].base) {
                     WALL_ID => 1,
                     0 => 2,
                     else => 0,
                 };
             } else n_left = 2;
+
             if (rect.x != 199) {
-                n_right = switch (matrix[Y][X + 1]) {
+                n_right = switch (matrix[Y][X + 1].base) {
                     WALL_ID => 1,
                     0 => 2,
                     else => 0,
                 };
             } else n_right = 2;
+
             if (rect.y != 0) {
-                n_top = switch (matrix[Y - 1][X]) {
+                n_top = switch (matrix[Y - 1][X].base) {
                     WALL_ID => 1,
                     0 => 2,
                     else => 0,
                 };
             } else n_top = 2;
+
             if (rect.y != 199) {
-                n_bottom = switch (matrix[Y + 1][X]) {
+                n_bottom = switch (matrix[Y + 1][X].base) {
                     WALL_ID => 1,
                     0 => 2,
                     else => 0,
@@ -725,12 +678,12 @@ pub const editor_suit = struct {
     // 3 - BACKGROUND_2
     // 4 - SPAWN PLAYER
     // 4xyyz -> ENEMY SPAWNER
-    var placedown_type: u16 = 1;
-    var current_matrix: [200][200]u16 = undefined;
+    var placedown_type: Tile = .{};
+    var current_matrix: [][]Tile = undefined;
     var cursor_position: e.Vector2 = e.Vec2(0, 0);
 
     var last_pos: e.Vector2 = e.Vec2(0, 0);
-    var last_placedown_type: u16 = 0;
+    var last_placedown_type: Tile = .{};
 
     var drag_start_pos: e.Vector2 = e.Vec2(0, 0);
     var drag_end_pos: e.Vector2 = e.Vec2(0, 0);
@@ -771,7 +724,13 @@ pub const editor_suit = struct {
         try e.entities.append(&selected_shower);
         editor_suit.manager.init(e.ALLOCATOR);
 
-        current_matrix = [_][200]u16{[_]u16{0} ** 200} ** 200;
+        current_matrix = try e.ALLOCATOR.alloc([]Tile, 200);
+        for (current_matrix, 0..) |_, index| {
+            current_matrix[index] = try e.ALLOCATOR.alloc(Tile, 200);
+            for (current_matrix[index], 0..) |_, jndex| {
+                current_matrix[index][jndex] = .{};
+            }
+        }
     }
 
     pub fn update() !void {
@@ -846,11 +805,11 @@ pub const editor_suit = struct {
             for (e.loadusize(a.y)..e.loadusize(b.y) + 1) |dy| {
                 for (e.loadusize(a.x)..e.loadusize(b.x) + 1) |dx| {
                     // No duplicate player spawners
-                    if (placedown_type == 4) {
+                    if (placedown_type.base == 4) {
                         for (current_matrix, 0..) |row, ri| {
                             for (row, 0..) |col, ci| {
-                                if (col != 4) continue;
-                                current_matrix[ri][ci] = 2;
+                                if (col.base != 4) continue;
+                                current_matrix[ri][ci] = .{ .base = 2 };
                             }
                         }
                     }
@@ -858,6 +817,7 @@ pub const editor_suit = struct {
                 }
             }
             editor_suit.unload();
+
             try loadFromMatrix(current_matrix);
 
             last_placedown_type = placedown_type;
@@ -880,14 +840,35 @@ pub const editor_suit = struct {
         }
 
         if (e.isKeyPressed(.key_one) and e.isKeyDown(.key_left_alt))
-            placedown_type = 0
+            placedown_type = .{}
         else if (e.isKeyPressed(.key_one))
-            placedown_type = 1;
-        if (e.isKeyPressed(.key_two)) placedown_type = 2;
-        if (e.isKeyPressed(.key_three)) placedown_type = 3;
-        if (e.isKeyPressed(.key_four)) placedown_type = 4;
-        if (e.isKeyPressed(.key_five)) placedown_type = 40000;
-        if (e.isKeyPressed(.key_six)) placedown_type = 41131;
+            placedown_type = .{ .base = 1 };
+        if (e.isKeyPressed(.key_two)) placedown_type = .{ .base = 2 };
+        if (e.isKeyPressed(.key_three)) placedown_type = .{ .base = 3 };
+        if (e.isKeyPressed(.key_four)) placedown_type = .{ .base = 4 };
+        if (e.isKeyPressed(.key_five)) placedown_type = .{
+            .base = 5,
+            .arch = 0,
+            .sub = 0,
+            .info = 0,
+        };
+        if (e.isKeyPressed(.key_six)) placedown_type = .{
+            .base = 5,
+            .arch = 1,
+            .sub = 0,
+            .info = 1,
+        };
+
+        if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_q)) {
+            freeCurrentMatrix();
+            current_matrix = try leveldat.toMatrix("test");
+            try loadFromMatrix(current_matrix);
+        }
+
+        if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_s)) {
+            try leveldat.save(current_matrix, "test");
+            move_vector.y = 0;
+        }
 
         e.camera.position = e.camera.position
             .add(move_vector
@@ -911,6 +892,8 @@ pub const editor_suit = struct {
         }
 
         editor_suit.manager.deinit();
+
+        freeCurrentMatrix();
     }
 
     pub fn enable() void {
@@ -1006,6 +989,13 @@ pub const editor_suit = struct {
         try e.entities.append(&(returned.entity));
     }
 
+    fn freeCurrentMatrix() void {
+        for (current_matrix, 0..) |_, index| {
+            e.ALLOCATOR.free(current_matrix[index]);
+        }
+        e.ALLOCATOR.free(current_matrix);
+    }
+
     pub fn unload() void {
         const items = editor_suit.manager.items() catch {
             std.log.err("Failed to get items!", .{});
@@ -1016,5 +1006,208 @@ pub const editor_suit = struct {
         for (items) |item| {
             editor_suit.manager.removeFreeId(item);
         }
+    }
+};
+
+pub const Tile = struct {
+    const Self = @This();
+
+    pub const StringLengthError = error{LengthNotDivisibleByThree};
+
+    pub const BASE_LEN_BITS: comptime_int = 4;
+    pub const ARCH_LEN_BITS: comptime_int = 8;
+    pub const SUB_LEN_BITS: comptime_int = 8;
+    pub const INFO_LEN_BITS: comptime_int = 4;
+
+    pub const BIT_LEN: comptime_int = BASE_LEN_BITS + ARCH_LEN_BITS + SUB_LEN_BITS + INFO_LEN_BITS;
+
+    pub const BASE_SHIFT: comptime_int = BIT_LEN - BASE_LEN_BITS;
+    pub const ARCH_SHIFT: comptime_int = BASE_SHIFT - ARCH_LEN_BITS;
+    pub const SUB_SHIFT: comptime_int = ARCH_SHIFT - SUB_LEN_BITS;
+    pub const INFO_SHIFT: comptime_int = SUB_SHIFT - INFO_LEN_BITS;
+
+    base: usize = 0,
+    arch: usize = 0,
+    sub: usize = 0,
+    info: usize = 0,
+
+    pub fn encode(self: Self) u24 {
+        const b = e.loadNsize(u24, self.base) << Tile.BASE_SHIFT;
+        const a = e.loadNsize(u24, self.arch) << Tile.ARCH_SHIFT;
+        const s = e.loadNsize(u24, self.sub) << Tile.SUB_SHIFT;
+        const i = e.loadNsize(u24, self.info) << Tile.INFO_SHIFT;
+
+        return ((b | a) | s) | i;
+    }
+
+    pub fn from(number: u24) Tile {
+        const base: u24 = number >> Tile.BASE_SHIFT;
+        const base_full: u24 = number ^ (base << Tile.BASE_SHIFT);
+
+        const arch: u24 = base_full >> Tile.ARCH_SHIFT;
+        const arch_full: u24 = base_full ^ (arch << Tile.ARCH_SHIFT);
+
+        const sub: u24 = arch_full >> Tile.SUB_SHIFT;
+        const sub_full: u24 = arch_full ^ (sub << Tile.SUB_SHIFT);
+
+        const info = sub_full >> Tile.INFO_SHIFT;
+
+        return Tile{
+            .base = e.loadNsize(usize, base),
+            .arch = e.loadNsize(usize, arch),
+            .sub = e.loadNsize(usize, sub),
+            .info = e.loadNsize(usize, info),
+        };
+    }
+
+    pub fn toASCII(self: Self) [3]u8 {
+        const coded = self.encode();
+
+        const ch1: u8 = e.loadNsize(u8, coded >> 16);
+        const ch2: u8 = e.loadNsize(u8, (coded << 8) >> 16);
+        const ch3: u8 = e.loadNsize(u8, (coded << 16) >> 16);
+
+        return [3]u8{ ch1, ch2, ch3 };
+    }
+
+    pub fn fromASCII(text: [3]u8) Self {
+        var bin: u24 = 0;
+
+        bin |= e.loadNsize(u24, text[0]) << 16;
+        bin |= e.loadNsize(u24, text[1]) << 8;
+        bin |= e.loadNsize(u24, text[2]);
+
+        return Self.from(bin);
+    }
+
+    /// Caller owns the returned memory
+    pub fn toString(alloc: Allocator, tiles: []Self) ![]const u8 {
+        var string = std.ArrayList(u8).init(alloc);
+        defer string.deinit();
+
+        for (tiles) |tile| {
+            for (tile.toASCII()) |char| {
+                try string.append(char);
+            }
+        }
+
+        return string.toOwnedSlice();
+    }
+
+    /// Caller owns the returned memory
+    pub fn fromString(alloc: Allocator, str: []const u8) ![]Self {
+        if (str.len % 3 != 0) {
+            return StringLengthError.LengthNotDivisibleByThree;
+        }
+
+        var newArr = std.ArrayList(Self).init(alloc);
+        defer newArr.deinit();
+
+        for (0..str.len / 3) |n| {
+            const index = n * 3;
+
+            const ascii = [3]u8{
+                str[index],
+                str[index + 1],
+                str[index + 2],
+            };
+
+            const tile = Tile.fromASCII(ascii);
+            try newArr.append(tile);
+        }
+
+        return newArr.toOwnedSlice();
+    }
+};
+
+pub const leveldat = struct {
+    pub fn save(matrix: [][]Tile, filename: []const u8) !void {
+        var list = std.ArrayList(Tile).init(e.ALLOCATOR);
+        defer list.deinit();
+
+        for (matrix) |row| {
+            for (row) |tile| {
+                try list.append(tile);
+            }
+        }
+
+        const arr = try list.toOwnedSlice();
+        defer e.ALLOCATOR.free(arr);
+
+        const string = try Tile.toString(e.ALLOCATOR, arr);
+        defer e.ALLOCATOR.free(string);
+
+        const bpath = "src/assets/levels/";
+        const ext = ".lvldat";
+        const path = try e.ALLOCATOR.alloc(u8, bpath.len + filename.len + ext.len);
+
+        std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+        std.mem.copyForwards(u8, path[bpath.len .. bpath.len + filename.len], filename);
+        std.mem.copyForwards(u8, path[bpath.len + filename.len ..], ext);
+
+        defer e.ALLOCATOR.free(path);
+
+        const file = try std.fs.cwd().createFile(path, .{});
+        defer file.close();
+
+        try file.writeAll(string);
+    }
+
+    pub fn toMatrix(name: []const u8) ![][]Tile {
+        const string: []const u8 = switch (e.builtin.mode) {
+            .Debug => Debug: {
+                const bpath = "src/assets/levels/";
+                const ext = ".lvldat";
+                const path = try e.ALLOCATOR.alloc(u8, bpath.len + name.len + ext.len);
+
+                std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+                std.mem.copyForwards(u8, path[bpath.len .. bpath.len + name.len], name);
+                std.mem.copyForwards(u8, path[bpath.len + name.len ..], ext);
+
+                defer e.ALLOCATOR.free(path);
+
+                const file = try std.fs.cwd().openFile(path, .{});
+                defer file.close();
+
+                break :Debug try file.readToEndAlloc(e.ALLOCATOR, 1024_000_000_000);
+            },
+            else => Release: {
+                const bpath = "levels/";
+                const ext = ".lvldat";
+                const path = try e.ALLOCATOR.alloc(u8, bpath.len + name.len + ext.len);
+
+                std.mem.copyForwards(u8, path[0..bpath.len], bpath);
+                std.mem.copyForwards(u8, path[bpath.len .. bpath.len + name.len], name);
+                std.mem.copyForwards(u8, path[bpath.len + name.len ..], ext);
+
+                break :Release (try e.assets.get.lvldat(e.ALLOCATOR, path)).?;
+            },
+        };
+
+        defer e.ALLOCATOR.free(string);
+
+        const tile_array = try Tile.fromString(e.ALLOCATOR, string);
+        defer e.ALLOCATOR.free(tile_array);
+
+        const tile_matrix = try e.reshape(Tile).array(
+            e.ALLOCATOR,
+            tile_array,
+            200,
+            200,
+        );
+
+        return tile_matrix;
+    }
+
+    pub fn load(name: []const u8) !void {
+        const matrix = try toMatrix(name);
+        defer {
+            for (matrix) |item| {
+                e.ALLOCATOR.free(item);
+            }
+            e.ALLOCATOR.free(matrix);
+        }
+
+        try loadFromMatrix(matrix);
     }
 };

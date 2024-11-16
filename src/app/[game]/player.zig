@@ -329,13 +329,13 @@ pub fn update() !void {
             //         ([_]u8{0} ** 200),
             //     } ** 190),
             // );
-            try levels.loadFromMatrix(
-                try e.assets.getJson(
-                    [200][200]u16,
-                    e.ARENA,
-                    "levels/test.json",
-                ),
-            );
+            // try levels.loadFromMatrix(
+            //     try e.assets.getJson(
+            //         [200][200]u16,
+            //         e.ARENA,
+            //         "levels/test.json",
+            //     ),
+            // );
         }
 
         if (e.isKeyDown(.key_w)) {
@@ -361,7 +361,7 @@ pub fn update() !void {
                 break :KeyF;
             }
 
-            try levels.load(levels.TestLevel);
+            try levels.leveldat.load("demo");
             break :KeyF;
             // if (e.isKeyDown(.key_zero)) {
             //     for (0..10) |_| {

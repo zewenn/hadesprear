@@ -19,6 +19,7 @@ var image_map: std.StringHashMap(Image) = undefined;
 var wave_map: std.StringHashMap(Wave) = undefined;
 var font_map: std.StringHashMap(Font) = undefined;
 var json_map: std.StringHashMap([]const u8) = undefined;
+var lvldat_map: std.StringHashMap([]const u8) = undefined;
 
 var alloc: Allocator = undefined;
 
@@ -44,14 +45,16 @@ pub fn init(allocator: Allocator) !void {
     wave_map = std.StringHashMap(Wave).init(alloc);
     font_map = std.StringHashMap(Font).init(alloc);
     json_map = std.StringHashMap([]const u8).init(alloc);
-
-    // const testimg = try Image.loadFromMemory(files[0], 4);
-    // std.debug.print("{any}", .{getPixelData(&testimg, .{ .x = 0, .y = 0 })});
+    lvldat_map = std.StringHashMap([]const u8).init(alloc);
 
     for (filenames, files) |name, data| {
         // Images
         if (std.mem.eql(u8, name[name.len - 3 .. name.len], "png")) {
             const img = rl.loadImageFromMemory(".png", data);
+            try image_map.put(name, img);
+        }
+        if (std.mem.eql(u8, name[name.len - 3 .. name.len], "jpg")) {
+            const img = rl.loadImageFromMemory(".jpg", data);
             try image_map.put(name, img);
         }
 
@@ -65,8 +68,14 @@ pub fn init(allocator: Allocator) !void {
             try wave_map.put(name, wave);
         }
 
+        // JSON
         if (std.mem.eql(u8, name[name.len - 4 .. name.len], "json")) {
             try json_map.put(name, data);
+        }
+
+        // LVLDAT
+        if (std.mem.eql(u8, name[name.len - 6 .. name.len], "lvldat")) {
+            try lvldat_map.put(name, data);
         }
 
         // Fonts
@@ -86,43 +95,62 @@ pub fn init(allocator: Allocator) !void {
     std.log.info("ASSETS: Loaded", .{});
 }
 
-/// Caller owns the returned memory!
-pub fn get(T: type, id: []const u8) ?T {
-    if (T == rl.Image) {
-        if (!image_map.contains(id)) {
-            std.log.err("Image does not exist: {s}", .{id});
-            return rl.imageCopy(image_map.get("sprites/missingno.png").?);
-        }
+pub const get = struct {
+    fn errorPrint(T: []const u8, name: []const u8) void {
+        std.log.err("{s} with the name of \"{s}\" does not exist!", .{ T, name });
+    }
 
-        if (image_map.getPtr(id)) |img| {
+    pub fn image(name: []const u8) ?rl.Image {
+        if (image_map.getPtr(name)) |img| {
             return rl.imageCopy(img.*);
         }
-        return null;
-    }
-    if (T == rl.Sound) {
-        if (!wave_map.contains(id)) @panic("Wave doen't exist");
 
-        if (wave_map.get(id)) |wav| {
+        errorPrint("Image", name);
+        return rl.imageCopy(image_map.get("sprites/missingno.png").?);
+    }
+
+    pub fn wave(name: []const u8) ?rl.Sound {
+        if (wave_map.get(name)) |wav| {
             const sound = rl.loadSoundFromWave(wav);
             return sound;
         }
+
+        errorPrint("Wave", name);
         return null;
     }
-    if (T == rl.Font) {
-        if (!font_map.contains(id)) @panic("Font doen't exist");
-        return font_map.get(id);
+
+    pub fn font(name: []const u8) ?rl.Font {
+        if (font_map.get(name)) |fnt| {
+            return fnt;
+        }
+
+        errorPrint("Font", name);
+        return null;
     }
-    std.log.err("ASSETS: File type not supported", .{});
-    return null;
-}
 
-pub fn getJson(T: type, allocator: Allocator, id: []const u8) !T {
-    if (!json_map.contains(id)) @panic("JSON doen't exist");
+    pub fn JSON(T: type, allocator: Allocator, name: []const u8) ?T {
+        const json_contents = json_map.get(name) orelse {
+            errorPrint("JSON", name);
+            return null;
+        };
 
-    const json_contents = json_map.get(id).?;
+        return try json.parseFromSliceLeaky(
+            T,
+            allocator,
+            json_contents,
+            .{ .allocate = .alloc_always },
+        );
+    }
 
-    return try json.parseFromSliceLeaky(T, allocator, json_contents, .{ .allocate = .alloc_always });
-}
+    pub fn lvldat(allocator: Allocator, name: []const u8) !?[]const u8 {
+        const leveldata: []const u8 = lvldat_map.get(name) orelse return null;
+
+        const string = try allocator.alloc(u8, leveldata.len);
+        std.mem.copyForwards(u8, string, leveldata);
+
+        return leveldata;
+    }
+};
 
 pub fn deinit() void {
     var kIt = image_map.keyIterator();
@@ -150,4 +178,5 @@ pub fn deinit() void {
     font_map.deinit();
 
     json_map.deinit();
+    lvldat_map.deinit();
 }

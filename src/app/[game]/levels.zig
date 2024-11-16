@@ -861,7 +861,7 @@ pub const editor_suit = struct {
 
         if (e.isKeyDown(.key_left_control) and e.isKeyPressed(.key_q)) {
             freeCurrentMatrix();
-            current_matrix = try leveldat.load("test");
+            current_matrix = try leveldat.toMatrix("test");
             try loadFromMatrix(current_matrix);
         }
 
@@ -1153,7 +1153,7 @@ pub const leveldat = struct {
         try file.writeAll(string);
     }
 
-    pub fn load(name: []const u8) ![][]Tile {
+    pub fn toMatrix(name: []const u8) ![][]Tile {
         const string: []const u8 = switch (e.builtin.mode) {
             .Debug => Debug: {
                 const bpath = "src/assets/levels/";
@@ -1197,5 +1197,17 @@ pub const leveldat = struct {
         );
 
         return tile_matrix;
+    }
+
+    pub fn load(name: []const u8) !void {
+        const matrix = try toMatrix(name);
+        defer {
+            for (matrix) |item| {
+                e.ALLOCATOR.free(item);
+            }
+            e.ALLOCATOR.free(matrix);
+        }
+
+        try loadFromMatrix(matrix);
     }
 };

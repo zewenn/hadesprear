@@ -361,7 +361,7 @@ pub fn update() !void {
                 break :KeyF;
             }
 
-            try levels.load(levels.TestLevel);
+            try levels.leveldat.load("demo");
             break :KeyF;
             // if (e.isKeyDown(.key_zero)) {
             //     for (0..10) |_| {

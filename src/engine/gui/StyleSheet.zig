@@ -11,15 +11,21 @@ const Unit = @import("Unit.zig");
 const Self = @This();
 const Translate = enum { min, center, max };
 
+pub const Alignment = struct {
+    x: Translate = .min,
+    y: Translate = .min,
+};
+
 display: bool = true,
 
 top: Unit = Unit.init(0, .px),
 left: Unit = Unit.init(0, .px),
 
-translate: struct {
-    x: Translate = .min,
-    y: Translate = .min,
-} = .{},
+translate: Alignment = .{},
+text_align: Alignment = .{
+    .x = .min,
+    .y = .min,
+},
 
 rotation: f32 = 0,
 

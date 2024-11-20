@@ -204,10 +204,7 @@ pub fn update() !void {
         var origin = transform.anchor.?;
 
         BackgroundColorRendering: {
-            const background_color: rl.Color = if (style.background.color) |c|
-                Colour.make(c)
-            else
-                break :BackgroundColorRendering;
+            const background_color = style.background.color orelse break :BackgroundColorRendering;
 
             rl.drawRectanglePro(
                 rl.Rectangle.init(
@@ -218,7 +215,7 @@ pub fn update() !void {
                 ),
                 origin,
                 transform.rotation.z,
-                background_color,
+                Colour.make(background_color),
             );
         }
 
@@ -358,8 +355,16 @@ pub fn update() !void {
 
             const fs = @constCast(&GUI.Unit{ .unit = .unit, .value = style.font.size }).calculate(0, 0);
 
-            const ox: f32 = fs * @as(f32, @floatFromInt(len)) / 2;
-            const oy: f32 = fs / 2;
+            const ox: f32 = switch (style.text_align.x) {
+                .min => 0,
+                .center => fs * @as(f32, @floatFromInt(len)) / 2,
+                .max => fs * @as(f32, @floatFromInt(len)),
+            };
+            const oy: f32 = switch (style.text_align.x) {
+                .min => 0,
+                .center => fs / 2,
+                .max => fs,
+            };
 
             if (style.font.shadow) |shadow| {
                 rl.drawTextPro(

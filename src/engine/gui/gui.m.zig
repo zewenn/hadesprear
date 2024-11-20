@@ -263,6 +263,11 @@ pub fn Text(options: GUIElement.Options, text: [*:0]const u8) !*GUIElement {
         el.options.style.height = .{ .value = el.options.style.font.size, .unit = .px };
     }
 
+    el.options.style.text_align = .{
+        .x = .center,
+        .y = .center,
+    };
+
     return el;
 }
 

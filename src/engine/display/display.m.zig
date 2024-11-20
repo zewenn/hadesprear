@@ -195,13 +195,8 @@ pub fn update() !void {
 
         if (!style.display) continue;
 
-        var transform: entities.Transform = undefined;
-
-        if (element.transform) |t| {
-            transform = t;
-        } else continue;
-
-        var origin = transform.anchor.?;
+        var transform: entities.Transform = element.transform orelse continue;
+        var origin = transform.anchor orelse continue;
 
         BackgroundColorRendering: {
             const background_color = style.background.color orelse break :BackgroundColorRendering;
@@ -341,18 +336,10 @@ pub fn update() !void {
         }
 
         FontRendering: {
-            var content: [*:0]const u8 = undefined;
-            if (element.contents) |c| {
-                content = c;
-            } else break :FontRendering;
-
-            var font: rl.Font = undefined;
-            if (assets.get.font(style.font.family)) |_font| {
-                font = _font;
-            } else break :FontRendering;
+            const content: [*:0]const u8 = element.contents orelse break :FontRendering;
+            const font: rl.Font = assets.get.font(style.font.family) orelse break :FontRendering;
 
             const len = std.mem.indexOfSentinel(u8, 0, content);
-
             const fs = @constCast(&GUI.Unit{ .unit = .unit, .value = style.font.size }).calculate(0, 0);
 
             const ox: f32 = switch (style.text_align.x) {
@@ -371,7 +358,6 @@ pub fn update() !void {
                     font,
                     content,
                     transform.position.add(shadow.offset),
-                    // origin,
                     rl.Vector2.init(ox, oy),
                     transform.rotation.z,
                     fs,
@@ -379,6 +365,7 @@ pub fn update() !void {
                     Colour.make(shadow.color),
                 );
             }
+
             rl.drawTextPro(
                 font,
                 content,
@@ -401,54 +388,42 @@ fn drawTetxure(
     ignore_cam: bool,
     collider: ?entities.RectangleVertices,
 ) void {
-    const X = GetX: {
-        var x: f128 = 0;
-        x = z.math.div(window.size.x, 2).?;
-        x += z.math.to_f128(transform.position.x).? * camera.zoom;
-        if (!ignore_cam)
-            x -= z.math.to_f128(camera.position.x).? * camera.zoom;
+    const X = window.size.x / 2 +
+        transform.position.x * camera.zoom -
+        if (!ignore_cam) camera.position.x * camera.zoom else 0;
 
-        break :GetX z.math.f128_to(f32, x).?;
-    };
+    const Y = window.size.y / 2 +
+        transform.position.y * camera.zoom -
+        if (!ignore_cam) camera.position.y * camera.zoom else 0;
 
-    const Y = GetY: {
-        var y = z.math.div(window.size.y, 2).?;
-        y += z.math.to_f128(transform.position.y).? * camera.zoom;
-        if (!ignore_cam)
-            y -= z.math.to_f128(camera.position.y).? * camera.zoom;
-
-        break :GetY z.math.f128_to(f32, y).?;
-    };
-
-    var anchor = transform.anchor;
-
-    if (anchor == null) {
-        anchor = .{
-            .x = transform.scale.x / 2,
-            .y = transform.scale.y / 2,
-        };
-    }
-
-    const origin: rl.Vector2 = anchor.?.multiply(
+    const origin = (transform.anchor orelse rl.Vector2{
+        .x = transform.scale.x / 2,
+        .y = transform.scale.y / 2,
+    }).multiply(
         rl.Vector2.init(
             camera.zoom,
             camera.zoom,
         ),
     );
 
+    const scaled = transform.scale.multiply(rl.Vector2{
+        .x = camera.zoom,
+        .y = camera.zoom,
+    });
+
     rl.drawTexturePro(
         texture,
         rl.Rectangle.init(
             0,
             0,
-            transform.scale.x * camera.zoom,
-            transform.scale.y * camera.zoom,
+            scaled.x,
+            scaled.y,
         ),
         rl.Rectangle.init(
             X,
             Y,
-            transform.scale.x * camera.zoom,
-            transform.scale.y * camera.zoom,
+            scaled.x,
+            scaled.y,
         ),
         origin,
         transform.rotation.z,
